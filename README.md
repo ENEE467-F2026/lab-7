@@ -1,7 +1,7 @@
 # ENEE 467 Fall 2025: Robotics Project Laboratory
-## Lab 7: Motion Planning and Control on the Real UR3e-Hand-E Robot with ROS 2
+## Lab 7: Autonomous Manipulation with ROS 2 on the Real UR3e–Hand-E Robot
 
-This repository contains a Docker container for Lab 7 (Motion Planning and Control on the Real UR3e-Hand-E Robot with ROS 2) as well as the necessary code templates for completing the exercises.
+This repository contains a Docker container for Lab 7 (Autonomous Manipulation with ROS 2 on the Real UR3e–Hand-E Robot) as well as the necessary code templates for completing the exercises.
 
 ## Overview
 
