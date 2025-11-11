@@ -16,7 +16,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     autoconf automake bash-completion build-essential cmake make pkg-config g++ git curl wget unzip \
     ca-certificates software-properties-common python3-pip python3-setuptools python3-apt sudo \
     python3-rosdep python3-vcstool python3-colcon-common-extensions \
-    lsb-release inetutils-ping iproute2 iputils-ping net-tools socat \
+    lsb-release iproute2 iputils-ping net-tools socat \
     mc nano vim tree tmux tzdata screen less xclip figlet toilet \
     libxext-dev libx11-dev x11proto-gl-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils \
     libgtk-3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
@@ -38,7 +38,7 @@ RUN pip install --no-cache-dir --break-system-packages \
     colcon-common-extensions vcstool ipython numpy==1.26.4 transforms3d==0.4.2 \
     opencv-python==4.9.0.80 opencv-contrib-python==4.9.0.80 \
     roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 \
-    scipy tqdm matplotlib scikit-image scikit-learn pclpy spatialmath-python==1.0.5 \
+    scipy tqdm matplotlib scikit-image scikit-learn spatialmath-python==1.0.5 \
     --extra-index-url https://pypi.org/simple && \
     pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision ultralytics
 

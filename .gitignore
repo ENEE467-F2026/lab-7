@@ -15,7 +15,7 @@
 # Ignore Jupyter Notebook checkpoints
 **.ipynb_checkpoints
 
-**src/
+# **src/
 **realsense/
 **/docs
 Lab_7_Autonomous_Manipulation_on_the_Real_Robot.pdf

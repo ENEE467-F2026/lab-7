@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ur3e_hande">
+
+  <xacro:include filename="$(find robotiq_hande_description)/urdf/hande.urdf.xacro"/>
+
+  <xacro:include filename="$(find ur3e_description)/urdf/ur3e.urdf.xacro"/>
+
+  <joint name="ur3e_hande_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <parent link="tool0"/>
+    <child link="robotiq_hande_coupler"/>
+  </joint>
+</robot>

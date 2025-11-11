@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ur3e_hande_bringup</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="me@clintonenwerem.com">Clinton Enwerem</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <depend>robotiq_hande_description</depend>
+  <depend>ur3e_hande_description</depend>
+  <depend>ur_description</depend>
+  <depend>ur_robot_driver</depend>
+  <depend>ur3e_description</depend>
+  <depend>robotiq_hande_ros2_driver</depend>
+  <depend>realsense2_camera</depend>
+  <depend>moveit</depend>
+  <depend>shape_msgs</depend>
+  <depend>realsense2_camera_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

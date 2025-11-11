@@ -3,3 +3,4 @@ userid=$(id -u) groupid=$(id -g) docker compose -f lab-7-compose.yml build
 
 # to start the container
 userid=$(id -u) groupid=$(id -g) docker compose -f lab-7-compose.yml run --rm lab-7-docker
+

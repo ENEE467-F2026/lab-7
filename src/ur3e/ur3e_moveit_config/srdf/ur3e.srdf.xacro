@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="ur3e">
+
+  <!-- robot name parameter -->
+  <xacro:arg name="name" default="ur3e"/>
+  <!-- parameters -->
+  <xacro:arg name="prefix" default="" />
+
+  <xacro:include filename="$(find ur3e_moveit_config)/srdf/ur3e_macro.srdf.xacro"/>
+
+  <xacro:ur3e_srdf name="$(arg name)" prefix="$(arg prefix)"/>
+
+</robot>

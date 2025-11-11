@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ur3e_hande_moveit_py</name>
+  <version>0.0.0</version>
+  <description>ROS2 package for object detection and pose estimation for the UR3e-Hand-E Setup.</description>
+  <maintainer email="me@clintonenwerem.com">Clinton Enwerem</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>rcl_interfaces</depend>
+  <depend>gripper_action</depend>
+  <depend>cv_bridge</depend>
+  <depend>tf2_ros</depend>
+  <depend>visualization_msgs</depend>
+  <depend>pymoveit2</depend>
+  <depend>robotiq_hande_description</depend>
+  <depend>realsense2_camera_msgs</depend>
+  <exec_depend>robotiq_hande_ros2_driver</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

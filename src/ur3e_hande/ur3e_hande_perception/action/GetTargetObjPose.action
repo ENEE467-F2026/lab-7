@@ -1,0 +1,5 @@
+std_msgs/String target_obj_description
+---
+geometry_msgs/PoseStamped target_obj_pose
+---
+int32 target_obj_found # bool: 0 if not obj with ObjectUId==target_obj_description

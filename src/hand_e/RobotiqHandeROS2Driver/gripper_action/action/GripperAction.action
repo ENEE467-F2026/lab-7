@@ -1,0 +1,14 @@
+# Goal
+int32 desired_position 
+int32 desired_speed
+int32 desired_force
+---
+# Result
+int32 position_error
+int32 speed_error
+int32 force_error
+---
+# Feedback
+int32 current_position
+int32 current_speed
+int32 current_force
