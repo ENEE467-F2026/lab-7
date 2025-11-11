@@ -1,0 +1,41 @@
+services:
+  lab-7-docker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        userid: ${userid}
+        groupid: ${groupid}
+    image: lab-7-image:latest
+    container_name: lab-7-container
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - LIBGL_ALWAYS_SOFTWARE=0
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - KINEMATICS_CONFIG_PATH=/home/robot/ros2_ws/config
+      - KINEMATICS_CONFIG_FILENAME=ur3e_mrc.yaml
+    # Required for communicating over the network
+    network_mode: "host"
+    ipc: "host"
+    pid: "host"
+    # Required for accessing hardware
+    privileged: true
+    tty: true
+    stdin_open: true
+    volumes:
+      - ../src:/home/robot/ros2_ws/src:rw
+      - ../config:/home/robot/ros2_ws/config:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    devices:
+      - /dev/bus/usb:/dev/bus/usb     
+    device_cgroup_rules:
+      - 'c 81:* rmw'     
+      - 'c 189:* rmw'   
+    entrypoint: >
+      bash -c "
+        set -e;
+        sudo udevadm control --reload-rules 2>/dev/null || true;
+        sudo udevadm trigger 2>/dev/null || true;
+        sudo chown -R ${userid}:${groupid} /home/robot/ros2_ws/src;
+        exec bash"

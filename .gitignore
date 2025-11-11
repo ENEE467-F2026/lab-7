@@ -1,0 +1,21 @@
+# Ignore Visual Studio Code settings
+**.vscode
+
+# Ignore Python cache files
+**__pycache__/
+**.pyc
+**.pyo
+**.pyd
+**.db
+**.log
+**log/
+**build/
+**install/
+
+# Ignore Jupyter Notebook checkpoints
+**.ipynb_checkpoints
+
+**src/
+**realsense/
+**/docs
+Lab_7_Autonomous_Manipulation_on_the_Real_Robot.pdf
