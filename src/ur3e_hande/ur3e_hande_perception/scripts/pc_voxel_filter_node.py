@@ -40,14 +40,17 @@ class PCVoxelFilterNode(Node):
 
     def pointcloud_callback(self, msg):
         try:
-            # Convert generator to list first
+            # Read all XYZ points as list of tuples (x, y, z)
             points_list = list(point_cloud2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True))
-            if len(points_list) == 0:
+            if not points_list:
                 self.get_logger().warn_once("Received empty point cloud.")
                 return
 
-            # Convert to numeric array
-            points = np.stack([points_list['x'], points_list['y'], points_list['z']], axis=-1)
+            # Convert to (N, 3) numpy array
+            points = np.array(points_list, dtype=np.float32)
+            if points.ndim != 2 or points.shape[1] != 3:
+                self.get_logger().warn_once(f"Unexpected point array shape: {points.shape}")
+                return
 
             # Optional crop
             if self.crop_enabled:
@@ -68,7 +71,7 @@ class PCVoxelFilterNode(Node):
             _, unique_indices = np.unique(voxel_indices, axis=0, return_index=True)
             filtered_points = points[unique_indices]
 
-            # Publish
+            # Publish filtered cloud
             header = Header()
             header.stamp = msg.header.stamp
             header.frame_id = msg.header.frame_id
@@ -81,6 +84,7 @@ class PCVoxelFilterNode(Node):
 
         except Exception as e:
             self.get_logger().error(f"Error in pointcloud_callback: {e}")
+
 
 
 def main(args=None):
