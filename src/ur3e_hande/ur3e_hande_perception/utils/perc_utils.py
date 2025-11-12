@@ -45,6 +45,11 @@ def compute_colored_point_cloud(depth_image, rgb_image, K, pack_rgb=True):
 
     K is the camera matrix
     """
+    if depth_image is None or rgb_image is None:
+        raise ValueError("Depth or RGB image is None")
+    if depth_image.shape[:2] != rgb_image.shape[:2]:
+        raise ValueError("Depth and RGB image sizes do not match")
+    
     # print(depth_image.shape)
     height, width = depth_image.shape
     fx, fy = K[0, 0], K[1, 1]
@@ -55,16 +60,14 @@ def compute_colored_point_cloud(depth_image, rgb_image, K, pack_rgb=True):
 
     # Backproject pixels to X, Y, Z in world frame
     Z = depth_image.flatten()
+    valid = Z > 0
     X = ((u - cx) * depth_image / fx).flatten()
     Y = ((v - cy) * depth_image / fy).flatten()
 
     # Get RGB values and reshape to Nx3 to 'color' cloud
-    colors = rgb_image.reshape(-1, 3)
-
-    # Combine into Nx6 point cloud
-    points = np.vstack((X, Y, Z)).T
-    point_cloud = np.hstack((points, colors.astype(np.float32)))  # shape: (N, 6), N = width*height
-
+    points = np.vstack((X[valid], Y[valid], Z[valid])).T
+    colors = rgb_image.reshape(-1, 3)[valid]
+    point_cloud = np.hstack((points, colors.astype(np.float32)))
     if pack_rgb:
        packed_points = []
        for i in range(point_cloud.shape[0]):
@@ -211,21 +214,23 @@ def tf_to_matrix(transform_stamped: TransformStamped):
    H = spmath.SE3.RTvec(rvec=rot_vec, tvec=t)
    return H
 
-def extract_plane(cloud: o3d.geometry.PointCloud, dist_thresh: float = 0.02, ransac_n: int = 3, num_iterations: int=1000) -> Tuple[np.ndarray, np.ndarray, o3d.geometry.PointCloud]:
-        """Segmentation: Extracts a plane from the point cloud using the RANSAC algorithm
-        
+def extract_plane(cloud: o3d.geometry.PointCloud, dist_thresh: float = 0.02, ransac_n: int = 3, num_iterations: int = 1000):
+    """Extracts the dominant plane from a point cloud using RANSAC.
         Reference: http://www.cse.yorku.ca/~kosta/CompVis_Notes/ransac.pdf
 
         scalar plane equation: ax + by + cz + d = 0
-        """
-        plane_model, inliers = cloud.segment_plane(distance_threshold=dist_thresh, 
-                                                   ransac_n=ransac_n,
-                                                   num_iterations=num_iterations)
-        coefficients = plane_model # [a, b, c, d]
-        # # Extract points belonging to the plane
-        plane_cloud = cloud.select_by_index(inliers)
-        # plane_cloud.paint_uniform_color([1.0, 0, 0])
-        return inliers, coefficients, plane_cloud
+    """
+    if len(cloud.points) < ransac_n:
+        raise ValueError(f"Not enough points for plane segmentation: got {len(cloud.points)}, need ≥ {ransac_n}")
+
+    plane_model, inliers = cloud.segment_plane(
+        distance_threshold=dist_thresh,
+        ransac_n=ransac_n,
+        num_iterations=num_iterations,
+    )
+    coefficients = np.asarray(plane_model)
+    plane_cloud = cloud.select_by_index(inliers)
+    return inliers, coefficients, plane_cloud
 
 def extract_cloud_clusters(cloud: o3d.geometry.PointCloud, cluster_name: str, cluster_tol:float=0.05, min_cluster_sz: int=80, max_cluster_sz: int=80000) -> Tuple[List[o3d.geometry.PointCloud], List[List[float]], List[List[float]]]:
     """Extracts clusters corresponding to flat surfaces from the point cloud

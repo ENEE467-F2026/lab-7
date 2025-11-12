@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: ur3e_hande_description
+    relative_path: urdf/ur3e_hande.urdf.xacro
+  srdf:
+    relative_path: config/ur3e_hande.srdf
+  package_settings:
+    author_name: Clinton Enwerem
+    author_email: me@clintonenwerem.com
+    generated_timestamp: 1755764437
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

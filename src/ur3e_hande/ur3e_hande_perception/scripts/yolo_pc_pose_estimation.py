@@ -8,6 +8,17 @@
 
 Author: Clinton Enwerem.
 Developed for the course ENEE467: Robotics Projects Laboratory, Fall 2025, University of Maryland, College Park, MD.
+
+
+ros2 run ur3e_hande_perception yolo_pc_pose_estimation.py --ros-args \
+  -p rs_color_topic:=/rgbd_camera/image \
+  -p rs_depth_topic:=/rgbd_camera/depth_image \
+  -p rs_color_info_topic:=/rgbd_camera/camera_info \
+  -p rs_pc_topic:=/rgbd_camera/points \
+  -p rs_pc_frame_id:=camera_depth_frame  \
+  -p bridge_color_img_enc:=bgr8    \
+  -p bridge_depth_img_enc:=passthrough  
+
 """
 import rclpy
 import os
@@ -49,6 +60,7 @@ from tf2_ros.transform_broadcaster import TransformBroadcaster
 # utils
 package_name = 'ur3e_hande_perception'
 package_share_dir = get_package_share_directory(package_name)
+model_path = os.path.join(package_share_dir, 'models', 'yolov8n.pt')
 
 # add workspace path to sys
 utils_file_path = os.path.join(package_share_dir, 'utils', 'perc_utils.py')
@@ -109,7 +121,7 @@ class YoloPoseEstimationActionServer(Node):
         self.declare_parameter('max_height_obj', value=0.3)
 
         # tf 
-        self.declare_parameter('rs_pc_frame_id', value="camera_depth_optical_frame")
+        self.declare_parameter('rs_pc_frame_id', value="camera_depth_frame")
         self.declare_parameter('rs_cbs_frame_id', value="camera_bottom_screw_frame")
         self.declare_parameter('world_frame_id', value="world")
         self.declare_parameter('camera_link_frame_id', value="camera_link")
@@ -117,7 +129,7 @@ class YoloPoseEstimationActionServer(Node):
 
         # OpenCV params
         self.declare_parameter("bridge_color_img_enc", value="bgr8", descriptor=self.bridge_color_img_enc_desc)
-        self.declare_parameter("bridge_depth_img_enc", value="16UC1", descriptor=self.bridge_depth_img_enc_desc)
+        self.declare_parameter("bridge_depth_img_enc", value="passthrough", descriptor=self.bridge_depth_img_enc_desc)
         self.declare_parameter("yolo_model", value="yolov8n.pt", descriptor=self.yolo_model_desc)
         self.declare_parameter('bbox_rect_line_width', value=3)
 
@@ -867,7 +879,15 @@ class YoloPoseEstimationActionServer(Node):
     def publish_sf_obj_pcd_det_cb(self, msg):
         pcd = self.ros_msg_to_point_cloud(msg) 
         voxel_size = 0.01
+
         if pcd is not None:
+            if voxel_size <= 0.0:
+                self.get_logger().warn(f"Invalid voxel_size={voxel_size}. Using default 0.005 m.")
+                voxel_size = 0.005
+            if len(pcd.points) == 0:
+                self.get_logger().warn("Received empty point cloud, skipping downsampling.")
+                return
+
             downpcd = pcd.voxel_down_sample(voxel_size)
 
             # filter

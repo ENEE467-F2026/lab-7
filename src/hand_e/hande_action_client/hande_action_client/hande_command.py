@@ -13,12 +13,11 @@ class HandeCommand(Node):
     def __init__(self):
         super().__init__("hande_command_node")
         self.done = False
-        ########################################################
-        # TODO (Ex.  2a): create action client, gripper_client
-        ########################################################
-        
-        
-        ########################################################
+        self.gripper_client = ActionClient(
+            self, 
+            ParallelGripperCommand, 
+            "/gripper_action_controller/gripper_cmd")
+
     def send_goal(self, 
                   position: float, 
                   wait_for_server_sec: float = 5.0):
@@ -28,17 +27,13 @@ class HandeCommand(Node):
             return False
 
         # Build the action goal
-        ########################################################
-        # TODO (Ex.  2b): fill in the goal message
-        ########################################################
         cmd = JointState()
-        cmd.position = [None] # <-- MODIFY
-        cmd.name = [" "]      # <-- MODIFY
+        cmd.position = [float(position)]
+        cmd.name = ["gripper_robotiq_hande_left_joint"]
         cmd.velocity = []
         cmd.effort = []
-
         goal_msg = ParallelGripperCommand.Goal()
-        goal_msg.command = None # <-- MODIFY
+        goal_msg.command = cmd
 
         send_goal_future = self.gripper_client.send_goal_async(goal_msg)
         send_goal_future.add_done_callback(self._goal_response_callback)
@@ -70,14 +65,17 @@ def main(argv=None):
                 position = OPEN_POS
             if "--close" in sys.argv:
                 position = CLOSED_POS
-            ########################################################
-            # TODO (Ex.  2c): prompt user for input
-            # Enter code template here
-            ########################################################
-            
-
-            ########################################################
-            ########################################################
+            if not ("--open" in sys.argv or "--close" in sys.argv):
+                inp = input("Gripper position (0.0-0.025 m, q to quit): ")
+                if inp.lower() in ["q", "quit", "exit"]:
+                    break
+                try:
+                    position = float(inp)
+                    if not (0.0 <= position <= 0.025):
+                        raise ValueError
+                except ValueError:
+                    print("Invalid position, try again.")
+                    continue
             client.send_goal(position=position)
             while rclpy.ok() and not client.done:
                 rclpy.spin_once(client, timeout_sec=0.0)

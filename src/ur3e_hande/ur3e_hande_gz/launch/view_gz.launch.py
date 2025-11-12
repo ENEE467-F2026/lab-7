@@ -66,7 +66,7 @@ def generate_launch_description() -> LaunchDescription:
     controllers_config = PathJoinSubstitution([
                 FindPackageShare("ur3e_hande_description"),
                 "config",
-                "controllers.yaml",
+                "controllers_sim.yaml",
             ])
 
     # URDF via xacro
@@ -320,7 +320,7 @@ def generate_declared_arguments() -> List[DeclareLaunchArgument]:
             default_value=path.join(
                 get_package_share_directory("ur3e_hande_description"),
                 "rviz",
-                "view_robot_tfs_no_pc.rviz",
+                "view_robot_tfs_w_pc.rviz",
             ),
             description="Path to configuration for RViz2.",
         ),

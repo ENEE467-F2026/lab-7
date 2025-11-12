@@ -39,7 +39,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from geometry_msgs.msg import TransformStamped
-from  tf_transformations import quaternion_from_euler
+from transforms3d.euler import euler2quat
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
@@ -114,7 +114,7 @@ translation = d435i_pose[:3]
 roll, pitch, yaw = d435i_pose[3:]
 
 # Convert Euler angles to quaternion
-qx, qy, qz, qw = quaternion_from_euler(roll, pitch, yaw)
+qw, qx, qy, qz = euler2quat(roll, pitch, yaw)
 
 REALSENSE_PACKAGE_NAME = 'realsense2_camera'
 # REALSENSE_LAUNCH_PATH = os.path.join(get_package_share_directory(REALSENSE_PACKAGE_NAME), 'examples', 'pointcloud', 'rs_pointcloud_launch.py')

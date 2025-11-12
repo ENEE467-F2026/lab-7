@@ -27,12 +27,15 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 )
 
 install(DIRECTORY
-  msg action scripts utils config rviz launch
+  msg action scripts utils config rviz launch models
   DESTINATION share/${PROJECT_NAME}
 )
 
 
-install(PROGRAMS scripts/yolo_pc_pose_estimation.py
+install(PROGRAMS 
+  scripts/yolo_pc_pose_estimation.py
+  scripts/pc_segmentation_node.py
+  scripts/pc_voxel_filter_node.py
    DESTINATION lib/${PROJECT_NAME}
  )
 

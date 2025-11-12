@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<robot name="ur3e_table">
+  <link name="table">
+  <visual>
+      <origin rpy="1.570796 0 1.570796" xyz="0.715 .9114 -.14"/>
+      <geometry>
+          <mesh filename="file://$(find ur3e_hande_description)/meshes/table/collision/table.stl" scale="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="blue">
+          <color rgba="0.200 0.294 0.392 1"/>
+      </material>
+  </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0.5 -0.095"/>
+      <geometry>
+      <box size="1.5 1.5 0.15"/>
+      </geometry>
+      <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="16.0"/>
+      <!-- Inertia for a box: 
+         Ixx = (1/12) * m * (h^2 + d^2)
+         Iyy = (1/12) * m * (w^2 + d^2)
+         Izz = (1/12) * m * (w^2 + h^2)
+         where w=1.5, h=1.5, d=0.15, m=16.0
+      -->
+      <inertia
+        ixx="3.03125"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="3.03125"
+        iyz="0.0"
+        izz="6.0"/>
+      </inertial>
+    </collision>
+  </link>
+</robot>

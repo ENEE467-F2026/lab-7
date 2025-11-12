@@ -7,7 +7,24 @@
   <xacro:include filename="$(find robotiq_hande_description)/urdf/robotiq_hande_gripper.ros2_control.xacro"/>
   <xacro:include filename="$(find robotiq_hande_description)/urdf/cylinder_inertial.xacro"/>
 
-  <xacro:macro name="robotiq_hande_gripper" params="name prefix parent grip_pos_min grip_pos_max tty baudrate parity data_bits stop_bit slave_id use_fake_hardware coupler_mass:=0.119">
+  <xacro:macro
+    name="robotiq_hande_gripper"
+    params="name
+            prefix
+            parent
+            grip_pos_min
+            grip_pos_max
+            tty
+            baudrate
+            parity
+            data_bits
+            stop_bit
+            slave_id
+            use_fake_hardware
+            coupler_mass:=0.119
+            xyz:='0 0 0'
+            rpy:='0 0 0'"
+  >
     <!-- ros2_control parameters  -->
     <xacro:robotiq_hande_ros2_control
       name="${name}"
@@ -36,7 +53,7 @@
     <xacro:arg name="hande_radius" default="0.0375"/>
 
     <joint name="${prefix}robotiq_hande_coupler_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
       <parent link="${parent}"/>
       <child link="${prefix}robotiq_hande_coupler"/>
     </joint>
@@ -44,7 +61,7 @@
     <link name="${prefix}robotiq_hande_coupler">
       <visual>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/io_coupler.dae"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/io_coupler.dae"/>
         </geometry>
       </visual>
 
@@ -70,7 +87,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/hande.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/hande.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </visual>
 
@@ -91,21 +108,23 @@
       <parent link="${prefix}robotiq_hande_link"/>
       <child link="${prefix}robotiq_hande_left_finger"/>
       <axis xyz="1 0 0"/>
-      <limit effort="130" lower="${grip_pos_min}" upper="${grip_pos_max}" velocity="0.15"/>
+      <limit effort="100" lower="${grip_pos_min}" upper="${grip_pos_max}" velocity="0.1"/>
+      <dynamics damping="0.5" friction="0.1"/>
+      <initial_position>0.02</initial_position>
     </joint>
 
     <link name="${prefix}robotiq_hande_left_finger">
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/finger.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/finger.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </visual>
 
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </collision>
 
@@ -121,7 +140,7 @@
       <parent link="${prefix}robotiq_hande_link"/>
       <child link="${prefix}robotiq_hande_right_finger"/>
       <axis xyz="-1 0 0"/>
-      <limit effort="130" lower="${grip_pos_min}" upper="${grip_pos_max}" velocity="0.15"/>
+      <limit effort="100" lower="${grip_pos_min}" upper="${grip_pos_max}" velocity="0.1"/>
       <mimic joint="${prefix}robotiq_hande_left_finger_joint" multiplier="1" offset="0"/>
     </joint>
 
@@ -129,14 +148,14 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/finger.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/finger.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </visual>
 
       <collision>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </collision>
 

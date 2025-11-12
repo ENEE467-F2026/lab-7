@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ur3e_hande">
+    <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+
+    <!-- Import ur3e_hande urdf file -->
+    <xacro:include filename="$(find ur3e_hande_description)/urdf/ur3e_hande.urdf.xacro" />
+
+    <!-- Import control_xacro -->
+    <xacro:include filename="ur3e_hande.ros2_control.xacro" />
+
+
+    <xacro:ur3e_hande_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)"/>
+
+</robot>

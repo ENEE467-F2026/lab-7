@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<robot name="side_extrusion_20">
+
+    <link name="side_extrusion_20">
+        <visual>
+            <origin rpy="0 0 0" xyz="-0.5762625 0.542925 0.291"/>
+            <geometry>
+                <mesh filename="file://$(find ur3e_hande_description)/meshes/side_extrusion_20/visual/side_extrusion_20.obj" scale="0.001 0.001 0.0004"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin rpy="0 0 0" xyz="-0.5762625 0.542925 0.291"/>
+            <geometry>
+                <!-- <box size="1.5 1.5 0.2"/> 0.000318585 -->
+                <mesh filename="file://$(find ur3e_hande_description)/meshes/side_extrusion_20/collision/side_extrusion_20.stl" scale="0.001 0.001 0.0004"/>
+            </geometry>
+        </collision>
+    </link>
+
+</robot>

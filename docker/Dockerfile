@@ -32,13 +32,14 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     ros-${ROS_DISTRO}-rviz2 \
     ros-${ROS_DISTRO}-librealsense2* \
     ros-${ROS_DISTRO}-realsense2-* \
+    ros-${ROS_DISTRO}-pcl-* \
     libpcl-dev libboost-dev libblas-dev liblapack-dev python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Python packages 
 RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
     pip==24.0 wheel==0.43.0 setuptools==79.0.1 \
-    colcon-common-extensions vcstool ipython numpy==1.26.4 transforms3d==0.4.2 \
+    colcon-common-extensions vcstool ipython numpy==1.26.4 transforms3d==0.4.2 pye57==0.4.18 \
     opencv-python==4.9.0.80 opencv-contrib-python==4.9.0.80 \
     roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 open3d==0.19.0 \
     scipy tqdm matplotlib scikit-image scikit-learn spatialmath-python \
@@ -114,8 +115,8 @@ ENV USER=robot \
 
 # ROS 2 workspace
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
-    mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src && \
-    git clone -b ${ROS_DISTRO} https://github.com/AGH-CEAI/robotiq_hande_driver.git
+    mkdir -p ~/ros2_ws/src
+    # git clone -b ${ROS_DISTRO} https://github.com/AGH-CEAI/robotiq_hande_driver.git
     # vcs import . < robotiq_hande_driver/robotiq_hande_driver/robotiq_hande_driver.repos && \
     # cd ~/ros2_ws && \
     # colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
