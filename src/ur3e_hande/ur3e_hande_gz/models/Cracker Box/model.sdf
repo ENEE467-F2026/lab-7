@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<!--
+
+This SDF file was automatically generated using a template modified 
+and authored by Adwait Naik. The moment of interia is not supposed to be changed.
+
+-->
+<sdf version="1.7">
+    <model name="cracker_box">
+      <pose>1.0 0 2.0 0 0 0</pose> 
+      <link name="link">
+        <inertial>
+          <inertia>
+           <ixx>1.2667764335249046e-05</ixx>
+           <ixy>1.729536435737038e-24</ixy>
+           <ixz>-2.9969843650251416e-23</ixz>
+           <iyy>8.895223860935137e-06</iyy>
+           <iyz>6.726307907846409e-22</iyz>
+           <izz>5.284067250610004e-06</izz>
+          </inertia>
+          <mass>0.0021732875685518717</mass>
+        </inertial>
+        <collision name="collision">
+          <geometry>
+          	<cylinder>
+              <radius>0.05</radius>
+              <length>0.14</length>
+            </cylinder>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+          	<mesh>
+              <uri>textured.obj</uri>
+	          </mesh>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+</sdf>

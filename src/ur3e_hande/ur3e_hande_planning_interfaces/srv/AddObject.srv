@@ -1,0 +1,11 @@
+# Add a new object to the planning scene
+
+string id
+string shape             # "box", "sphere", "cylinder", or "cone"
+float64[] position       # [x, y, z]
+float64[] quat_xyzw      # [x, y, z, w]
+float64[] dimensions     # box=[x, y, z]; sphere=[r]; cylinder/cone=[h, r]
+
+---
+bool success
+string message

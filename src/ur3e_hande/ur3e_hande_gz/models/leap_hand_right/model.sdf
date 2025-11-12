@@ -1,0 +1,1271 @@
+<sdf version='1.9'>
+  <model name='leap_hand_right'>
+    <link name='palm_lower'>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.23699999999999999</mass>
+        <inertia>
+          <ixx>0.000354094</ixx>
+          <ixy>-1.1930000000000001e-06</ixy>
+          <ixz>-2.4449999999999999e-06</ixz>
+          <iyy>0.00026091500000000002</iyy>
+          <iyz>-2.9050000000000001e-06</iyz>
+          <izz>0.00052925699999999999</izz>
+        </inertia>
+      </inertial>
+      <collision name='palm_lower_collision'>
+        <pose>-0.008999999999999999 0.008 -0.011 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.022 0.026 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_1'>
+        <pose>-0.008999999999999999 -0.037 -0.011 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.022 0.026 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_2'>
+        <pose>-0.008999999999999999 -0.082 -0.011 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.022 0.026 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_3'>
+        <pose>-0.066 -0.078 -0.0115 0 0 -0.2967</pose>
+        <geometry>
+          <box>
+            <size>0.058 0.02 0.046</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_4'>
+        <pose>-0.03 -0.035 -0.003 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.12 0.03</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_5'>
+        <pose>-0.032 -0.035 -0.024 0 0.7850000000000003 0</pose>
+        <geometry>
+          <box>
+            <size>0.01 0.12 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_6'>
+        <pose>-0.048 -0.033 -0.0115 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.024 0.116 0.046</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_7'>
+        <pose>-0.078 -0.053 -0.0115 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.044 0.052 0.046</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_8'>
+        <pose>-0.098 -0.008999999999999999 -0.006 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.004 0.036 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='palm_lower_collision_9'>
+        <pose>-0.078 -0.003 0.01 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.044 0.056 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='palm_lower_visual'>
+        <pose>-0.02 0.02575 -0.0347 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/palm_lower.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='index_1' type='revolute'>
+      <pose relative_to='palm_lower'>-0.007 0.023 -0.0187 1.570789999998722 1.570790000027876 0</pose>
+      <parent>palm_lower</parent>
+      <child>mcp_joint</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.314</lower>
+          <upper>2.23</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='mcp_joint'>
+      <pose relative_to='index_1'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.043999999999999997</mass>
+        <inertia>
+          <ixx>1.1499e-05</ixx>
+          <ixy>3.0489999999999999e-06</ixy>
+          <ixz>1.2100000000000001e-07</ixz>
+          <iyy>7.7959999999999996e-06</iyy>
+          <iyz>1.12e-07</iyz>
+          <izz>1.4759e-05</izz>
+        </inertia>
+      </inertial>
+      <collision name='mcp_joint_collision'>
+        <pose>0 0.018 0.0147 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.006 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_collision_1'>
+        <pose>-0.027 0.042 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.028 0.04 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_collision_2'>
+        <pose>-0.0262 0.02 0.0146 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.006 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_collision_3'>
+        <pose>-0.0295 0.035 0.029 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.024 0.008</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_collision_4'>
+        <pose>0 0.005 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_collision_5'>
+        <pose>0 0.005 -0.001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='mcp_joint_visual'>
+        <pose>0.008399999999999999 0.0077 0.01465 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/mcp_joint.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='index_0' type='revolute'>
+      <pose relative_to='mcp_joint'>-0.0122 0.0381 0.0145 -1.57079 0 1.57079</pose>
+      <parent>mcp_joint</parent>
+      <child>pip</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1.0469999999999999</lower>
+          <upper>1.0469999999999999</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='pip'>
+      <pose relative_to='index_0'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.032000000000000001</mass>
+        <inertia>
+          <ixx>4.7979999999999996e-06</ixx>
+          <ixy>1.2e-08</ixy>
+          <ixz>4.0000000000000002e-09</ixz>
+          <iyy>2.8619999999999999e-06</iyy>
+          <iyz>1.0999999999999999e-08</iyz>
+          <izz>4.2339999999999996e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='pip_collision'>
+        <pose>0.0075 -0.0002 -0.011 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.026 0.022</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='pip_visual'>
+        <pose>0.009599999999999999 0.0002 0.0007 0 -1.570796326794897 -1.570796326794897</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/pip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='index_2' type='revolute'>
+      <pose relative_to='pip'>0.015 0.0143 -0.013 1.570789999998722 -1.570790000027876 0</pose>
+      <parent>pip</parent>
+      <child>dip</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.50600000000000001</lower>
+          <upper>1.885</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='dip'>
+      <pose relative_to='index_2'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.036999999999999998</mass>
+        <inertia>
+          <ixx>5.5419999999999996e-06</ixx>
+          <ixy>-6.0699999999999997e-07</ixy>
+          <ixz>-1.7e-08</ixz>
+          <iyy>5.7270000000000004e-06</iyy>
+          <iyz>-2.3000000000000001e-08</iyz>
+          <izz>6.6819999999999997e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='dip_collision'>
+        <pose>0 -0.02 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.016 0.006 0.026</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_collision_1'>
+        <pose>0 -0.016 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.004 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_collision_2'>
+        <pose>0 -0.0045 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_collision_3'>
+        <pose>0 -0.0045 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_collision_4'>
+        <pose>0.0075 -0.035 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.022 0.026</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='dip_visual'>
+        <pose>0.0211 -0.008399999999999999 0.0097 -3.1415926 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/dip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='index_3' type='revolute'>
+      <pose relative_to='dip'>0 -0.0361 0.0002 0 0 0</pose>
+      <parent>dip</parent>
+      <child>fingertip</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.36599999999999999</lower>
+          <upper>2.0419999999999998</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='fingertip'>
+      <pose relative_to='index_3'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.016</mass>
+        <inertia>
+          <ixx>3.3680000000000002e-06</ixx>
+          <ixy>1.15e-07</ixy>
+          <ixz>0</ixz>
+          <iyy>1.556e-06</iyy>
+          <iyz>0</iyz>
+          <izz>2.8629999999999999e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='fingertip_collision'>
+        <pose>0 -0.017 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.006 0.03</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_collision_1'>
+        <pose>0 -0.006 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.022 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_collision_2'>
+        <pose>0 -0.006 -0.001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.022 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_collision_3'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/collision/dae_files/white_tip.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='fingertip_visual'>
+        <pose>0.0132 -0.0061 0.0144 3.1415926 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/fingertip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='middle_1' type='revolute'>
+      <pose relative_to='palm_lower'>-0.0071 -0.0224 -0.0187 1.570789999998722 1.570790000027876 0</pose>
+      <parent>palm_lower</parent>
+      <child>mcp_joint_2</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.314</lower>
+          <upper>2.23</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='mcp_joint_2'>
+      <pose relative_to='middle_1'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.043999999999999997</mass>
+        <inertia>
+          <ixx>1.1499e-05</ixx>
+          <ixy>3.0489999999999999e-06</ixy>
+          <ixz>1.2100000000000001e-07</ixz>
+          <iyy>7.7959999999999996e-06</iyy>
+          <iyz>1.12e-07</iyz>
+          <izz>1.4759e-05</izz>
+        </inertia>
+      </inertial>
+      <collision name='mcp_joint_2_collision'>
+        <pose>0 0.018 0.0147 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.006 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_2_collision_1'>
+        <pose>-0.027 0.042 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.028 0.04 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_2_collision_2'>
+        <pose>-0.0262 0.02 0.0146 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.006 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_2_collision_3'>
+        <pose>-0.0295 0.035 0.029 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.024 0.008</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_2_collision_4'>
+        <pose>0 0.005 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_2_collision_5'>
+        <pose>0 0.005 -0.001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='mcp_joint_2_visual'>
+        <pose>0.008399999999999999 0.0077 0.01465 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/mcp_joint.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='middle_0' type='revolute'>
+      <pose relative_to='mcp_joint_2'>-0.0122 0.0381 0.0145 -1.57079 0 1.57079</pose>
+      <parent>mcp_joint_2</parent>
+      <child>pip_2</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1.0469999999999999</lower>
+          <upper>1.0469999999999999</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='pip_2'>
+      <pose relative_to='middle_0'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.032000000000000001</mass>
+        <inertia>
+          <ixx>4.7979999999999996e-06</ixx>
+          <ixy>1.2e-08</ixy>
+          <ixz>4.0000000000000002e-09</ixz>
+          <iyy>2.8619999999999999e-06</iyy>
+          <iyz>1.0999999999999999e-08</iyz>
+          <izz>4.2339999999999996e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='pip_2_collision'>
+        <pose>0.0075 -0.0002 -0.011 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.026 0.022</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='pip_2_visual'>
+        <pose>0.009599999999999999 0.0003 0.0007 0 -1.570796326794897 -1.570796326794897</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/pip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='middle_2' type='revolute'>
+      <pose relative_to='pip_2'>0.015 0.0143 -0.013 1.570789999998722 -1.570790000027876 0</pose>
+      <parent>pip_2</parent>
+      <child>dip_2</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.50600000000000001</lower>
+          <upper>1.885</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='dip_2'>
+      <pose relative_to='middle_2'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.036999999999999998</mass>
+        <inertia>
+          <ixx>5.5419999999999996e-06</ixx>
+          <ixy>-6.0699999999999997e-07</ixy>
+          <ixz>-1.7e-08</ixz>
+          <iyy>5.7270000000000004e-06</iyy>
+          <iyz>-2.3000000000000001e-08</iyz>
+          <izz>6.6819999999999997e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='dip_2_collision'>
+        <pose>0 -0.02 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.016 0.006 0.026</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_2_collision_1'>
+        <pose>0 -0.016 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.004 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_2_collision_2'>
+        <pose>0 -0.0045 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_2_collision_3'>
+        <pose>0 -0.0045 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_2_collision_4'>
+        <pose>0.0075 -0.035 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.022 0.026</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='dip_2_visual'>
+        <pose>0.0211 -0.008399999999999999 0.0097 -3.14159 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/dip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='middle_3' type='revolute'>
+      <pose relative_to='dip_2'>0 -0.0361 0.0002 0 0 0</pose>
+      <parent>dip_2</parent>
+      <child>fingertip_2</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.36599999999999999</lower>
+          <upper>2.0419999999999998</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='fingertip_2'>
+      <pose relative_to='middle_3'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.016</mass>
+        <inertia>
+          <ixx>3.3680000000000002e-06</ixx>
+          <ixy>1.15e-07</ixy>
+          <ixz>0</ixz>
+          <iyy>1.556e-06</iyy>
+          <iyz>0</iyz>
+          <izz>2.8629999999999999e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='fingertip_2_collision'>
+        <pose>0 -0.017 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.006 0.03</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_2_collision_1'>
+        <pose>0 -0.006 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.022 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_2_collision_2'>
+        <pose>0 -0.006 -0.001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.022 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_2_collision_3'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/collision/dae_files/white_tip.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='fingertip_2_visual'>
+        <pose>0.0132 -0.0061 0.0145 3.14159 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/fingertip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='ring_1' type='revolute'>
+      <pose relative_to='palm_lower'>-0.00709 -0.0678 -0.0187 1.570789999998722 1.570790000027876 0</pose>
+      <parent>palm_lower</parent>
+      <child>mcp_joint_3</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.314</lower>
+          <upper>2.23</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='mcp_joint_3'>
+      <pose relative_to='ring_1'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.043999999999999997</mass>
+        <inertia>
+          <ixx>1.1499e-05</ixx>
+          <ixy>3.0489999999999999e-06</ixy>
+          <ixz>1.2100000000000001e-07</ixz>
+          <iyy>7.7959999999999996e-06</iyy>
+          <iyz>1.12e-07</iyz>
+          <izz>1.4759e-05</izz>
+        </inertia>
+      </inertial>
+      <collision name='mcp_joint_3_collision'>
+        <pose>0 0.018 0.0147 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.006 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_3_collision_1'>
+        <pose>-0.027 0.042 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.028 0.04 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_3_collision_2'>
+        <pose>-0.0262 0.02 0.0146 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.006 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_3_collision_3'>
+        <pose>-0.0295 0.035 0.029 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.024 0.008</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_3_collision_4'>
+        <pose>0 0.005 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='mcp_joint_3_collision_5'>
+        <pose>0 0.005 -0.001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='mcp_joint_3_visual'>
+        <pose>0.008399999999999999 0.0077 0.01465 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/mcp_joint.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='ring_0' type='revolute'>
+      <pose relative_to='mcp_joint_3'>-0.0122 0.0381 0.0145 -1.57079 0 1.57079</pose>
+      <parent>mcp_joint_3</parent>
+      <child>pip_3</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1.0469999999999999</lower>
+          <upper>1.0469999999999999</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='pip_3'>
+      <pose relative_to='ring_0'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.032000000000000001</mass>
+        <inertia>
+          <ixx>4.7979999999999996e-06</ixx>
+          <ixy>1.2e-08</ixy>
+          <ixz>4.0000000000000002e-09</ixz>
+          <iyy>2.8619999999999999e-06</iyy>
+          <iyz>1.0999999999999999e-08</iyz>
+          <izz>4.2339999999999996e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='pip_3_collision'>
+        <pose>0.0075 -0.0002 -0.011 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.026 0.022</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='pip_3_visual'>
+        <pose>0.009599999999999999 0.0003 0.0007 0 -1.570796326794897 -1.570796326794897</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/pip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='ring_2' type='revolute'>
+      <pose relative_to='pip_3'>0.015 0.0143 -0.013 1.570789999998722 -1.570790000027876 0</pose>
+      <parent>pip_3</parent>
+      <child>dip_3</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.50600000000000001</lower>
+          <upper>1.885</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='dip_3'>
+      <pose relative_to='ring_2'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.036999999999999998</mass>
+        <inertia>
+          <ixx>5.5419999999999996e-06</ixx>
+          <ixy>-6.0699999999999997e-07</ixy>
+          <ixz>-1.7e-08</ixz>
+          <iyy>5.7270000000000004e-06</iyy>
+          <iyz>-2.3000000000000001e-08</iyz>
+          <izz>6.6819999999999997e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='dip_3_collision'>
+        <pose>0 -0.02 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.016 0.006 0.026</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_3_collision_1'>
+        <pose>0 -0.016 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.004 0.034</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_3_collision_2'>
+        <pose>0 -0.0045 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_3_collision_3'>
+        <pose>0 -0.0045 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='dip_3_collision_4'>
+        <pose>0.0075 -0.035 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.022 0.026</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='dip_3_visual'>
+        <pose>0.0211 -0.008399999999999999 0.0097 -3.14159 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/dip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='ring_3' type='revolute'>
+      <pose relative_to='dip_3'>0 -0.03609 0.0002 0 0 0</pose>
+      <parent>dip_3</parent>
+      <child>fingertip_3</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.36599999999999999</lower>
+          <upper>2.0419999999999998</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='fingertip_3'>
+      <pose relative_to='ring_3'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.016</mass>
+        <inertia>
+          <ixx>3.3680000000000002e-06</ixx>
+          <ixy>1.15e-07</ixy>
+          <ixz>0</ixz>
+          <iyy>1.556e-06</iyy>
+          <iyz>0</iyz>
+          <izz>2.8629999999999999e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='fingertip_3_collision'>
+        <pose>0 -0.017 0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.006 0.03</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_3_collision_1'>
+        <pose>0 -0.006 0.03 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.022 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_3_collision_2'>
+        <pose>0 -0.006 -0.001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.022 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='fingertip_3_collision_3'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/collision/dae_files/white_tip.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='fingertip_3_visual'>
+        <pose>0.0132 -0.0061 0.0145 3.14159 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/fingertip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='thumb_0' type='revolute'>
+      <pose relative_to='palm_lower'>-0.0693 -0.0012 -0.0216 0 1.570790000045424 0</pose>
+      <parent>palm_lower</parent>
+      <child>thumb_temp_base</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.34899999999999998</lower>
+          <upper>2.0939999999999999</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='thumb_temp_base'>
+      <pose relative_to='thumb_0'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.032000000000000001</mass>
+        <inertia>
+          <ixx>4.7979999999999996e-06</ixx>
+          <ixy>1.2e-08</ixy>
+          <ixz>4.0000000000000002e-09</ixz>
+          <iyy>2.8619999999999999e-06</iyy>
+          <iyz>1.0999999999999999e-08</iyz>
+          <izz>4.2339999999999996e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='thumb_temp_base_collision'>
+        <pose>0.0075 -0.0002 -0.011 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.034 0.026 0.022</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='thumb_temp_base_visual'>
+        <pose>-0.0053 0.0003 0.00078 0 -1.570796326794897 -1.570796326794897</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/pip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='thumb_1' type='revolute'>
+      <pose relative_to='thumb_temp_base'>0 0.0143 -0.013 1.570789999998722 -1.570790000027876 0</pose>
+      <parent>thumb_temp_base</parent>
+      <child>thumb_pip</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-0.46999999999999997</lower>
+          <upper>2.4430000000000001</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='thumb_pip'>
+      <pose relative_to='thumb_1'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.0030000000000000001</mass>
+        <inertia>
+          <ixx>5.9299999999999998e-07</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>5.4899999999999995e-07</iyy>
+          <iyz>0</iyz>
+          <izz>2.2399999999999999e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='thumb_pip_collision'>
+        <pose>0 0 -0.0015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.018 0.033 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_pip_collision_1'>
+        <pose>0 -0.015 -0.013 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.004 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_pip_collision_2'>
+        <pose>0 0.015 -0.013 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.004 0.02</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='thumb_pip_visual'>
+        <pose>0.01196 0 -0.0158 1.57079 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/thumb_pip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='thumb_2' type='revolute'>
+      <pose relative_to='thumb_pip'>0 0.0145 -0.017 -1.57079 0 0</pose>
+      <parent>thumb_pip</parent>
+      <child>thumb_dip</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1.2</lower>
+          <upper>1.8999999999999999</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='thumb_dip'>
+      <pose relative_to='thumb_2'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.037999999999999999</mass>
+        <inertia>
+          <ixx>8.4740000000000005e-06</ixx>
+          <ixy>2.41e-07</ixy>
+          <ixz>2.6000000000000001e-08</ixz>
+          <iyy>3.8410000000000002e-06</iyy>
+          <iyz>2.4999999999999999e-08</iyz>
+          <izz>7.6790000000000005e-06</izz>
+        </inertia>
+      </inertial>
+      <collision name='thumb_dip_collision'>
+        <pose>0 0.0105 -0.014 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.04 0.024</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_dip_collision_1'>
+        <pose>0 0.031 -0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.004 0.032</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_dip_collision_2'>
+        <pose>0 0.042 0.001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_dip_collision_3'>
+        <pose>0 0.042 -0.029 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.014 0.02 0.004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_dip_collision_4'>
+        <pose>-0.0135 0.0175 -0.011656 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.01 0.024 0.018</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='thumb_dip_visual'>
+        <pose>0.0439 0.0579 -0.0086 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/thumb_dip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='thumb_3' type='revolute'>
+      <pose relative_to='thumb_dip'>0 0.0466 0.0002 0 0 3.14159</pose>
+      <parent>thumb_dip</parent>
+      <child>thumb_fingertip</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1.3400000000000001</lower>
+          <upper>1.8799999999999999</upper>
+          <effort>0.94999999999999996</effort>
+          <velocity>8.4800000000000004</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='thumb_fingertip'>
+      <pose relative_to='thumb_3'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.049000000000000002</mass>
+        <inertia>
+          <ixx>2.0372000000000001e-05</ixx>
+          <ixy>-4.89e-07</ixy>
+          <ixz>-2.9999999999999997e-08</ixz>
+          <iyy>4.3359999999999997e-06</iyy>
+          <iyz>-9.6999999999999995e-08</iyz>
+          <izz>1.9845000000000001e-05</izz>
+        </inertia>
+      </inertial>
+      <collision name='thumb_fingertip_collision'>
+        <pose>0 -0.008500000000000001 -0.015 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.036 0.024</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_fingertip_collision_1'>
+        <pose>0 -0.029 -0.014 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.004 0.03</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_fingertip_collision_2'>
+        <pose>0.015 -0.0175 -0.0115 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.008 0.024 0.018</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name='thumb_fingertip_collision_3'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/collision/dae_files/white_tip_thumb.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='thumb_fingertip_visual'>
+        <pose>0.0625 0.0784 0.0489 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/visual/dae_files/thumb_fingertip.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

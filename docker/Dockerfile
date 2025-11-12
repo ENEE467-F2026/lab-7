@@ -2,6 +2,7 @@
 # Base Image for the Hardware Lab with UR3e + Robotiq Hand-E
 ############################################################
 ARG ROS_DISTRO=jazzy
+ARG HOME=/home/robot
 FROM osrf/ros:${ROS_DISTRO}-desktop
 
 ENV ROS_DISTRO=${ROS_DISTRO}
@@ -14,13 +15,14 @@ SHELL ["/bin/bash", "-c"]
 # System utilities and core packages
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     autoconf automake bash-completion build-essential cmake make pkg-config g++ git curl wget unzip \
-    ca-certificates software-properties-common python3-pip python3-setuptools python3-apt sudo \
+    ca-certificates software-properties-common python3-pip python3-apt sudo \
     python3-rosdep python3-vcstool python3-colcon-common-extensions \
     lsb-release iproute2 iputils-ping net-tools socat \
     mc nano vim tree tmux tzdata screen less xclip figlet toilet \
     libxext-dev libx11-dev x11proto-gl-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils \
     libgtk-3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
-    libusb-1.0-0-dev libusb-1.0-0 libssl-dev libudev-dev udev libudev1 \
+    libusb-1.0-0-dev libusb-1.0-0 libssl-dev libudev-dev udev libudev1 libmodbus-dev \
+    hwloc libmkl-dev libtbb-dev \
     python3-opencv \
     ros-${ROS_DISTRO}-cv-bridge \
     ros-${ROS_DISTRO}-image-transport \
@@ -33,14 +35,18 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libpcl-dev libboost-dev libblas-dev liblapack-dev python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Python packages
-RUN pip install --no-cache-dir --break-system-packages \
+# Python packages 
+RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
+    pip==24.0 wheel==0.43.0 setuptools==79.0.1 \
     colcon-common-extensions vcstool ipython numpy==1.26.4 transforms3d==0.4.2 \
     opencv-python==4.9.0.80 opencv-contrib-python==4.9.0.80 \
-    roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 \
-    scipy tqdm matplotlib scikit-image scikit-learn spatialmath-python==1.0.5 \
+    roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 open3d==0.19.0 \
+    scipy tqdm matplotlib scikit-image scikit-learn spatialmath-python \
     --extra-index-url https://pypi.org/simple && \
-    pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch torchvision ultralytics
+    # install PyTorch + Ultralytics without dependency resolution
+    python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed --no-deps \
+      torch torchvision ultralytics \
+      --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Librealsense installation
 ARG LIBREALSENSE_TAG=v2.57.3
@@ -50,39 +56,8 @@ RUN git clone --depth 1 --branch ${LIBREALSENSE_TAG} https://github.com/IntelRea
  && make -j"$(nproc)" && make install \
  && install -m 644 /opt/librealsense/config/99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules || true
 
-RUN python3 -m pip install pyrealsense2 --no-cache-dir --ignore-installed \
- || (cd /opt/librealsense && python3 -m pip install . --no-cache-dir --ignore-installed)
-
-# Open3D from source
-ARG OPEN3D_VERSION=v0.19.0
-ENV OPEN3D_ML_ROOT=/opt/Open3D
-WORKDIR /opt
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git cmake build-essential ninja-build python3-dev \
-    libgl1-mesa-dev libegl1-mesa-dev libxi-dev libxrender-dev libxrandr-dev libxtst-dev \
-    libgtk-3-dev libglfw3-dev libosmesa6-dev libudev-dev \
-    libblas-dev liblapack-dev libjpeg-dev libpng-dev libtiff-dev \
-    && rm -rf /var/lib/apt/lists/* && \
-    git clone --branch ${OPEN3D_VERSION} --depth 1 https://github.com/isl-org/Open3D.git ${OPEN3D_ML_ROOT} && \
-    cd ${OPEN3D_ML_ROOT} && mkdir build && cd build && \
-    cmake .. \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_SHARED_LIBS=ON \
-      -DBUILD_EXAMPLES=OFF \
-      -DBUILD_GUI=OFF \
-      -DBUILD_WEBRTC=OFF \
-      -DBUILD_JUPYTER_EXTENSION=OFF \
-      -DBUILD_TENSORFLOW_OPS=OFF \
-      -DBUILD_PYTORCH_OPS=OFF \
-      -DPYTHON_EXECUTABLE=$(which python3) \
-      -DBUILD_UNIT_TESTS=OFF \
-      -DBUNDLE_OPEN3D_ML=ON \
-      -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    make -j"$(nproc)" && make install && \
-    python3 -m pip install .
-
-WORKDIR /home/robot
+RUN python3 -m pip install pyrealsense2 --no-cache-dir --ignore-installed --break-system-packages \
+ || (cd /opt/librealsense && python3 -m pip install . --no-cache-dir --ignore-installed --break-system-packages)
 
 # MoveIt, UR Drivers, Gazebo, and Utilities
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -112,6 +87,8 @@ RUN sudo rosdep fix-permissions && \
 # UID/GID matching for host
 ARG userid=1002
 ARG groupid=1002
+
+# Create or reuse the user safely
 RUN existing_uid=$(getent passwd ${userid} | cut -d: -f1) && \
     if [ -n "$existing_uid" ]; then \
         echo "Reusing existing UID ${userid} (user: $existing_uid) as 'robot'"; \
@@ -138,12 +115,10 @@ ENV USER=robot \
 # ROS 2 workspace
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src && \
-    git clone -b ${ROS_DISTRO} https://github.com/AGH-CEAI/robotiq_hande_driver.git && \
-    vcs import . < robotiq_hande_driver/robotiq_hande_driver/robotiq_hande_driver.repos && \
-    git clone -b ${ROS_DISTRO} https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git ur_ros2_driver && \
-    vcs import . < ur_ros2_driver/ur_ros2_driver.repos && \
-    cd ~/ros2_ws && \
-    colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+    git clone -b ${ROS_DISTRO} https://github.com/AGH-CEAI/robotiq_hande_driver.git
+    # vcs import . < robotiq_hande_driver/robotiq_hande_driver/robotiq_hande_driver.repos && \
+    # cd ~/ros2_ws && \
+    # colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 # code-server and VSCode ROS extension
 RUN curl -fsSL https://code-server.dev/install.sh | sh && \
@@ -152,14 +127,20 @@ RUN curl -fsSL https://code-server.dev/install.sh | sh && \
     fi || true
 
 # Shell environment
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
-    echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc && \
+RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc && \
+    echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc && \
     echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc && \
+    # segmentation fault workaround
     echo "export QT_QPA_PLATFORM=xcb" >> ~/.bashrc && \
+    # autocompletion for Gazebo CLI
+    echo "source /usr/share/bash-completion/completions/gz" >> ~/.bashrc && \
+    # echo "export ROS_LOCALHOST_ONLY=1" >> ~/.bashrc && \
+    echo "export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST" >> ~/.bashrc && \
     echo "export GZ_VERSION=harmonic" >> ~/.bashrc && \
     echo "alias clc=clear" >> ~/.bashrc && \
+    # clear terminal when starting
     echo "clear" >> ~/.bashrc && \
-    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467   LAB 7  '" >> ~/.bashrc
+    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7        '" >> ~/.bashrc
 
 # tmux Config
 ADD --chown=robot:robot \

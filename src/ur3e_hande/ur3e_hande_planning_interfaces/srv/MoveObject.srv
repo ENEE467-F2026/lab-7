@@ -1,0 +1,9 @@
+# Move an existing object
+
+string id
+float64[] position
+float64[] quat_xyzw
+
+---
+bool success
+string message

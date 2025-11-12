@@ -19,6 +19,7 @@ install(DIRECTORY
 install(PROGRAMS 
           scripts/pnp_demo.py 
           scripts/pnp_demo_p.py 
+          scripts/pnp_demo_sim.py
    DESTINATION lib/${PROJECT_NAME}
  )
 

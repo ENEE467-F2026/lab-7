@@ -1,0 +1,54 @@
+<?xml  version="1.0" ?>
+<sdf version="1.5">
+
+ <model name='aruco_box'>
+ <!-- Original inertial params: mass: 1 kg, ixx = iyy = izz = 0.166667 -->
+ <!-- params scale by s^3 for scale s -->
+      <pose>0 0 0 0 -0 0</pose>
+      <link name='link'>
+        <inertial>
+        <mass>0.000125</mass>
+          <inertia>
+            <ixx>0.000020833375</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000020833375</iyy>
+            <iyz>0</iyz>
+            <izz>0.000020833375</izz>
+          </inertia>
+          <pose>0 0 0 0 -0 0</pose>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.03 0.03 0.03</size>
+            </box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='aruco_box_mesh'>
+          <geometry>
+            <mesh>
+                <uri>model://aruco_box/model.dae</uri>
+                <scale>0.03 0.03 0.03</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    </sdf>

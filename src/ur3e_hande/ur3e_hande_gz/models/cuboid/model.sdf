@@ -1,0 +1,32 @@
+<!-- cuboid.sdf -->
+<!-- Copy for Gazebo -->
+<sdf version="1.6">
+    <model name="cuboid">
+    <pose>0 0 0.05 0 0 0</pose> <!-- z = half the height to raise the  from the ground -->
+        <link name="link">
+            <visual name="visual">
+                <geometry>
+                    <box><size>0.1 0.1 0.35</size></box>
+                </geometry>
+                <material>
+                    <ambient>1 0.7 0.4 1</ambient>
+                    <diffuse>1 0.6 0.2 1</diffuse>
+                    <specular>0.15 0.12 0.1 1</specular>
+                    <emissive>0 0 0 1</emissive>
+                </material>
+            </visual>
+            <collision name="collision">
+                <geometry>
+                    <box><size>0.1 0.1 0.35</size></box>
+                </geometry>
+            </collision>
+        </link>
+        <!-- Enable pose publishing on /model/<world_name>/cuboid/pose -->
+        <plugin
+        filename="gz-sim-pose-publisher-system"
+        name="gz::sim::systems::PosePublisher">
+        <use_pose_vector_msg>true</use_pose_vector_msg>
+        <publish_nested_model_pose>true</publish_nested_model_pose>
+      </plugin>
+    </model>
+</sdf>

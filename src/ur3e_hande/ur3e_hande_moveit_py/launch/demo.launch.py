@@ -12,7 +12,6 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     ur3e_bringup_pkg = get_package_share_directory('ur3e_bringup')
     ur3e_hande_moveit_pkg = get_package_share_directory('ur3e_hande_moveit_config')
-    log_data = LaunchConfiguration("log_data")
     use_perception = LaunchConfiguration("use_perception")
     obj_pos = LaunchConfiguration("obj_pos")
     target_obj_desc = LaunchConfiguration("target_obj_desc")
@@ -20,7 +19,6 @@ def generate_launch_description():
     launch_rviz = LaunchConfiguration("launch_rviz")
 
     declared_arguments = [
-        DeclareLaunchArgument("log_data", default_value="false", description="log data?"),
         DeclareLaunchArgument("use_perception", default_value="true", description="Whether to use the perception module to detect object pose. \n Must provide the position of the object to be picked as a launch argument (obj_pos) if false, unless the launch file will throw an error."),
         DeclareLaunchArgument("obj_pos", default_value="0.33931674 0.3942382 0.2380788", description="The position (specified as space-separated floats x y z) of the object to pick.\n Only used if use_perception is set to false."),
         DeclareLaunchArgument("target_obj_desc", default_value="red cup", description="String specifying the color and class name of the object to be picked up by the UR's end effector."),
@@ -167,18 +165,5 @@ def generate_launch_description():
                         {'target_description': target_obj_desc}
                      ]
                 )
-            ]),
-    
-        # include functionality to log data depending on whether the parameter log_data is specified
-        TimerAction(
-            period=14.0,
-            actions=[
-            Node(
-                package="robotiq_hande_ros2_driver",
-                condition=IfCondition(log_data),
-                executable="data_logger",
-                name="data_logger",
-                output="log"
-                )
-        ])
+            ])
 ])

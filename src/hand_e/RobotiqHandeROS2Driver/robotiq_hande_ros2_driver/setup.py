@@ -30,8 +30,6 @@ setup(
             'gripper_node = robotiq_hande_ros2_driver.gripper_node:main',
             'test = robotiq_hande_ros2_driver.test:main',
             'gripper_joint_publisher = robotiq_hande_ros2_driver.gripper_joint_publisher:main',
-            'simple_teleop_hande = robotiq_hande_ros2_driver.simple_teleop_hande:main',
-            'data_logger = robotiq_hande_ros2_driver.data_logger:main',
         ],
     },
 )

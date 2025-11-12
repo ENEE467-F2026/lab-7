@@ -1,0 +1,93 @@
+<?xml version='1.0' ?>
+<sdf version="1.8">
+  <world name="smallbox">
+    <physics type="bullet" name="dart_physics">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <dart>
+        <solver>
+          <solver_type>dantzig</solver_type>
+        </solver>
+        <collision_detector>fcl</collision_detector>
+      </dart>
+    </physics>
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <!--light-->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground Plane -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Add square shelf -->
+    <!-- <include>
+     <static>true</static>
+      <uri>model://SquareShelf</uri>
+      <pose>-0.1858 0.5097 0.845 0 0 0</pose>
+    </include> -->
+
+    <include>
+        <static>false</static>
+        <uri>model://cuboid</uri>
+      <pose>0.00 0.42 0.96 0 0 0</pose>
+    </include>
+
+
+    <!-- Add an object somewhere on the table -->
+    <include>
+      <static>false</static>
+      <uri>model://cube</uri>
+      <pose>0.2858 0.5097 0.845 0 0 0</pose>
+    </include>
+
+  </world>
+</sdf>

@@ -5,6 +5,8 @@ This repository contains a Docker container for Lab 7 (Autonomous Manipulation w
 
 ## Overview
 
+![ROS 2 Jazzy](https://img.shields.io/badge/ROS2-Jazzy-orange)
+
 Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. This lab brings these elements together in ROS 2, enabling the real UR3e–Hand-E robot to detect, grasp, and place an object. Students will explore how these subsystems interact in real time and how autonomy developed in simulation transfers to physical hardware.
 
 ## Lab Software

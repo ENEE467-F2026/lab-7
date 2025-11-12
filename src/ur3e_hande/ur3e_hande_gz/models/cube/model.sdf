@@ -1,0 +1,31 @@
+<!-- cube.sdf -->
+<sdf version="1.6">
+    <model name="cube">
+    <pose>0 0 0.05 0 0 0</pose> <!-- z = half the height to raise the from the ground -->
+        <link name="link">
+            <visual name="visual">
+                <geometry>
+                    <box><size>0.04 0.04 0.045</size></box>
+                </geometry>
+                <material>
+                    <ambient>1 0 0 1</ambient> <!-- Red color -->
+                    <diffuse>1 0 0 1</diffuse> <!-- Red color -->
+                    <specular>0.1 0.1 0.1 1</specular>
+                    <emissive>0 0 0 1</emissive>
+                </material>
+            </visual>
+            <collision name="collision">
+                <geometry>
+                    <box><size>0.04 0.04 0.045</size></box>
+                </geometry>
+            </collision>
+        </link>
+        <!-- Enable pose publishing on /model/<world_name>/cube/pose -->
+        <plugin
+        filename="gz-sim-pose-publisher-system"
+        name="gz::sim::systems::PosePublisher">
+        <use_pose_vector_msg>true</use_pose_vector_msg>
+        <publish_nested_model_pose>true</publish_nested_model_pose>
+      </plugin>
+    </model>
+</sdf>

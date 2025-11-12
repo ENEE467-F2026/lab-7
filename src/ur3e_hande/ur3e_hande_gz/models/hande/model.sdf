@@ -1,0 +1,173 @@
+<sdf version='1.11'>
+  <model name='hande'>
+    <link name='robotiq_hande_coupler'>
+      <inertial>
+        <pose>0 0 0.025000000000000001 0 0 0</pose>
+        <mass>0.86387000000000003</mass>
+        <inertia>
+          <ixx>0.00040845999999999998</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00040845999999999998</iyy>
+          <iyz>0</iyz>
+          <izz>0.00045598999999999998</izz>
+        </inertia>
+      </inertial>
+      <collision name='robotiq_hande_coupler_collision'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/io_coupler.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='robotiq_hande_coupler_fixed_joint_lump__robotiq_hande_link_collision_1'>
+        <pose>0 0 0.010999999999999999 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/hande.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='robotiq_hande_coupler_visual'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/io_coupler.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='robotiq_hande_coupler_fixed_joint_lump__robotiq_hande_link_visual_1'>
+        <pose>0 0 0.010999999999999999 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/hande.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='gripper_robotiq_hande_left_finger_joint' type='prismatic'>
+      <pose relative_to='robotiq_hande_coupler'>0 0 0.11 0 0 0</pose>
+      <parent>robotiq_hande_coupler</parent>
+      <child>robotiq_hande_left_finger</child>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0.01</upper>
+          <effort>1</effort>
+          <velocity>0.01</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='robotiq_hande_left_finger'>
+      <pose relative_to='gripper_robotiq_hande_left_finger_joint'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.038039999999999997</mass>
+        <inertia>
+          <ixx>1.0000000000000001e-09</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1.0000000000000001e-09</iyy>
+          <iyz>0</iyz>
+          <izz>1.0000000000000001e-09</izz>
+        </inertia>
+      </inertial>
+      <collision name='robotiq_hande_left_finger_collision'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/finger_collision.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='robotiq_hande_left_finger_visual'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/finger.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='gripper_robotiq_hande_right_finger_joint' type='prismatic'>
+      <pose relative_to='robotiq_hande_coupler'>0 0 0.11 0 0 0</pose>
+      <parent>robotiq_hande_coupler</parent>
+      <child>robotiq_hande_right_finger</child>
+      <axis>
+        <xyz>-1 0 0</xyz>
+        <mimic joint='gripper_robotiq_hande_left_finger_joint'>
+          <multiplier>1</multiplier>
+          <offset>0</offset>
+          <reference>0</reference>
+        </mimic>
+        <limit>
+          <lower>0</lower>
+          <upper>0.01</upper>
+          <effort>1</effort>
+          <velocity>0.01</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='robotiq_hande_right_finger'>
+      <pose relative_to='gripper_robotiq_hande_right_finger_joint'>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.038039999999999997</mass>
+        <inertia>
+          <ixx>1.0000000000000001e-09</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1.0000000000000001e-09</iyy>
+          <iyz>0</iyz>
+          <izz>1.0000000000000001e-09</izz>
+        </inertia>
+      </inertial>
+      <collision name='robotiq_hande_right_finger_collision'>
+        <pose>0 0 0 0 0 3.1415899999999999</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/finger_collision.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='robotiq_hande_right_finger_visual'>
+        <pose>0 0 0 0 0 3.1415899999999999</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>meshes/finger.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <frame name='robotiq_hande_end_joint' attached_to='robotiq_hande_link'>
+      <pose>0 0 0.14549999999999999 0 0 0</pose>
+    </frame>
+    <frame name='robotiq_hande_end' attached_to='robotiq_hande_end_joint'>
+      <pose>0 0 0 0 0 0</pose>
+    </frame>
+    <frame name='robotiq_hande_base_joint' attached_to='robotiq_hande_coupler'>
+      <pose>0 0 0.010999999999999999 0 0 0</pose>
+    </frame>
+    <frame name='robotiq_hande_link' attached_to='robotiq_hande_base_joint'>
+      <pose>0 0 0 0 0 0</pose>
+    </frame>
+  </model>
+</sdf>
