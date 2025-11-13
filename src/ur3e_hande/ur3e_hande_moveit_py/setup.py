@@ -30,9 +30,9 @@ setup(
     entry_points={
         'console_scripts': [
             'pnp_demo_sim = ur3e_hande_moveit_py.pnp_demo_sim:main',
-            'pnp_demo_ik = ur3e_hande_moveit_py.pnp_demo_ik:main',
             'pnp_demo = ur3e_hande_moveit_py.pnp_demo:main',
-            'ur3_joint_goal = ur3e_hande_moveit_py.ur3_joint_goal:main'
+            'ur3_joint_goal = ur3e_hande_moveit_py.ur3_joint_goal:main',
+            'metrics_logger = ur3e_hande_moveit_py.metrics_logger:main',
 
         ],
     },

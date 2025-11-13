@@ -17,7 +17,7 @@ Usage:
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -32,6 +32,8 @@ def generate_launch_description():
     place_offset_y = LaunchConfiguration("place_offset_y")
     world_to_spawn = LaunchConfiguration("world_to_spawn")
     pnp = LaunchConfiguration("pnp")
+    print_metrics = LaunchConfiguration("print_metrics")
+    use_perception = LaunchConfiguration("use_perception")
 
     # Declared arguments
     declared_arguments = [
@@ -65,6 +67,16 @@ def generate_launch_description():
             default_value="false", # safe default to avoid accidental execution
             description="Whether to launch the pick-and-place demo client.",
         ),
+        DeclareLaunchArgument(
+            "print_metrics",
+            default_value="false",
+            description="Whether to print pick-and-place metrics to console.",
+        ),
+        DeclareLaunchArgument(
+            "use_perception",
+            default_value="true",
+            description="Whether to use perception nodes for object pose estimation.",
+        ),
     ]
 
     # Gazebo + MoveIt2 simulation
@@ -86,6 +98,7 @@ def generate_launch_description():
         executable="pc_voxel_filter_node",
         name="pc_voxel_filter_node",
         output="screen",
+        condition=IfCondition(use_perception),
         parameters=[
             {"use_sim_time": True},
             {"input_topic": "/rgbd_camera/points"},
@@ -101,6 +114,7 @@ def generate_launch_description():
         executable="pc_segmentation_node",
         name="pc_segmentation_node",
         output="screen",
+        condition=IfCondition(use_perception),
         parameters=[
             {"use_sim_time": True},
             {"input_topic": "/filtered_cloud"},
@@ -116,6 +130,7 @@ def generate_launch_description():
                 executable="obj_pose_action_server",
                 name="object_pose_server",
                 output="screen",
+                condition=IfCondition(use_perception),
                 parameters=[
                     {"use_sim_time": True},
                 ],
@@ -123,7 +138,7 @@ def generate_launch_description():
         ],
     )
 
-    # Pick-and-Place Client (autonomous MoveIt2)
+    # Pick-and-Place Client
     pick_and_place = TimerAction(
         period=10.0,  # wait for perception + pose server to initialize
         actions=[
@@ -144,6 +159,36 @@ def generate_launch_description():
         ],
     )
 
+    # Metrics Logger Node
+    metrics_logger_node = TimerAction(
+        period=10.0,  # wait for other nodes to initialize
+        actions=[
+            Node(
+                package="ur3e_hande_moveit_py",
+                executable="metrics_logger",
+                name="pnp_metrics_logger",
+                output="screen",
+                condition=IfCondition(
+                PythonExpression([
+                    "'",
+                    pnp,
+                    "' == 'true' and '",
+                    print_metrics,
+                    "' == 'true' and '",
+                    use_perception,
+                    "' == 'true'"
+                ])
+                ),
+                parameters=[
+                    {"use_sim_time": True},
+                    {"csv_path": "pnp_metrics_sim.csv"},
+                    {"base_frame": "base_link"},
+                    {"ee_frame": "tool0"},
+                ],
+            )
+        ],
+    )
+
     # Final launch sequence
     return LaunchDescription(
         declared_arguments
@@ -153,5 +198,6 @@ def generate_launch_description():
             pc_segmentation_node,
             obj_pose_action_server,
             pick_and_place,
+            metrics_logger_node,
         ]
     )
