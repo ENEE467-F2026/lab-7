@@ -19,7 +19,7 @@
         <geometry>
           <mesh>
             <uri>model://plastic_cup/meshes/plastic_cup.dae</uri>
-            <scale>0.9 0.9 0.9</scale>
+            <scale>1.0 1.0 1.0</scale>
           </mesh>
         </geometry>
         <surface>
@@ -28,19 +28,25 @@
             <poissons_ratio>0.35</poissons_ratio>
             <elastic_modulus>3.102640776e+09</elastic_modulus>
             <ode>
-              <kp>100000</kp>
-              <kd>100</kd>
-              <max_vel>100.0</max_vel>
-              <min_depth>0.001</min_depth>
+              <kp>3000</kp>
+              <kd>50</kd>
+              <max_vel>10</max_vel>
+              <min_depth>0.02</min_depth>
             </ode>
           </contact>
-          <friction>
+            <friction>
+              <ode>
+                <mu>2.0</mu>
+                <mu2>2.0</mu2>
+              </ode>
+            </friction>
+          <!-- <friction>
             <torsional>
               <coefficient>1.0</coefficient>
               <use_patch_radius>0</use_patch_radius>
               <surface_radius>0.01</surface_radius>
             </torsional>
-          </friction>
+          </friction> -->
         </surface>
       </collision>
 
@@ -48,7 +54,7 @@
         <geometry>
           <mesh>
             <uri>model://plastic_cup/meshes/plastic_cup.dae</uri>
-            <scale>0.9 0.9 0.9</scale>
+            <scale>1.0 1.0 1.0</scale>
           </mesh>
         </geometry>
         <material>

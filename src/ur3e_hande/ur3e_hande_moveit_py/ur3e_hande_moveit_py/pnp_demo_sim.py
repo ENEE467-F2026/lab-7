@@ -92,10 +92,12 @@ class PickAndPlaceSim(Node):
         self.declare_parameter("target_height", 0.13)
         self.declare_parameter("target_position", [0.29, 0.51, 0.07])
         self.declare_parameter("pregrasp_z", 0.28)
+        self.declare_parameter("place_z", 0.4)
         self.declare_parameter("lift_z_offset", 0.12)
         self.declare_parameter("place_offset_y", 0.0)
         self.declare_parameter("ee_frame", "tool0")
         self.declare_parameter("grip_exec_delay", 0.9) # s
+        self.declare_parameter("safe_lift_z", 0.60)   # 60 cm above table
 
         self.pregrasp_z = self.get_parameter("pregrasp_z").value
         self.lift_z_offset = self.get_parameter("lift_z_offset").value
@@ -104,11 +106,8 @@ class PickAndPlaceSim(Node):
         self.target_position = self.get_parameter("target_position").value
         self.ee_frame = self.get_parameter("ee_frame").get_parameter_value().string_value
         self.grip_exec_delay = self.get_parameter("grip_exec_delay").value
-
-        self.declare_parameter("place_pos_arg", [-self.target_position[0], 
-                                                 self.target_position[1], 
-                                                 self.pregrasp_z])
-        self.place_pos_arg = self.get_parameter("place_pos_arg").get_parameter_value().double_array_value
+        self.place_z = self.get_parameter("place_z").value
+        self.safe_lift_z = self.get_parameter("safe_lift_z").value
 
         # synchronous execution: wait for each motion to finish before continuing
         self.declare_parameter("synchronous", True)
@@ -137,14 +136,23 @@ class PickAndPlaceSim(Node):
             return
 
         # derived waypoints
-        self.lift_z = max(self.obj_pos[2] + self.lift_z_offset, self.pregrasp_z + 0.03)
-        self.get_logger().info(f"Computed lift_z: {self.lift_z:.3f} m")
+        
+        self.lift_z = max(self.safe_lift_z, self.obj_pos[2] + self.lift_z_offset)
+        self.get_logger().info(f"Computed lift_z: {self.lift_z:.3f} m") # always lift to at least safe_lift_z
 
-        self.approach_pos = [self.obj_pos[0], self.obj_pos[1], self.lift_z]
+        self.declare_parameter("place_pos_arg", [-self.target_position[0]-0.1, 
+                                                 self.target_position[1], 
+                                                 self.lift_z])
+        self.place_pos_arg = self.get_parameter("place_pos_arg").get_parameter_value().double_array_value
+        self.approach_z = max(self.obj_pos[2] + self.lift_z_offset, self.pregrasp_z + 0.03)
+
+        self.approach_pos = [self.obj_pos[0], self.obj_pos[1], self.approach_z]
         self.get_logger().info(f"Approach position: {self.approach_pos}")
 
         self.grasp_pos = [self.obj_pos[0], self.obj_pos[1], self.pregrasp_z]
         self.get_logger().info(f"Grasp position: {self.grasp_pos}")
+
+        self.lift_pos = [self.obj_pos[0], self.obj_pos[1], self.lift_z]
 
         self.place_pos = [float(x) for x in self.place_pos_arg] if self.place_pos_arg else self.compute_place_pos(self.grasp_pos)
 
@@ -204,29 +212,30 @@ class PickAndPlaceSim(Node):
             return None
 
     # IK + planning utils
-    def _ik_with_yaw_sweep(self, pos_xyz, q0=None, yaw_candidates_deg=((0, 0, 0, 0, 0, 0, 0, 0))): #(0, 45, -45, 90, -90, 135, -135, 180))
-        """Try multiple EE yaw angles about +Z to find a valid IK"""
-        for yaw_deg in yaw_candidates_deg:
-            # q = self.moveit2.compute_ik(pos_xyz, quat_xyzw)
-            # choose initial seed for IK
-            q0_seed = q0 if q0 is not None else ur_approach
-            se_approach = self.rtb_model.fkine(q0_seed, end=self.ee_frame)
+    def _ik_rtb(self, pos_xyz, q0=None):
+        """Compute IK using Robotics Toolbox as fallback"""
 
-            # rtb fallback using the chosen seed's pose
-            T_goal = sm.SE3.Trans(x=pos_xyz[0], y=pos_xyz[1], z=pos_xyz[2]) * sm.SE3.Rt(se_approach.R, [0,0,0])
-            q_rtb = self.rtb_model.ikine_LM(
-                Tep=T_goal,
-                q0=q0_seed,
-                ilimit=2000,
-                end=self.ee_frame,
-                tol=1e-1)
-            self.get_logger().info(f"RTB IK error norm at yaw {yaw_deg} deg: {q_rtb.residual:.6f}")
-            if q_rtb.success:
-                self.get_logger().info(f"\x1b[32mRTB IK success at yaw {yaw_deg} deg; q: {q_rtb.q.tolist()}\x1b[0m")
-                return q_rtb.q.tolist()
-            else:
-                self.get_logger().debug(f"IK failed for yaw {yaw_deg} deg")
-        return None
+        # q = self.moveit2.compute_ik(pos_xyz, quat_xyzw); does not work well for some poses
+
+        # choose initial seed for IK
+        q0_seed = q0 if q0 is not None else ur_approach
+        se_approach = self.rtb_model.fkine(q0_seed, end=self.ee_frame)
+
+        # rtb fallback using the chosen seed's pose
+        T_goal = sm.SE3.Trans(x=pos_xyz[0], y=pos_xyz[1], z=pos_xyz[2]) * sm.SE3.Rt(se_approach.R, [0,0,0])
+        q_rtb = self.rtb_model.ikine_LM(
+            Tep=T_goal,
+            q0=q0_seed,
+            ilimit=2000,
+            end=self.ee_frame,
+            tol=1e-1)
+        self.get_logger().info(f"RTB IK error norm for pos_xyz: {pos_xyz}: {q_rtb.residual:.6f}")
+        if q_rtb.success:
+            self.get_logger().info(f"\x1b[32mRTB IK success at pos_xyz: {pos_xyz}, with q: {q_rtb.q.tolist()}\x1b[0m")
+            return q_rtb.q.tolist()
+        else:
+            self.get_logger().debug(f"IK failed for pos_xyz: {pos_xyz}")
+            return None
 
     def _plan_then_execute(self, q, label):
         """Plan a trajectory; only execute if valid"""
@@ -292,36 +301,37 @@ class PickAndPlaceSim(Node):
         self.get_logger().info("Waiting for gripper action server…")
         self.gripper_client.wait_for_server()
 
+        self.open_gripper()
+        time.sleep(self.grip_exec_delay * 5)
         # approach
-        q_approach = self._ik_with_yaw_sweep(self.approach_pos)
+        q_approach = self._ik_rtb(self.approach_pos)
         if not self._plan_then_execute(q_approach, "Approach"):
             self.get_logger().error("Aborting: cannot reach approach pose.")
             return
-
+        
         # grasp
         # use cube-specific approach as IK seed for grasp
-        q_grasp = self._ik_with_yaw_sweep(self.grasp_pos, q0=ur_pregrip)
+        q_grasp = self._ik_rtb(self.grasp_pos, q0=ur_pregrip)
         if not self._plan_then_execute(q_grasp, "Grasp"):
             self.get_logger().error("Aborting: cannot reach grasp pose.")
             return
 
-        self.open_gripper()
-        time.sleep(self.grip_exec_delay)
         self.close_gripper()
         time.sleep(self.grip_exec_delay)
 
         # lift
-        if not self._plan_then_execute(q_approach, "Lift"):
+        q_lift = self._ik_rtb(self.lift_pos, q0=q_grasp)
+        if not self._plan_then_execute(q_lift, "Lift"):
             self.get_logger().error("Aborting: cannot lift after grasp.")
             return
 
         # place
-        q_place = self._ik_with_yaw_sweep(self.place_pos, q0=ur_place)
+        q_place = self._ik_rtb(self.place_pos, q0=ur_place)
         if not self._plan_then_execute(q_place, "Place"):
             self.get_logger().error("Aborting: cannot reach place pose.")
             return
-        self.open_gripper()
         time.sleep(self.grip_exec_delay)
+        self.open_gripper()
         # return home
         try:
             home = robot.get_named_group_states("")["ur_home"]
@@ -360,7 +370,7 @@ class PickAndPlaceSim(Node):
 
     def close_gripper(self):
         self.get_logger().info("Closing gripper…")
-        self.send_gripper_goal(0.000)
+        self.send_gripper_goal(0.001)
 
 
 def main(args=None):

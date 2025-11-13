@@ -39,6 +39,7 @@ class PCVoxelFilterNode(Node):
         self.declare_parameter('leaf_size', 0.005)
         self.declare_parameter('crop_enabled', True)
         self.declare_parameter('crop_bounds', [0.33, 2.00, -0.72, 1.00, -0.50, 0.45])  
+        self.declare_parameter("stop_after_first", True)
         # [xmin, xmax, ymin, ymax, zmin, zmax] x[0.33, 2.00], y[-0.72, 1.00], z[-0.50, 0.45]
 
         self.input_topic = self.get_parameter('input_topic').value
@@ -46,6 +47,9 @@ class PCVoxelFilterNode(Node):
         self.leaf_size = self.get_parameter('leaf_size').value
         self.crop_enabled = self.get_parameter('crop_enabled').value
         self.crop_bounds = self.get_parameter('crop_bounds').value
+
+        self.stop_after_first = self.get_parameter("stop_after_first").value
+        self.done = False
 
         # Subscriber and publisher
         self.subscription = self.create_subscription(
@@ -58,6 +62,8 @@ class PCVoxelFilterNode(Node):
         self.get_logger().info(f"Listening to {self.input_topic}, publishing filtered cloud on {self.output_topic}")
 
     def pointcloud_callback(self, msg):
+        if self.stop_after_first and self.done:
+            return
         try:
             # Read all XYZ points as list of tuples (x, y, z)
             # dtype({'names': ['x', 'y', 'z'], 'formats': ['<f4', '<f4', '<f4'], 'offsets': [0, 4, 8], 'itemsize': 24}) 
@@ -129,6 +135,7 @@ class PCVoxelFilterNode(Node):
             self.get_logger().info(
                 f"Publishing filtered cloud (~{filtered_points.shape[0]} points per frame)"
             )
+            self.done = True
 
         except Exception as e:
             self.get_logger().error(f"Error in pointcloud_callback: {e}")

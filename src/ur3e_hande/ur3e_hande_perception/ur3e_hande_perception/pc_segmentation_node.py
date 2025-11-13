@@ -46,6 +46,7 @@ class PCSegmentationNode(Node):
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
+        self.segmentation_done = False
 
         self.declare_parameter('camera_frame', 'camera_optical_link')
         self.declare_parameter('base_frame', 'base_link')
@@ -92,6 +93,8 @@ class PCSegmentationNode(Node):
             self.get_logger().error(f"Transform lookup failed: {e}")
 
     def pointcloud_callback(self, msg: PointCloud2):
+        if self.segmentation_done:
+            return
         try:
             gen = point_cloud2.read_points_numpy(
                 msg, field_names=("x", "y", "z"), skip_nans=True, reshape_organized_cloud=True
@@ -214,6 +217,7 @@ class PCSegmentationNode(Node):
         marker.color.g = 1.0
         marker.color.b = 0.0
         marker.color.a = 0.4
+        marker.lifetime = rclpy.duration.Duration(seconds=0).to_msg()
 
         marker_array = MarkerArray()
         marker_array.markers.append(marker)
@@ -249,13 +253,18 @@ class PCSegmentationNode(Node):
             marker.color.g = g
             marker.color.b = b
             marker.color.a = 0.7
+            marker.lifetime = rclpy.duration.Duration(seconds=0).to_msg()
             markers.append(marker)
 
             self.publish_object_metadata(cluster_id, centroid, dims, min_bounds, max_bounds)
 
         marker_array = MarkerArray(markers=markers)
         self.object_pub.publish(marker_array)
-        self.get_logger().info(f"Published {len(unique_labels)} object clusters.")
+        
+        if not self.segmentation_done:
+            self.get_logger().info(f"Published {len(unique_labels)} object clusters.")
+            self.get_logger().info("Segmentation complete; stopping pointcloud subscriber.")
+            self.segmentation_done = True
 
     def publish_object_metadata(self, cluster_id: int, centroid, dims, min_bounds, max_bounds):
         """Publish ObjectMetaData and DetectedObjects messages."""
