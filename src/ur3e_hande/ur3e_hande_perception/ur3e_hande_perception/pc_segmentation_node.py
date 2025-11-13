@@ -114,7 +114,7 @@ class PCSegmentationNode(Node):
             self.get_logger().error(f"Error in pointcloud_callback: {e}")
 
     def segment_plane_and_objects(self, pts, header):
-        """Perform RANSAC plane segmentation and DBSCAN clustering."""
+        """Perform RANSAC plane segmentation and DBSCAN clustering"""
         # Fit plane using RANSAC
         plane_pts, nonplane_pts, plane_eq = self.extract_plane_ransac(pts)
         if plane_pts is None or len(plane_pts) < 100:
@@ -125,14 +125,14 @@ class PCSegmentationNode(Node):
 
         # Cluster objects
         if nonplane_pts is None or len(nonplane_pts) == 0:
-            self.get_logger().warning("No points remaining after plane removal.")
+            self.get_logger().warning("No points remaining after plane removal")
             return
 
         labels = self.cluster_objects(nonplane_pts)
         self.publish_object_markers(nonplane_pts, labels, header)
 
     def extract_plane_ransac(self, pts, max_iterations=200):
-        """Simple RANSAC plane segmentation (NumPy only)."""
+        """Simple RANSAC plane segmentation"""
         best_inliers = []
         best_eq = None
         n_pts = len(pts)
@@ -194,8 +194,8 @@ class PCSegmentationNode(Node):
     def publish_plane_marker(self, plane_pts, header):
         """Publish the detected plane as a semi-transparent cube marker."""
         centroid = np.mean(plane_pts, axis=0)
-        min_bounds = np.min(plane_pts, axis=0)
-        max_bounds = np.max(plane_pts, axis=0)
+        min_bounds = np.min(plane_pts, axis=0)        # [min_x, min_y, min_z]
+        max_bounds = np.max(plane_pts, axis=0)        # [max_x, max_y, max_z]
         length, width = max_bounds[0] - min_bounds[0], max_bounds[1] - min_bounds[1]
 
         marker = Marker()
@@ -251,32 +251,41 @@ class PCSegmentationNode(Node):
             marker.color.a = 0.7
             markers.append(marker)
 
-            self.publish_object_metadata(cluster_id, centroid, dims)
+            self.publish_object_metadata(cluster_id, centroid, dims, min_bounds, max_bounds)
 
         marker_array = MarkerArray(markers=markers)
         self.object_pub.publish(marker_array)
         self.get_logger().info(f"Published {len(unique_labels)} object clusters.")
 
-    def publish_object_metadata(self, cluster_id: int, centroid, dims):
+    def publish_object_metadata(self, cluster_id: int, centroid, dims, min_bounds, max_bounds):
         """Publish ObjectMetaData and DetectedObjects messages."""
-        # ObjectMetaData (geometry and bounds)
+
+        # self.get_logger().warning(f" {cluster_id}\n Centroid: {centroid}\n Dims: {dims}\n Min bounds: {min_bounds}\n Max bounds: {max_bounds}")
+        # ObjectMetaData
         meta_msg = ObjectMetaData()
-        meta_msg.header.stamp = self.get_clock().now().to_msg()
-        meta_msg.header.frame_id = self.base_frame
-        meta_msg.id = cluster_id
-        meta_msg.bounds = [dims[0], dims[1], dims[2], 0.0]  # bounds[4]: confidence?
+        meta_msg.id = int(cluster_id)
 
         pose_msg = PoseStamped()
-        pose_msg.header = meta_msg.header
-        pose_msg.pose.position.x = float(centroid[0])
+        pose_msg.header.stamp = self.get_clock().now().to_msg()
+        pose_msg.header.frame_id = str(self.base_frame)
+        pose_msg.pose.position.x = float(centroid[0]) 
         pose_msg.pose.position.y = float(centroid[1])
         pose_msg.pose.position.z = float(centroid[2])
         pose_msg.pose.orientation.w = 1.0  # the object is upright by default
         meta_msg.object_pose = pose_msg
 
+        # dimensions and centroid
+        meta_msg.dimensions = [float(x) for x in dims.tolist()]           # [h, w, t]
+        meta_msg.centroid = [float(c) for c in centroid.tolist()]         # [x, y, z]
+
+        # bounds
+        min_x, max_x = float(min_bounds[0]), float(max_bounds[0])
+        min_y, max_y = float(min_bounds[1]), float(max_bounds[1])
+        meta_msg.bounds = [float(b) for b in [min_x, max_x, min_y, max_y]]
+
         # DetectedObjects 
         det_msg = DetectedObjects()
-        det_msg.object_id = cluster_id
+        det_msg.object_id = int(cluster_id)
         det_msg.position.x = float(centroid[0])
         det_msg.position.y = float(centroid[1])
         det_msg.position.z = float(centroid[2])

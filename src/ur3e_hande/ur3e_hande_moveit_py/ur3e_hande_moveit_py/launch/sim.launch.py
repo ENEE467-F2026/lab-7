@@ -21,6 +21,7 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
+from launch.conditions import IfCondition
 
 
 def generate_launch_description():
@@ -30,6 +31,7 @@ def generate_launch_description():
     pregrasp_z_offset = LaunchConfiguration("pregrasp_z_offset")
     place_offset_y = LaunchConfiguration("place_offset_y")
     world_to_spawn = LaunchConfiguration("world_to_spawn")
+    pnp = LaunchConfiguration("pnp")
 
     # Declared arguments
     declared_arguments = [
@@ -57,6 +59,11 @@ def generate_launch_description():
             "world_to_spawn",
             default_value="smallbox",
             description="Gazebo world to spawn (basic, bookshelf, bin, aruco, or smallbox).",
+        ),
+        DeclareLaunchArgument(
+            "pnp",
+            default_value="false", # safe default to avoid accidental execution
+            description="Whether to launch the pick-and-place demo client.",
         ),
     ]
 
@@ -125,6 +132,7 @@ def generate_launch_description():
                 executable="pnp_demo_sim",
                 name="pnp_demo_sim",
                 output="screen",
+                condition=IfCondition(pnp),
                 parameters=[
                     {"use_sim_time": True},
                     {"velocity_scale": ParameterValue(velocity_scale, value_type=float)},
@@ -143,7 +151,7 @@ def generate_launch_description():
             gz_moveit_launch,
             pc_voxel_filter_node,
             pc_segmentation_node,
-            # obj_pose_action_server,
-            # pick_and_place,
+            obj_pose_action_server,
+            pick_and_place,
         ]
     )

@@ -1,10 +1,15 @@
-# Goal: geometric bounds of target object 
-float32[4] target_obj_bounds    # e.g., [xmin, xmax, ymin, ymax]
----
-# Result: estimated pose of the object if found
-geometry_msgs/PoseStamped target_obj_pose
-int32 target_obj_found          # 1 = found, 0 = not found
----
-# Feedback: optional status
-string status_text
+# Goal
+# The client can specify either:
+#   (a) A rough 3D target position + size
+#   (b) A bounding box [xmin, xmax, ymin, ymax] for backward compatibility
 
+geometry_msgs/Point target_position        # approximate centroid of desired object (in base_link)
+float32 target_height                      # approximate height (m)
+float32[4] target_obj_bounds               # optional legacy bounds
+---
+# Result
+geometry_msgs/PoseStamped target_obj_pose  # matched object's pose
+int32 target_obj_found                     # 1 = found, 0 = not found
+---
+# Feedback
+string status_text
