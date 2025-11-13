@@ -55,6 +55,7 @@ class PCSegmentationNode(Node):
         self.declare_parameter('dbscan_eps', 0.03)
         self.declare_parameter('dbscan_min_samples', 50)
         self.declare_parameter('surface_thickness', 0.02)
+        self.declare_parameter('stop_after_first_pub', True)
 
         self.input_topic = self.get_parameter('input_topic').value
         self.dist_thresh = self.get_parameter('plane_distance_thresh').value
@@ -63,6 +64,7 @@ class PCSegmentationNode(Node):
         self.surface_thickness = self.get_parameter('surface_thickness').value
         self.camera_frame = self.get_parameter('camera_frame').value
         self.base_frame = self.get_parameter('base_frame').value
+        self.stop_after_first_pub = self.get_parameter('stop_after_first_pub').value
 
         self.subscription = self.create_subscription(
             PointCloud2,
@@ -93,7 +95,7 @@ class PCSegmentationNode(Node):
             self.get_logger().error(f"Transform lookup failed: {e}")
 
     def pointcloud_callback(self, msg: PointCloud2):
-        if self.segmentation_done:
+        if self.segmentation_done and self.stop_after_first_pub:
             return
         try:
             gen = point_cloud2.read_points_numpy(
@@ -202,7 +204,7 @@ class PCSegmentationNode(Node):
         length, width = max_bounds[0] - min_bounds[0], max_bounds[1] - min_bounds[1]
 
         marker = Marker()
-        marker.header = Header(frame_id="base_link")
+        marker.header = Header(frame_id=self.base_frame)
         marker.type = Marker.CUBE
         marker.action = Marker.ADD
         marker.id = 0
@@ -238,7 +240,7 @@ class PCSegmentationNode(Node):
 
             r, g, b = [random.random() for _ in range(3)]
             marker = Marker()
-            marker.header = Header(frame_id="base_link")
+            marker.header = Header(frame_id=self.base_frame)
             marker.type = Marker.CUBE
             marker.action = Marker.ADD
             marker.id = int(cluster_id)
@@ -261,7 +263,7 @@ class PCSegmentationNode(Node):
         marker_array = MarkerArray(markers=markers)
         self.object_pub.publish(marker_array)
         
-        if not self.segmentation_done:
+        if not self.segmentation_done and self.stop_after_first_pub:
             self.get_logger().info(f"Published {len(unique_labels)} object clusters.")
             self.get_logger().info("Segmentation complete; stopping pointcloud subscriber.")
             self.segmentation_done = True

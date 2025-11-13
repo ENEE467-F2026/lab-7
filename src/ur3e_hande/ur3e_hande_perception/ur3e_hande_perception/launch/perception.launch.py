@@ -8,10 +8,10 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('ur3e_hande_perception')
+    perception_pkg_share = get_package_share_directory('ur3e_hande_perception')
     moveit_pkg_share = get_package_share_directory('ur3e_hande_moveit_config')
     use_perception = LaunchConfiguration("use_perception")
-    rviz_config = os.path.join(moveit_pkg_share, 'config', 'moveit.rviz')
+    rviz_config = os.path.join(perception_pkg_share, 'rviz', 'pc_test.rviz')
 
     declared_arguments = [
         DeclareLaunchArgument("use_perception", default_value="true", description="Whether to use the perception module to detect object pose. \n Must provide the position of the object to be picked as a launch argument (obj_pos) if false, unless the launch file will throw an error."),
@@ -66,7 +66,9 @@ def generate_launch_description():
             {"output_topic": "/filtered_cloud"},
             {"leaf_size": 0.005},
             {"crop_enabled": True},
-            # {"crop_bounds": [0.33, 2.00, -0.72, 1.00, -0.50, 0.45]},
+            {"stop_after_first": False}, # keep processing point clouds since cloud is sparser in real life
+            {"crop_bounds": [0.0, 1.22, 0, 0.51, 0.00, 1.5]},  # xmin, xmax, ymin, ymax, zmin, zmax; Point cloud bounds: x[0.00, 1.22], y[0.00, 0.51], z[0.00, 1.50]
+
             ],
         )
         ]
@@ -83,7 +85,9 @@ def generate_launch_description():
             output="screen",
             parameters=[
             {"use_sim_time": True},
-            {"input_topic": "/filtered_cloud"}
+            {"input_topic": "/filtered_cloud"},
+            {"base_frame": "camera_link"},
+            {"stop_after_first_pub": False}, # keep publishing segmentation results
             ],
         )
         ]
