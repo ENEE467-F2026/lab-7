@@ -16,6 +16,7 @@ from typing import List
 from gripper_action.action import GripperAction
 from pymoveit2 import MoveIt2
 from pymoveit2.robots import ur
+from ur3e_hande_planning_interfaces.action import GetTargetObjPose
 
 # home config
 home_q = [0.0, -1.5707, 0.0, -1.5707, 0.0, 0.0]
@@ -27,6 +28,9 @@ class PickAndPlace(Node):
         # Parameters
         self.declare_parameter("synchronous", True)
         self.declare_parameter("obj_pos", "")
+        # params for perception-based object lookup (used when obj_pos not provided)
+        self.declare_parameter("target_position", [0.29, 0.51, 0.07])
+        self.declare_parameter("target_height", 0.13)
         self.declare_parameter("z_pregrip", 0.23846336)
         self.declare_parameter("z_offset", 0.06)
         self.declare_parameter("place_pos", "")
@@ -34,15 +38,34 @@ class PickAndPlace(Node):
         self.synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
         self.zpregrip = self.get_parameter("z_pregrip").get_parameter_value().double_value
         self.zoffset = self.get_parameter("z_offset").get_parameter_value().double_value
-        obj_pos_val = self.get_parameter("obj_pos").get_parameter_value().double_array_value
-        if not obj_pos_val or len(obj_pos_val) != 3:
-            self.get_logger().error("Missing obj_pos parameter (x y z). Exiting.")
-            rclpy.shutdown()
-            return
-        self.obj_pos = [float(x) for x in obj_pos_val]
-        self.pregrasp_z = self.get_parameter("pregrasp_z").value
-        self.lift_z = self.obj_pos[2] + self.get_parameter("lift_z_offset").value
-        self.place_offset_y = self.get_parameter("place_offset_y").value
+        obj_pos_param = self.get_parameter("obj_pos").get_parameter_value()
+        # Try to read as double array; fall back to empty
+        try:
+            obj_pos_val = obj_pos_param.double_array_value
+        except Exception:
+            obj_pos_val = []
+
+        if obj_pos_val and len(obj_pos_val) == 3:
+            self.obj_pos = [float(x) for x in obj_pos_val]
+        else:
+            self.get_logger().info("No obj_pos provided; querying perception for object pose...")
+            self.obj_pos = self.query_object_pose_from_perception()
+            if self.obj_pos is None:
+                self.get_logger().error("No object pose available from perception. Exiting.")
+                rclpy.shutdown()
+                return
+        # mirror the z_pregrip param into a pregrasp_z name used elsewhere
+        self.pregrasp_z = self.zpregrip
+        # lift/placement params may be absent in this file; safely attempt to read
+        try:
+            self.lift_z = self.obj_pos[2] + self.get_parameter("lift_z_offset").value
+        except Exception:
+            # default lift offset
+            self.lift_z = self.obj_pos[2] + 0.06
+        try:
+            self.place_offset_y = self.get_parameter("place_offset_y").value
+        except Exception:
+            self.place_offset_y = 0.0
 
         # relocation poses
         self.approach_pos = [self.obj_pos[0], self.obj_pos[1], self.zpregrip + self.zoffset]
@@ -112,6 +135,42 @@ class PickAndPlace(Node):
 
     def compute_place_pos(self) -> List[float]:
         return [-self.pre_grip_pos[0], self.pre_grip_pos[1], self.pre_grip_pos[2]]
+
+    def query_object_pose_from_perception(self):
+        """Request an object pose from perception via GetTargetObjPose action."""
+        client = ActionClient(self, GetTargetObjPose, "get_target_obj_pose")
+        # wait for server
+        client.wait_for_server()
+
+        goal_msg = GetTargetObjPose.Goal()
+        tgt = self.get_parameter("target_position").get_parameter_value().double_array_value
+        if not tgt or len(tgt) != 3:
+            tgt = [0.29, 0.51, 0.07]
+        goal_msg.target_position.x = float(tgt[0])
+        goal_msg.target_position.y = float(tgt[1])
+        goal_msg.target_position.z = float(tgt[2])
+        goal_msg.target_height = float(self.get_parameter("target_height").get_parameter_value().double_value)
+
+        self.get_logger().info(f"Requesting nearest object to {tgt} via perception action...")
+        send_future = client.send_goal_async(goal_msg)
+        rclpy.spin_until_future_complete(self, send_future)
+        goal_handle = send_future.result()
+        if not goal_handle.accepted:
+            self.get_logger().error("Perception action goal rejected.")
+            return None
+
+        result_future = goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, result_future)
+        result = result_future.result().result
+
+        if getattr(result, "target_obj_found", False):
+            pose = result.target_obj_pose.pose.position
+            obj_pos = [pose.x, pose.y, pose.z]
+            self.get_logger().info(f"Perception returned object pose: {obj_pos}")
+            return obj_pos
+        else:
+            self.get_logger().warn("Perception did not find a matching object.")
+            return None
 
     def start_pnp_sequence(self):
         self.get_logger().info("Waiting for gripper action server...")

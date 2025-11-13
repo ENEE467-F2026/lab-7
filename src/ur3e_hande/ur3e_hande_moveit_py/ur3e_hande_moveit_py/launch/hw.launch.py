@@ -14,14 +14,12 @@ def generate_launch_description():
     ur3e_hande_moveit_pkg = get_package_share_directory('ur3e_hande_moveit_config')
     use_perception = LaunchConfiguration("use_perception")
     obj_pos = LaunchConfiguration("obj_pos")
-    target_obj_desc = LaunchConfiguration("target_obj_desc")
     robot_ip = LaunchConfiguration("robot_ip")
     launch_rviz = LaunchConfiguration("launch_rviz")
 
     declared_arguments = [
         DeclareLaunchArgument("use_perception", default_value="true", description="Whether to use the perception module to detect object pose. \n Must provide the position of the object to be picked as a launch argument (obj_pos) if false, unless the launch file will throw an error."),
         DeclareLaunchArgument("obj_pos", default_value="0.33931674 0.3942382 0.2380788", description="The position (specified as space-separated floats x y z) of the object to pick.\n Only used if use_perception is set to false."),
-        DeclareLaunchArgument("target_obj_desc", default_value="red cup", description="String specifying the color and class name of the object to be picked up by the UR's end effector."),
         DeclareLaunchArgument("robot_ip", default_value="192.168.77.22", description="IP address of the robot."),
         DeclareLaunchArgument("launch_rviz", default_value="false", description="Whether to launch RViz."),
     ]
@@ -68,19 +66,6 @@ def generate_launch_description():
             )
             ]
         ),
-
-        # Start ros2_control
-        # TimerAction(
-        #     period=4.0,
-        #     actions=[
-        #     ExecuteProcess(
-        #         cmd=[
-        #             'ros2', 'control', 'set_controller_state',
-        #             'scaled_joint_trajectory_controller', 'active',
-        #             '-c', '/controller_manager'
-        #         ],
-        #         output='screen'
-        #     )]),
 
         # Run perception nodes
         TimerAction(
@@ -169,7 +154,7 @@ def generate_launch_description():
             actions=[
                 Node(
                      package='ur3e_hande_moveit_py',
-                      executable='pnp_demo_p.py',
+                      executable='pnp_demo.py',
                       name='pnp_demo',
                       output='screen'
                 )
@@ -182,12 +167,11 @@ def generate_launch_description():
             actions=[
                 Node(
                      package='ur3e_hande_moveit_py',
-                     executable='pnp_demo.py',
+                     executable='pnp_demo',
                      name='pnp_demo',
                      output='screen',
                      parameters=[
                         {'obj_pos': obj_pos},
-                        {'target_description': target_obj_desc}
                      ]
                 )
             ])
