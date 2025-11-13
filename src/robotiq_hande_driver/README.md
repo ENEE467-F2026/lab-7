@@ -70,7 +70,7 @@ All other connection options will be ignored; this mode does not communicate wit
 
 If you want to work with the real gripper via direct serial communication, the computer connects to the gripper through a USB-to-RS485 adapter. The wiring is represented as:
 
-Computer → USB adapter ↔ RS485 ↔ Hand-E gripper
+Computer --> USB adapter ↔ RS485 ↔ Hand-E gripper
 
 In this case, you need to set `use_fake_hardware:=false` and provide serial port to establish connection using `tty_port`:
 ```bash

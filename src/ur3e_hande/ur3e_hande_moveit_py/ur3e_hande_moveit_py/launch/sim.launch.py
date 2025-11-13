@@ -5,7 +5,7 @@ Launch the full Lab 7 autonomous manipulation stack in simulation.
 Brings up:
   • Gazebo + MoveIt 2 for UR3e-HandE
   • Point cloud voxel filter + segmentation nodes
-  • Object Pose Server (action server for perception → planning)
+  • Object Pose Server (action server for perception --> planning)
   • Pick-and-Place client (MoveIt2 + gripper control)
 
 Usage:
