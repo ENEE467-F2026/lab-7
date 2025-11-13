@@ -15,6 +15,13 @@
 
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>realsense2_camera_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>rcl_interfaces</depend>
+  <depend>rosidl_default_runtime</depend>
+
   
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

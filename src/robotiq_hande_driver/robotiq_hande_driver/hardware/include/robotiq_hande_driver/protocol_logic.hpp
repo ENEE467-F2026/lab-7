@@ -235,10 +235,10 @@ class ProtocolLogic {
     // Fault
     uint8_t raw_fault_status_;
 
-    // Stores the requested position in normalized 0–255 value
+    // Stores the requested position in normalized 0-255 value
     uint8_t raw_position_request_;
 
-    // Stores the actual position in normalized 0–255 value
+    // Stores the actual position in normalized 0-255 value
     uint8_t raw_position_;
 
     // Stores the electric current drawn by the gripper in 10 mA value

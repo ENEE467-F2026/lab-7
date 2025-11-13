@@ -82,17 +82,42 @@ def generate_launch_description():
         #         output='screen'
         #     )]),
 
-        # Run perception node 
+        # Run perception nodes
         TimerAction(
             period=6.0,
             condition=IfCondition(use_perception),
             actions=[
-                Node(
-                     package='ur3e_hande_perception',
-                      executable='yolo_pc_pose_estimation.py',
-                      name='yolo_pc_pose_estimator',
-                      output='screen'
-                )
+            Node(
+                package="ur3e_hande_perception",
+                executable="pc_voxel_filter_node",
+                name="pc_voxel_filter_node",
+                output="screen",
+                parameters=[
+                {"use_sim_time": True},
+                {"input_topic": "/camera/camera/depth/color/points"},
+                {"output_topic": "/filtered_cloud"},
+                {"leaf_size": 0.005},
+                {"crop_enabled": True},
+                # {"crop_bounds": [0.33, 2.00, -0.72, 1.00, -0.50, 0.45]},
+                ],
+            )
+            ]
+        ),
+
+        TimerAction(
+            period=6.0,
+            condition=IfCondition(use_perception),
+            actions=[
+            Node(
+                package="ur3e_hande_perception",
+                executable="pc_segmentation_node",
+                name="pc_segmentation_node",
+                output="screen",
+                parameters=[
+                {"use_sim_time": True},
+                {"input_topic": "/filtered_cloud"}
+                ],
+            )
             ]
         ),
 

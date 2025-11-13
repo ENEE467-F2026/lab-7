@@ -16,7 +16,7 @@
     </group>
     <group name="gripper">
         <joint name="gripper_robotiq_hande_left_finger_joint"/>
-        <joint name="gripper_robotiq_hande_right_finger_joint"/>
+        <!-- <joint name="gripper_robotiq_hande_right_finger_joint"/> -->
     </group>
   <!--GROUP STATES-->
   <group_state group="ur_manipulator" name="ur_home">
@@ -53,8 +53,8 @@
     <joint name="wrist_3_joint" value="-0.007"/>
   </group_state>
   <group_state group="gripper" name="gripper_open">
-    <joint name="gripper_robotiq_hande_left_finger_joint" value="0.025"/>
-    <joint name="gripper_robotiq_hande_right_finger_joint" value="0.025"/>
+    <joint name="gripper_robotiq_hande_left_finger_joint" value="0.023"/>
+    <joint name="gripper_robotiq_hande_right_finger_joint" value="0.023"/>
   </group_state>
   <group_state group="gripper" name="gripper_closed">
     <joint name="gripper_robotiq_hande_left_finger_joint" value="0.0"/>

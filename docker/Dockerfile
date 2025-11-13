@@ -39,7 +39,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 # Python packages 
 RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
     pip==24.0 wheel==0.43.0 setuptools==79.0.1 \
-    colcon-common-extensions vcstool ipython numpy==1.26.4 transforms3d==0.4.2 pye57==0.4.18 \
+    colcon-common-extensions vcstool ipython numpy==1.26.4 transforms3d==0.4.2 \
     opencv-python==4.9.0.80 opencv-contrib-python==4.9.0.80 \
     roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 open3d==0.19.0 \
     scipy tqdm matplotlib scikit-image scikit-learn spatialmath-python \

@@ -1,13 +1,13 @@
 # ENEE 467 Fall 2025: Robotics Project Laboratory
 ## Lab 7: Autonomous Manipulation with ROS 2 on the Real UR3e-Hand-E Robot
 
-This repository contains a Docker container for Lab 7 (Autonomous Manipulation with ROS 2 on the Real UR3e–Hand-E Robot) as well as the necessary code templates for completing the exercises.
+This repository contains a Docker container for Lab 7 (Autonomous Manipulation with ROS 2 on the Real UR3e-Hand-E Robot) as well as the necessary code templates for completing the exercises.
 
 ## Overview
 
 ![ROS 2 Jazzy](https://img.shields.io/badge/ROS2-Jazzy-orange)
 
-Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. This lab brings these elements together in ROS 2, enabling the real UR3e–Hand-E robot to detect, grasp, and place an object. Students will explore how these subsystems interact in real time and how autonomy developed in simulation transfers to physical hardware.
+Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. This lab brings these elements together in ROS 2, enabling the real UR3e-Hand-E robot to detect, grasp, and place an object. Students will explore how these subsystems interact in real time and how autonomy developed in simulation transfers to physical hardware.
 
 ## Lab Software
 

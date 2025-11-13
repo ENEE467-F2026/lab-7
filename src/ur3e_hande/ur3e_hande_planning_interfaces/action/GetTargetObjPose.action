@@ -1,0 +1,10 @@
+# Goal: geometric bounds of target object 
+float32[4] target_obj_bounds    # e.g., [xmin, xmax, ymin, ymax]
+---
+# Result: estimated pose of the object if found
+geometry_msgs/PoseStamped target_obj_pose
+int32 target_obj_found          # 1 = found, 0 = not found
+---
+# Feedback: optional status
+string status_text
+

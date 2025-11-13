@@ -3,15 +3,15 @@
 Launch the full Lab 7 autonomous manipulation stack in simulation.
 
 Brings up:
-  • Gazebo Harmonic simulation with MoveIt 2 (UR3e-HandE)
-  • YOLO + point cloud perception node
-  • PyMoveIt2 pick-and-place node using ros2_control gripper action
+  • Gazebo + MoveIt 2 for UR3e-HandE
+  • Point cloud voxel filter + segmentation nodes
+  • Object Pose Server (action server for perception → planning)
+  • Pick-and-Place client (MoveIt2 + gripper control)
 
-ros2 launch ur3e_hande_moveit_py sim.launch.py
-
-ros2 launch ur3e_hande_moveit_py sim.launch.py \
-    pregrasp_z_offset:=0.04 place_offset_y:=0.05 velocity_scale:=0.3
-
+Usage:
+  ros2 launch ur3e_hande_moveit_py sim.launch.py
+  ros2 launch ur3e_hande_moveit_py sim.launch.py \
+      pregrasp_z_offset:=0.04 place_offset_y:=0.05 velocity_scale:=0.3
 """
 
 from launch import LaunchDescription
@@ -24,40 +24,34 @@ from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    # Launch Configurations
+    # Launch configurations
     launch_rviz = LaunchConfiguration("launch_rviz")
     velocity_scale = LaunchConfiguration("velocity_scale")
     pregrasp_z_offset = LaunchConfiguration("pregrasp_z_offset")
     place_offset_y = LaunchConfiguration("place_offset_y")
-    pose_avg_window = LaunchConfiguration("pose_avg_window")
     world_to_spawn = LaunchConfiguration("world_to_spawn")
 
-    # Declared Launch Arguments
+    # Declared arguments
     declared_arguments = [
         DeclareLaunchArgument(
             "launch_rviz",
             default_value="true",
-            description="Launch RViz with the Gazebo + MoveIt simulation scene.",
+            description="Launch RViz with the Gazebo + MoveIt scene.",
         ),
         DeclareLaunchArgument(
             "velocity_scale",
             default_value="0.2",
-            description="Velocity/acceleration scaling factor for MoveIt execution.",
+            description="Velocity/acceleration scaling for MoveIt2 trajectories.",
         ),
         DeclareLaunchArgument(
             "pregrasp_z_offset",
             default_value="0.0",
-            description="Extra vertical offset (m) added to the pre-grasp waypoint.",
+            description="Extra Z-offset added to the pre-grasp pose (meters).",
         ),
         DeclareLaunchArgument(
             "place_offset_y",
             default_value="0.0",
-            description="Lateral offset (m) applied to the placement target along Y-axis.",
-        ),
-        DeclareLaunchArgument(
-            "pose_avg_window",
-            default_value="1",
-            description="Number of perception pose estimates to average before publishing.",
+            description="Lateral offset along Y for placement (meters).",
         ),
         DeclareLaunchArgument(
             "world_to_spawn",
@@ -66,7 +60,7 @@ def generate_launch_description():
         ),
     ]
 
-    # Gazebo Simulation
+    # Gazebo + MoveIt2 simulation
     gz_moveit_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -79,31 +73,52 @@ def generate_launch_description():
         }.items(),
     )
 
-    # Perception node
-    perception_node = Node(
-    package="ur3e_hande_perception",
-    executable="yolo_pc_pose_estimation.py",
-    name="yolo_pc_pose_estimator",
-    output="screen",
-    parameters=[
-        {"use_sim_time": True},
-        # Gazebo RGBD topics
-        {"rs_color_topic": "/rgbd_camera/image"},
-        {"rs_depth_topic": "/rgbd_camera/depth_image"},
-        {"rs_color_info_topic": "/rgbd_camera/camera_info"},
-        {"rs_pc_topic": "/rgbd_camera/points"},
-        # Encoding and model
-        {"bridge_color_img_enc": "bgr8"},
-        {"bridge_depth_img_enc": "passthrough"},
-        {"yolo_model": "yolov8n.pt"},
-        # Optional params
-        {"rs_pc_frame_id": "camera_depth_frame"},
-    ],
-)
+    # Perception nodes
+    pc_voxel_filter_node = Node(
+        package="ur3e_hande_perception",
+        executable="pc_voxel_filter_node",
+        name="pc_voxel_filter_node",
+        output="screen",
+        parameters=[
+            {"use_sim_time": True},
+            {"input_topic": "/rgbd_camera/points"},
+            {"output_topic": "/filtered_cloud"},
+            {"leaf_size": 0.005},
+            {"crop_enabled": True},
+            # {"crop_bounds": [0.33, 2.00, -0.72, 1.00, -0.50, 0.45]},
+        ],
+    )
 
-    # Pick-and-Place Node (MoveIt2 + ros2_control gripper)
+    pc_segmentation_node = Node(
+        package="ur3e_hande_perception",
+        executable="pc_segmentation_node",
+        name="pc_segmentation_node",
+        output="screen",
+        parameters=[
+            {"use_sim_time": True},
+            {"input_topic": "/filtered_cloud"},
+        ],
+    )
+
+    # Object Pose Action Server
+    obj_pose_action_server = TimerAction(
+        period=4.0,  # start a few seconds after perception
+        actions=[
+            Node(
+                package="ur3e_hande_perception",
+                executable="obj_pose_action_server",
+                name="object_pose_server",
+                output="screen",
+                parameters=[
+                    {"use_sim_time": True},
+                ],
+            )
+        ],
+    )
+
+    # Pick-and-Place Client (autonomous MoveIt2)
     pick_and_place = TimerAction(
-        period=8.0,  # seconds to wait for object pose availability
+        period=10.0,  # wait for perception + pose server to initialize
         actions=[
             Node(
                 package="ur3e_hande_moveit_py",
@@ -112,21 +127,23 @@ def generate_launch_description():
                 output="screen",
                 parameters=[
                     {"use_sim_time": True},
-                    {"velocity_scale": ParameterValue(0.5, value_type=float)},
-                    {"pregrasp_z_offset": ParameterValue(0.05, value_type=float)},
-                    {"place_offset_y": ParameterValue(0.1, value_type=float)},
+                    {"velocity_scale": ParameterValue(velocity_scale, value_type=float)},
+                    {"pregrasp_z_offset": ParameterValue(pregrasp_z_offset, value_type=float)},
+                    {"place_offset_y": ParameterValue(place_offset_y, value_type=float)},
+                    # If omitted, PickAndPlaceSim will query GetTargetObjPose
                 ],
             )
         ],
     )
 
-
-    # Final LaunchDescription
+    # Final launch sequence
     return LaunchDescription(
         declared_arguments
         + [
             gz_moveit_launch,
-            # perception_node,
+            pc_voxel_filter_node,
+            pc_segmentation_node,
+            # obj_pose_action_server,
             # pick_and_place,
         ]
     )

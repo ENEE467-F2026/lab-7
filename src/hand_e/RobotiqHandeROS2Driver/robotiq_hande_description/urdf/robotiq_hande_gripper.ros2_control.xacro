@@ -4,7 +4,7 @@
     <ros2_control name="${name}" type="system">
       <hardware>
         <xacro:if value="${use_fake_hardware}">
-          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+          <plugin>fake_components/GenericSystem</plugin>
         </xacro:if>
 
         <xacro:unless value="${use_fake_hardware}">

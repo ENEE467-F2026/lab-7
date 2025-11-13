@@ -2,6 +2,11 @@
 
 moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
+trajectory_execution:
+  allowed_execution_duration_scaling: 1.5
+  allowed_goal_duration_margin: 2.0
+  allowed_start_tolerance: 0.01
+
 moveit_simple_controller_manager:
   controller_names:
     - scaled_joint_trajectory_controller
@@ -23,6 +28,7 @@ moveit_simple_controller_manager:
     type: ParallelGripperCommand
     joints:
       - gripper_robotiq_hande_left_finger_joint
-      # - gripper_robotiq_hande_right_finger_joint
+      - gripper_robotiq_hande_right_finger_joint
     action_ns: gripper_cmd
     default: true
+

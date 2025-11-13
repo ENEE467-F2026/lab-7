@@ -134,7 +134,7 @@ class HandeGripper {
     /**
      * @brief Retrieves the electric current drawn by the gripper.
      *
-     * @return The electric current in amperes (range: 0–2.55 A)
+     * @return The electric current in amperes (range: 0-2.55 A)
      */
     double get_current() const;
 

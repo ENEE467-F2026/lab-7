@@ -104,8 +104,7 @@
         <state_interface name="effort"/>
       </joint>
 
-       <joint name="gripper_robotiq_hande_right_finger_joint" mimic="true">
-       
+      <joint name="gripper_robotiq_hande_right_finger_joint">
         <state_interface name="position"/>
         <state_interface name="velocity"/>
       </joint>

@@ -19,14 +19,14 @@ joint_limits:
     has_acceleration_limits: true
     max_acceleration: 0.5
     max_position: 0.025
-    min_position: 0.0
-  gripper_robotiq_hande_right_finger_joint:
-    has_velocity_limits: true
-    max_velocity: 0.15
-    has_acceleration_limits: true
-    max_acceleration: 0.5
-    max_position: 0.025
-    min_position: 0.0
+    min_position: -0.001
+  # gripper_robotiq_hande_right_finger_joint:
+  #   has_velocity_limits: true
+  #   max_velocity: 0.15
+  #   has_acceleration_limits: true
+  #   max_acceleration: 0.5
+  #   max_position: 0.025
+  #   min_position: 0.0
   shoulder_lift_joint:
     has_velocity_limits: true
     max_velocity: 3.14

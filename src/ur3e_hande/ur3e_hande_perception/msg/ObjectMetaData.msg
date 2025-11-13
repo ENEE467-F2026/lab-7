@@ -1,3 +1,0 @@
-std_msgs/Header header
-ObjectUId object_uid
-geometry_msgs/PoseStamped object_pose
