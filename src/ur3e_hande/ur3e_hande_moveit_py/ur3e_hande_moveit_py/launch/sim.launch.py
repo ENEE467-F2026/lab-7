@@ -155,37 +155,8 @@ def generate_launch_description():
                     {"velocity_scale": ParameterValue(velocity_scale, value_type=float)},
                     {"pregrasp_z_offset": ParameterValue(pregrasp_z_offset, value_type=float)},
                     {"place_offset_y": ParameterValue(place_offset_y, value_type=float)},
+                    {"print_metrics": ParameterValue(print_metrics, value_type=bool)},
                     # If omitted, PickAndPlaceSim will query GetTargetObjPose
-                ],
-            )
-        ],
-    )
-
-    # Metrics Logger Node
-    metrics_logger_node = TimerAction(
-        period=10.0,  # wait for other nodes to initialize
-        actions=[
-            Node(
-                package="ur3e_hande_moveit_py",
-                executable="metrics_logger",
-                name="pnp_metrics_logger",
-                output="screen",
-                condition=IfCondition(
-                PythonExpression([
-                    "'",
-                    pnp,
-                    "' == 'true' and '",
-                    print_metrics,
-                    "' == 'true' and '",
-                    use_perception,
-                    "' == 'true'"
-                ])
-                ),
-                parameters=[
-                    {"use_sim_time": True},
-                    {"csv_path": "pnp_metrics_sim.csv"},
-                    {"base_frame": "base_link"},
-                    {"ee_frame": "tool0"},
                 ],
             )
         ],
@@ -199,7 +170,6 @@ def generate_launch_description():
             pc_voxel_filter_node,
             pc_segmentation_node,
             obj_pose_action_server,
-            pick_and_place,
-            metrics_logger_node,
+            pick_and_place
         ]
     )

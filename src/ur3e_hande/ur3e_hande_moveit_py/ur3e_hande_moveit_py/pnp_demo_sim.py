@@ -36,11 +36,14 @@ import numpy as np
 import time
 import roboticstoolbox as rtb
 import spatialmath as sm
+from std_msgs.msg import Float32
+from geometry_msgs.msg import TransformStamped
 
 from pymoveit2 import MoveIt2
 from pymoveit2.robots import ur3e_hande as robot
 from control_msgs.action import ParallelGripperCommand
 from ur3e_hande_planning_interfaces.action import GetTargetObjPose
+from std_msgs.msg import Bool
 from visualization_msgs.msg import Marker, MarkerArray
 
 ur_approach = [
@@ -105,7 +108,8 @@ class PickAndPlaceSim(Node):
         self.declare_parameter("place_offset_y", 0.0)
         self.declare_parameter("ee_frame", "tool0")
         self.declare_parameter("grip_exec_delay", 0.9) # s
-        self.declare_parameter("safe_lift_z", 0.60)   # 60 cm above table
+        self.declare_parameter("safe_lift_z", 0.60)   # 60 cm above table; higher due to simulation artifacts
+        self.declare_parameter("print_metrics", False)
 
         self.pregrasp_z = self.get_parameter("pregrasp_z").value
         self.lift_z_offset = self.get_parameter("lift_z_offset").value
@@ -116,8 +120,9 @@ class PickAndPlaceSim(Node):
         self.grip_exec_delay = self.get_parameter("grip_exec_delay").value
         self.place_z = self.get_parameter("place_z").value
         self.safe_lift_z = self.get_parameter("safe_lift_z").value
+        self.print_metrics = self.get_parameter("print_metrics").get_parameter_value().bool_value
 
-        # synchronous execution: wait for each motion to finish before continuing
+        # synchronous execution
         self.declare_parameter("synchronous", True)
         self._synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
 
@@ -144,7 +149,6 @@ class PickAndPlaceSim(Node):
             return
 
         # derived waypoints
-        
         self.lift_z = max(self.safe_lift_z, self.obj_pos[2] + self.lift_z_offset)
         self.get_logger().info(f"Computed lift_z: {self.lift_z:.3f} m") # always lift to at least safe_lift_z
 
@@ -252,20 +256,30 @@ class PickAndPlaceSim(Node):
             return False
         synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
 
+        t0 = time.time()
         try:
             traj = self.moveit2.move_to_configuration(q)
         except Exception as e:
             self.get_logger().warn(f"[{label}] Planning/execution threw: {e}")
             return False
-
+        t1 = time.time()
+        planning_time = t1 - t0
+        if self.print_metrics:
+            self.get_logger().info(f"[{label}] Planning time: {planning_time:.4f} seconds")
+        
         if traj is not None and not getattr(traj, "joint_trajectory", None):
             self.get_logger().warn(f"[{label}] Planning returned an unexpected result.")
 
         if synchronous:
             # Wait until execution finishes before continuing 
             try:
+                t_exec0 = time.time()
                 self.get_logger().info(f"[{label}] Waiting until execution finished...")
                 self.moveit2.wait_until_executed()
+                t_exec1 = time.time()
+                exec_time = t_exec1 - t_exec0
+                if self.print_metrics:
+                    self.get_logger().info(f"[{label}] Execution time: {exec_time:.4f} seconds")
             except Exception as e:
                 self.get_logger().warn(f"[{label}] Waiting for execution failed: {e}")
                 return False
@@ -287,7 +301,7 @@ class PickAndPlaceSim(Node):
         if "segmented_plane" in self.objects:
             self.moveit2.remove_collision_object(id="segmented_plane")
             del self.objects["segmented_plane"]
-            
+
         plane_marker = msg.markers[0]   # get first marker
 
         # Extract pose
@@ -326,7 +340,6 @@ class PickAndPlaceSim(Node):
 
         # small sleep to ensure MoveIt processes scene updates
         time.sleep(0.05)
-
 
     def _start_move(self):
         """One-shot starter: cancel timer, wait for joint states, then run sequence."""
@@ -408,7 +421,15 @@ class PickAndPlaceSim(Node):
         except Exception as e:
             self.get_logger().warn(f"Home pose retrieval/plan failed: {e}")
 
-        self.get_logger().info("Pick-and-place sequence complete.")
+        # publish completion flag for external listeners
+        try:
+            self.get_logger().info("Pick-and-place sequence complete.")
+            msg = Bool()
+            msg.data = True
+            # publish once
+            self._pnp_done_pub.publish(msg)
+        except Exception as e:
+            self.get_logger().warn(f"Failed to publish pnp completion flag: {e}")
 
     # gripper methods
     def send_gripper_goal(self, position: float):
