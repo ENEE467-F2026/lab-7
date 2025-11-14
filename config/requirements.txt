@@ -1,4 +1,0 @@
-YOLOv8
-open3d
-spatialmathtoolbox
-ultralytics

@@ -10,7 +10,7 @@ moveit_simple_controller_manager:
   controller_names:
     - scaled_joint_trajectory_controller
     - joint_trajectory_controller
-
+    - gripper_action_controller
 
   scaled_joint_trajectory_controller:
     action_ns: follow_joint_trajectory
@@ -36,3 +36,13 @@ moveit_simple_controller_manager:
       - wrist_1_joint
       - wrist_2_joint
       - wrist_3_joint
+
+  gripper_action_controller:
+    type: ParallelGripperCommand
+    joints:
+      - robotiq_hande_left_finger_joint
+      - robotiq_hande_right_finger_joint
+    action_ns: gripper_cmd
+    default: true
+
+

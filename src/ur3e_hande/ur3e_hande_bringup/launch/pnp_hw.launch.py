@@ -51,7 +51,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "launch_rviz",
-            default_value="true",    use_perception = LaunchConfiguration("use_perception"),
+            default_value="true",   
             description="Launch RViz or not."
         ),
     ]
@@ -144,45 +144,66 @@ def generate_launch_description():
         )
     )
 
-    # Hand-E Gripper Bringup
-    ld.add_action(
-        TimerAction(
-            period=8.0,
-            actions=[
-                Node(
-                    package="robotiq_hande_ros2_driver",
-                    executable="gripper_joint_publisher",
-                    name="gripper_joint_publisher",
-                    output="screen",
-                )
-            ],
-        )
-    )
+    # # Hand-E Gripper Bringup
+    # ld.add_action(
+    #     TimerAction(
+    #         period=8.0,
+    #         actions=[
+    #             ExecuteProcess(
+    #                 cmd=[
+    #                     "ros2", "launch", "robotiq_hande_driver", "rs_launch.py",
+    #                     "use_fake_hardware:=false",
+    #                     "create_socat_tty:=true",
+    #                     "tty_port:=/tmp/ttyUR"
+    #                     "socat_ip_address:=192.168.77.22"
+    #                     "socat_port:=54321"
+    #                     "frequency_hz:=10"
+    #                     "launch_rviz:=false",
+    #                 ],
+    #                 output="screen",
+    #             )
+    #         ],
+    #     )
+    # )
+    # ld.add_action(
+    #     TimerAction(
+    #         period=8.0,
+    #         actions=[
+    #             Node(
+    #                 package="robotiq_hande_ros2_driver",
+    #                 executable="gripper_joint_publisher",
+    #                 name="gripper_joint_publisher",
+    #                 output="screen",
+    #             )
+    #         ],
+    #     )
+    # )
 
-    ld.add_action(
-        TimerAction(
-            period=10.0,
-            actions=[
-                Node(
-                    package="robotiq_hande_ros2_driver",
-                    executable="gripper_action_server",
-                    name="gripper_action_server",
-                    output="screen",
-                    parameters=[
-                        {"robot_ip": robot_ip},
-                        {"p_diff_thresh": 5},
-                        {"u_diff_thresh": 4},
-                        {"f_diff_thresh": 5},
-                    ],
-                )
-            ],
-        )
-    )
+    # ld.add_action(
+    #     TimerAction(
+    #         period=10.0,64 bytes from 192.168.77.22: icmp_seq=49 ttl=64 time=0.329 ms
+
+    #         actions=[
+    #             Node(
+    #                 package="robotiq_hande_ros2_driver",
+    #                 executable="gripper_action_server",
+    #                 name="gripper_action_server",
+    #                 output="screen",
+    #                 parameters=[
+    #                     {"robot_ip": robot_ip},
+    #                     {"p_diff_thresh": 5},
+    #                     {"u_diff_thresh": 4},
+    #                     {"f_diff_thresh": 5},
+    #                 ],
+    #             )
+    #         ],
+    #     )
+    # )
 
     # MoveIt2 for Hardware
     ld.add_action(
         TimerAction(
-            period=12.0,
+            period=8.0,
             actions=[
                 IncludeLaunchDescription(
                     PythonLaunchDescriptionSource(
@@ -200,7 +221,7 @@ def generate_launch_description():
     # Pick-and-Place Node
     ld.add_action(
         TimerAction(
-            period=14.0,
+            period=10.0,
             condition=IfCondition(use_perception),
             actions=[
                 Node(
@@ -216,7 +237,7 @@ def generate_launch_description():
     # manual obj_pos mode
     ld.add_action(
         TimerAction(
-            period=14.0,
+            period=12.0,
             condition=UnlessCondition(use_perception),
             actions=[
                 Node(

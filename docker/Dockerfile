@@ -23,8 +23,6 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libgtk-3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
     libusb-1.0-0-dev libusb-1.0-0 libssl-dev libudev-dev udev libudev1 libmodbus-dev \
     hwloc libmkl-dev libtbb-dev \
-    python3-opencv \
-    ros-${ROS_DISTRO}-cv-bridge \
     ros-${ROS_DISTRO}-image-transport \
     ros-${ROS_DISTRO}-tf2-ros \
     ros-${ROS_DISTRO}-tf2-geometry-msgs \
@@ -37,17 +35,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     && rm -rf /var/lib/apt/lists/*
 
 # Python packages 
-RUN python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed \
-    pip==24.0 wheel==0.43.0 setuptools==79.0.1 \
-    colcon-common-extensions vcstool ipython numpy==1.26.4 transforms3d==0.4.2 \
-    opencv-python==4.9.0.80 opencv-contrib-python==4.9.0.80 \
-    roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 open3d==0.19.0 \
-    scipy tqdm matplotlib scikit-image scikit-learn spatialmath-python \
-    --extra-index-url https://pypi.org/simple && \
-    # install PyTorch + Ultralytics without dependency resolution
-    python3 -m pip install --no-cache-dir --break-system-packages --ignore-installed --no-deps \
-      torch torchvision ultralytics \
-      --extra-index-url https://download.pytorch.org/whl/cpu
+RUN pip install ipython roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 transforms3d==0.4.2 scikit-image scikit-learn --break-system-packages && \
+    export PATH=/home/robot/.local/bin:$PATH
 
 # Librealsense installation
 ARG LIBREALSENSE_TAG=v2.57.3
@@ -67,7 +56,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-gz-ros2-control ros-${ROS_DISTRO}-ros-gz-bridge \
     ros-${ROS_DISTRO}-foxglove-bridge ros-${ROS_DISTRO}-joint-state-publisher-gui \
     ros-${ROS_DISTRO}-moveit* ros-${ROS_DISTRO}-ur* \
-    ros-${ROS_DISTRO}-aruco-markers-msgs* ros-${ROS_DISTRO}-aruco-opencv* \
     ros-${ROS_DISTRO}-rqt-image-view ros-${ROS_DISTRO}-gz-* \
     && rm -rf /var/lib/apt/lists/*
 

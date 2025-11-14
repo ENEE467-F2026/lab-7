@@ -5,7 +5,8 @@ controller_manager:
     # UR Controllers
   gripper_action_controller:
         # type: position_controllers/GripperActionController
-        type: forward_command_controller/ForwardCommandController
+        # type: forward_command_controller/ForwardCommandController
+        type: parallel_gripper_action_controller/GripperActionController
 
   joint_state_broadcaster:
     type: joint_state_broadcaster/JointStateBroadcaster
@@ -186,12 +187,14 @@ tcp_pose_broadcaster:
 
 gripper_action_controller:
   ros__parameters:
-    joints:
-      - robotiq_hande_left_finger_joint
-      # - robotiq_hande_right_finger_joint
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      - velocity
-    interface_name: position
+      joint: robotiq_hande_left_finger_joint
+      command_interfaces:
+        - position
+      state_interfaces:
+        - position
+        - velocity
+      interface_name: position
+      goal_tolerance: 0.002
+      stalled_velocity_threshold: 0.001
+      stall_timeout: 1.0
+      max_effort: 0.0

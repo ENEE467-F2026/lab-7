@@ -55,7 +55,7 @@ class PCSegmentationNode(Node):
         self.declare_parameter('dbscan_eps', 0.03)
         self.declare_parameter('dbscan_min_samples', 50)
         self.declare_parameter('surface_thickness', 0.02)
-        self.declare_parameter('stop_after_first_pub', True)
+        self.declare_parameter('stop_after_first_pub', False)
 
         self.input_topic = self.get_parameter('input_topic').value
         self.dist_thresh = self.get_parameter('plane_distance_thresh').value

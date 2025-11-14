@@ -8,13 +8,19 @@
   <xacro:arg name="parent" default="tool0"/>
   <xacro:arg name="grip_pos_min" default="0"/>
   <xacro:arg name="grip_pos_max" default="0.025"/>
-  <xacro:arg name="tty" default="/tmp/ttyUR"/>
+  <xacro:arg name="tty_port" default="/tmp/ttyUR"/>
   <xacro:arg name="baudrate" default="115200"/>
   <xacro:arg name="parity" default="N"/>
   <xacro:arg name="data_bits" default="8"/>
   <xacro:arg name="stop_bit" default="1"/>
   <xacro:arg name="slave_id" default="9"/>
-  <xacro:arg name="use_fake_hardware" default="false"/>
+  <xacro:arg name="frequency_hz" default="10"/>
+
+  <xacro:arg name="create_socat_tty" default="false"/>
+  <xacro:arg name="socat_ip_address" default="192.168.77.22"/>
+  <xacro:arg name="socat_port" default="54321"/>
+
+  <xacro:arg name="use_fake_hardware" default="true"/>
 
   <xacro:arg name="import_ur3e" default="true"/>
   <xacro:arg name="import_hande" default="true"/>
@@ -26,7 +32,7 @@
 
     <!-- Import hande xacro -->
   <xacro:if value="$(arg import_hande)">
-    <xacro:include filename="$(find robotiq_hande_description)/urdf/robotiq_hande_gripper.urdf.xacro"/>
+    <xacro:include filename="$(find robotiq_hande_description)/urdf_hw/robotiq_hande_gripper.urdf.xacro"/>
   </xacro:if>
 
    <!-- import main macro -->
@@ -56,7 +62,7 @@
    <xacro:arg name="reverse_ip" default="0.0.0.0"/>
    <xacro:arg name="script_command_port" default="50004"/>
    <!--   tool communication related parameters-->
-   <xacro:arg name="use_tool_communication" default="true" />
+   <xacro:arg name="use_tool_communication" default="false" />
    <xacro:arg name="tool_voltage" default="24" />
    <xacro:arg name="tool_parity" default="N" />
    <xacro:arg name="tool_baud_rate" default="115200" />
@@ -121,45 +127,26 @@
     </xacro:ur_robot>
    </xacro:if>
 
-    <!-- <xacro:if value="$(arg import_hande)"> -->
-      <!-- <xacro:robotiq_hande_gripper
+    <xacro:if value="$(arg import_hande)"> 
+      <xacro:robotiq_hande_gripper
         name="$(arg hande_name)"
         prefix=""
         parent="$(arg parent)"
         grip_pos_min="$(arg grip_pos_min)"
         grip_pos_max="$(arg grip_pos_max)"
-        tty="$(arg tty)"
+        tty_port="$(arg tty_port)"
         baudrate="$(arg baudrate)"
         parity="$(arg parity)"
         data_bits="$(arg data_bits)"
         stop_bit="$(arg stop_bit)"
         slave_id="$(arg slave_id)"
+        frequency_hz="$(arg frequency_hz)"
+        create_socat_tty="$(arg create_socat_tty)"
+        socat_ip_address="$(arg socat_ip_address)"
+        socat_port="$(arg socat_port)"
         use_fake_hardware="$(arg use_fake_hardware)"
-      /> -->
-    <!-- </xacro:if> -->
-
-   <xacro:if value="$(arg sim_gazebo)">
-    <!-- Gazebo plugins -->
-    <gazebo reference="world">
-    </gazebo>
-    <gazebo>
-      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-        <parameters>$(arg simulation_controllers)</parameters>
-      </plugin>
-    </gazebo>
-  </xacro:if>
-
-  <xacro:if value="$(arg sim_ignition)">
-    <!-- Gazebo plugins -->
-    <gazebo reference="world">
-    </gazebo>
-    <gazebo>
-      <plugin filename="libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
-        <parameters>$(arg simulation_controllers)</parameters>
-        <controller_manager_node_name>$(arg tf_prefix)controller_manager</controller_manager_node_name>
-      </plugin>
-    </gazebo>
-  </xacro:if>
+      />
+    </xacro:if>
 
   <!-- Import table -->
   <xacro:include filename="$(find ur3e_description)/urdf/table.urdf"/>
@@ -168,11 +155,6 @@
   <xacro:if value="${is_import_ur3e and is_import_camera}">
     <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
   </xacro:if>
-
-  <!-- Use the sensor_d435i macro with a unique name (camera_top)-->
-  <!-- <xacro:sensor_d435i parent="world" name="camera1">
-      <origin rpy="0.0 0.4712 1.57" xyz="0.381 -0.125 0.415925"/>  
-  </xacro:sensor_d435i> -->
 
   <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
   <xacro:if value="${is_import_ur3e and is_import_camera}">
@@ -191,13 +173,13 @@
   </xacro:if>
 
   <!-- Joint between ur3e and hande -->
-<xacro:if value="${is_import_ur3e and is_import_hande}">
+<!-- <xacro:if value="${is_import_ur3e and is_import_hande}">
   <joint name="ur3e_hande_joint" type="fixed">
     <origin rpy="${pi/2} ${-pi/2} 0" xyz="0.00574 .03656 .01111"/>
     <parent link="tool0"/>
     <child link="hande_link"/>
   </joint>
-</xacro:if>
+</xacro:if> -->
 
 
 </robot>
