@@ -69,7 +69,7 @@
     <link name="${prefix}robotiq_hande_coupler">
       <visual>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/io_coupler.dae"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/io_coupler.dae"/>
         </geometry>
       </visual>
 
@@ -95,7 +95,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/hande.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/hande.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </visual>
 
@@ -123,14 +123,14 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/finger.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/finger.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </visual>
 
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </collision>
 
@@ -154,14 +154,14 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/finger.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/finger.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </visual>
 
       <collision>
         <origin xyz="0 0 0" rpy="0 0 ${pi}"/>
         <geometry>
-          <mesh filename="package://robotiq_hande_description/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
+          <mesh filename="file://$(find robotiq_hande_description)/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
         </geometry>
       </collision>
 

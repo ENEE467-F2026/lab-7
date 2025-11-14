@@ -7,12 +7,12 @@
   <link name="robotiq_hande_coupler">
     <visual>
       <geometry>
-        <mesh filename="package://robotiq_hande_description/meshes/io_coupler.dae"/>
+        <mesh filename="file://$(find robotiq_hande_description)/meshes/io_coupler.dae"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://robotiq_hande_description/meshes/io_coupler.dae"/>
+        <mesh filename="file://$(find robotiq_hande_description)/meshes/io_coupler.dae"/>
       </geometry>
     </collision>
   </link>
@@ -24,12 +24,12 @@
   <link name="robotiq_hande_link">
     <visual>
       <geometry>
-        <mesh filename="package://robotiq_hande_description/meshes/hande.dae" scale="1.0 1.0 1.0"/>
+        <mesh filename="file://$(find robotiq_hande_description)/meshes/hande.dae" scale="1.0 1.0 1.0"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://robotiq_hande_description/meshes/hande.dae" scale="1.0 1.0 1.0"/>
+        <mesh filename="file://$(find robotiq_hande_description)/meshes/hande.dae" scale="1.0 1.0 1.0"/>
       </geometry>
     </collision>
   </link>
@@ -43,12 +43,12 @@
   <link name="robotiq_hande_left_finger">
     <visual>
       <geometry>
-        <mesh filename="package://robotiq_hande_description/meshes/finger.dae" scale="1.0 1.0 1.0"/>
+        <mesh filename="file://$(find robotiq_hande_description)/meshes/finger.dae" scale="1.0 1.0 1.0"/>
       </geometry>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://robotiq_hande_description/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
+        <mesh filename="file://$(find robotiq_hande_description)/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
       </geometry>
     </collision>
   </link>
@@ -64,13 +64,13 @@
     <visual>
       <origin rpy="0 0 3.14159"/>
       <geometry>
-        <mesh filename="package://robotiq_hande_description/meshes/finger.dae" scale="1.0 1.0 1.0"/>
+        <mesh filename="file://$(find robotiq_hande_description)/meshes/finger.dae" scale="1.0 1.0 1.0"/>
       </geometry>
     </visual>
     <collision>
       <origin rpy="0 0 3.14159"/>
       <geometry>
-        <mesh filename="package://robotiq_hande_description/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
+        <mesh filename="file://$(find robotiq_hande_description)/meshes/finger_collision.dae" scale="1.0 1.0 1.0"/>
       </geometry>
     </collision>
   </link>

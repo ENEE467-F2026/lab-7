@@ -16,8 +16,7 @@
   <depend>ur3e_hande_description</depend>
   <depend>ur_description</depend>
   <depend>ur_robot_driver</depend>
-  <depend>ur3e_description</depend>
-  <depend>robotiq_hande_ros2_driver</depend>
+  <depend>robotiq_hande_driver</depend>
   <depend>realsense2_camera</depend>
   <depend>moveit</depend>
   <depend>shape_msgs</depend>
