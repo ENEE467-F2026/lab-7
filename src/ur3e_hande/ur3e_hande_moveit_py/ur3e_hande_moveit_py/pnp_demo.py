@@ -41,45 +41,8 @@ from pymoveit2 import MoveIt2
 from pymoveit2.robots import ur3e_hande as robot
 from control_msgs.action import ParallelGripperCommand
 from ur3e_hande_planning_interfaces.action import GetTargetObjPose
+from std_msgs.msg import Bool
 from visualization_msgs.msg import Marker, MarkerArray
-
-ur_approach = [
-    -1.8605,         # pan 
-    -2.99056,        # lift 
-        0.675617,    # elbow 
-    -2.00445,        # w1 
-        1.61112,     # w2  
-    -0.00712473,     # w3  
-]
-
-# Alternate joint configurations for cube pick-and-place 
-ur_approach_cube = [
-    -1.86057,
-    -2.99056,
-    0.475617,
-    -2.00445,
-    1.61112,
-    -0.00712473,
-]
-
-ur_pregrip = [
-    -1.83906,
-    -3.10465,
-    0.656839,
-    -2.02065,
-    1.61113,
-    -0.00707275,
-]
-
-# place seed
-ur_place = [
-    -0.626256,    # pan
-    -3.11027,     # lift
-     0.681228,    # elbow
-    -2.06301,     # w1
-     1.47058,     # w2
-    -0.00735981,  # w3
-]
 
 class PickAndPlaceSim(Node):
     def __init__(self):
@@ -94,30 +57,65 @@ class PickAndPlaceSim(Node):
             10
         )
 
+        # variables for metrics
+        self.plan_time = None
+        self.exec_time = None
+        self.planning_success = None
+
         # params
         self.declare_parameter("obj_pos", [])
         self.declare_parameter("target_obj_bounds", [0.3, 0.5, -0.2, 0.2])
         self.declare_parameter("target_height", 0.13)
-        self.declare_parameter("target_position", [0.29, 0.51, 0.07])
+        self.declare_parameter("target_position", [0.29, 0.51, 0.10])
         self.declare_parameter("pregrasp_z", 0.28)
         self.declare_parameter("place_z", 0.4)
         self.declare_parameter("lift_z_offset", 0.12)
         self.declare_parameter("place_offset_y", 0.0)
         self.declare_parameter("ee_frame", "tool0")
         self.declare_parameter("grip_exec_delay", 0.9) # s
-        self.declare_parameter("safe_lift_z", 0.60)   # 60 cm above table
+        self.declare_parameter("safe_lift_z", 0.30)  
+        self.declare_parameter("print_metrics", False)
+        self.declare_parameter("max_vel_scale", 0.15)
+        self.declare_parameter("max_acc_scale", 0.15)
+        self.declare_parameter("goal_pos_tol", 0.003)
+        self.declare_parameter("goal_ori_tol", 0.01)
 
         self.pregrasp_z = self.get_parameter("pregrasp_z").value
         self.lift_z_offset = self.get_parameter("lift_z_offset").value
         self.place_offset_y = self.get_parameter("place_offset_y").value
         self.target_height = self.get_parameter("target_height").value
+        self.goal_pos_tol = self.get_parameter("goal_pos_tol").get_parameter_value().double_value
+        self.goal_ori_tol = self.get_parameter("goal_ori_tol").get_parameter_value().double_value
         self.target_position = self.get_parameter("target_position").value
         self.ee_frame = self.get_parameter("ee_frame").get_parameter_value().string_value
         self.grip_exec_delay = self.get_parameter("grip_exec_delay").value
         self.place_z = self.get_parameter("place_z").value
         self.safe_lift_z = self.get_parameter("safe_lift_z").value
+        self.print_metrics = self.get_parameter("print_metrics").get_parameter_value().bool_value
+        self.max_vel_scale = self.get_parameter("max_vel_scale").get_parameter_value().double_value
+        self.max_acc_scale = self.get_parameter("max_acc_scale").get_parameter_value().double_value
 
-        # synchronous execution: wait for each motion to finish before continuing
+        self.declare_parameter("ur_approach",
+        [-1.8605, -2.99056, 0.675617, -2.00445, 1.61112, -0.00712473])
+
+        self.declare_parameter("ur_approach_cube",
+        [-1.86057, -2.99056, 0.475617, -2.00445, 1.61112, -0.00712473])
+
+        self.declare_parameter("ur_pregrip",
+        [-1.83906, -3.10465, 0.656839, -2.02065, 1.61113, -0.00707275])
+
+        self.declare_parameter("ur_place",
+        [-0.626256, -3.11027, 0.681228, -2.06301, 1.47058, -0.00735981])
+
+        self.ur_approach      = list(self.get_parameter("ur_approach").value)
+        self.ur_approach_cube = list(self.get_parameter("ur_approach_cube").value)
+        self.ur_pregrip       = list(self.get_parameter("ur_pregrip").value)
+        self.ur_place         = list(self.get_parameter("ur_place").value)
+
+        self.GREEN = "\x1b[32m"
+        self.RESET = "\x1b[0m"
+
+        # synchronous execution
         self.declare_parameter("synchronous", True)
         self._synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
 
@@ -144,7 +142,6 @@ class PickAndPlaceSim(Node):
             return
 
         # derived waypoints
-        
         self.lift_z = max(self.safe_lift_z, self.obj_pos[2] + self.lift_z_offset)
         self.get_logger().info(f"Computed lift_z: {self.lift_z:.3f} m") # always lift to at least safe_lift_z
 
@@ -152,7 +149,7 @@ class PickAndPlaceSim(Node):
                                                  self.target_position[1], 
                                                  self.lift_z])
         self.place_pos_arg = self.get_parameter("place_pos_arg").get_parameter_value().double_array_value
-        self.approach_z = max(self.obj_pos[2] + self.lift_z_offset, self.pregrasp_z + 0.1)
+        self.approach_z = max(self.obj_pos[2] + self.lift_z_offset, self.pregrasp_z + 0.03)
 
         self.approach_pos = [self.obj_pos[0], self.obj_pos[1], self.approach_z]
         self.get_logger().info(f"Approach position: {self.approach_pos}")
@@ -174,10 +171,10 @@ class PickAndPlaceSim(Node):
             callback_group=self.cb_group,
         )
         self.moveit2.planner_id = "RRTConnectkConfigDefault"
-        self.moveit2.max_velocity = 0.25
-        self.moveit2.max_acceleration = 0.25
-        self.moveit2.goal_position_tolerance = 0.003
-        self.moveit2.goal_orientation_tolerance = 0.01
+        self.moveit2.max_velocity = self.max_vel_scale
+        self.moveit2.max_acceleration = self.max_acc_scale
+        self.moveit2.goal_position_tolerance = self.goal_pos_tol
+        self.moveit2.goal_orientation_tolerance = self.goal_ori_tol
 
         # begin sequence
         self._start_timer = self.create_timer(1.5, self._start_move, callback_group=self.cb_group)
@@ -202,7 +199,7 @@ class PickAndPlaceSim(Node):
         send_future = self.pose_client.send_goal_async(goal_msg)
         rclpy.spin_until_future_complete(self, send_future)
         goal_handle = send_future.result()
-        if not goal_handle.accepted:       
+        if not goal_handle.accepted:
             self.get_logger().error("Pose goal rejected.")
             return None
 
@@ -223,10 +220,8 @@ class PickAndPlaceSim(Node):
     def _ik_rtb(self, pos_xyz, q0=None):
         """Compute IK using Robotics Toolbox as fallback"""
 
-        # q = self.moveit2.compute_ik(pos_xyz, quat_xyzw); does not work well for some poses
-
         # choose initial seed for IK
-        q0_seed = q0 if q0 is not None else ur_approach
+        q0_seed = q0 if q0 is not None else self.ur_approach
         se_approach = self.rtb_model.fkine(q0_seed, end=self.ee_frame)
 
         # rtb fallback using the chosen seed's pose
@@ -252,20 +247,28 @@ class PickAndPlaceSim(Node):
             return False
         synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
 
+        t0 = time.time()
         try:
             traj = self.moveit2.move_to_configuration(q)
         except Exception as e:
             self.get_logger().warn(f"[{label}] Planning/execution threw: {e}")
             return False
-
+        t1 = time.time()
+        if self.plan_time is None:
+            self.plan_time = t1 - t0
+        
         if traj is not None and not getattr(traj, "joint_trajectory", None):
             self.get_logger().warn(f"[{label}] Planning returned an unexpected result.")
 
         if synchronous:
             # Wait until execution finishes before continuing 
             try:
+                t_exec0 = time.time()
                 self.get_logger().info(f"[{label}] Waiting until execution finished...")
                 self.moveit2.wait_until_executed()
+                t_exec1 = time.time()
+                if self.exec_time is None:
+                    self.exec_time = t_exec1 - t_exec0
             except Exception as e:
                 self.get_logger().warn(f"[{label}] Waiting for execution failed: {e}")
                 return False
@@ -283,6 +286,10 @@ class PickAndPlaceSim(Node):
 
         if msg is None or len(msg.markers) == 0:
             return
+
+        if "segmented_plane" in self.objects:
+            self.moveit2.remove_collision_object(id="segmented_plane")
+            del self.objects["segmented_plane"]
 
         plane_marker = msg.markers[0]   # get first marker
 
@@ -322,7 +329,6 @@ class PickAndPlaceSim(Node):
 
         # small sleep to ensure MoveIt processes scene updates
         time.sleep(0.05)
-
 
     def _start_move(self):
         """One-shot starter: cancel timer, wait for joint states, then run sequence."""
@@ -371,7 +377,7 @@ class PickAndPlaceSim(Node):
         
         # grasp
         # use cube-specific approach as IK seed for grasp
-        q_grasp = self._ik_rtb(self.grasp_pos, q0=ur_pregrip)
+        q_grasp = self._ik_rtb(self.grasp_pos, q0=self.ur_pregrip)
         if not self._plan_then_execute(q_grasp, "Grasp"):
             self.get_logger().error("Aborting: cannot reach grasp pose.")
             return
@@ -386,7 +392,7 @@ class PickAndPlaceSim(Node):
             return
 
         # place
-        q_place = self._ik_rtb(self.place_pos, q0=ur_place)
+        q_place = self._ik_rtb(self.place_pos, q0=self.ur_place)
         if not self._plan_then_execute(q_place, "Place"):
             self.get_logger().error("Aborting: cannot reach place pose.")
             return
@@ -405,6 +411,17 @@ class PickAndPlaceSim(Node):
             self.get_logger().warn(f"Home pose retrieval/plan failed: {e}")
 
         self.get_logger().info("Pick-and-place sequence complete.")
+        if self.planning_success is None:
+            self.planning_success = True
+        if self.print_metrics:
+            self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
+            self.get_logger().info(self.GREEN + "Metrics Summary:" + self.RESET)
+            self.get_logger().info(self.GREEN + f"  1. Planning Success (bool): {int(self.planning_success)}" + self.RESET)
+            self.get_logger().info(self.GREEN + f"  2. Planning time [s]: {self.plan_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.GREEN + f"  3. Execution time [s]: {self.exec_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
+
+
 
     # gripper methods
     def send_gripper_goal(self, position: float):

@@ -27,13 +27,17 @@ from launch.conditions import IfCondition
 def generate_launch_description():
     # Launch configurations
     launch_rviz = LaunchConfiguration("launch_rviz")
-    velocity_scale = LaunchConfiguration("velocity_scale")
     pregrasp_z_offset = LaunchConfiguration("pregrasp_z_offset")
     place_offset_y = LaunchConfiguration("place_offset_y")
     world_to_spawn = LaunchConfiguration("world_to_spawn")
     pnp = LaunchConfiguration("pnp")
     print_metrics = LaunchConfiguration("print_metrics")
     use_perception = LaunchConfiguration("use_perception")
+    max_acc_scale = LaunchConfiguration("max_acc_scale")
+    max_vel_scale = LaunchConfiguration("max_vel_scale")
+    goal_pos_tol = LaunchConfiguration("goal_pos_tol")
+    goal_ori_tol = LaunchConfiguration("goal_ori_tol")
+
 
     # Declared arguments
     declared_arguments = [
@@ -43,9 +47,24 @@ def generate_launch_description():
             description="Launch RViz with the Gazebo + MoveIt scene.",
         ),
         DeclareLaunchArgument(
-            "velocity_scale",
-            default_value="0.2",
-            description="Velocity/acceleration scaling for MoveIt2 trajectories.",
+            "max_acc_scale",
+            default_value="0.25",
+            description="Acceleration scaling for MoveIt2 trajectories.",
+        ),
+        DeclareLaunchArgument(
+            "max_vel_scale",
+            default_value="0.25",
+            description="Velocity scaling for MoveIt2 trajectories.",
+        ),
+        DeclareLaunchArgument(
+            "goal_pos_tol",
+            default_value="0.003",
+            description="Position tolerance for MoveIt2 goals (meters).",
+        ),
+        DeclareLaunchArgument(
+            "goal_ori_tol",
+            default_value="0.01",
+            description="Orientation tolerance for MoveIt2 goals (radians).",
         ),
         DeclareLaunchArgument(
             "pregrasp_z_offset",
@@ -152,7 +171,10 @@ def generate_launch_description():
                 condition=IfCondition(pnp),
                 parameters=[
                     {"use_sim_time": True},
-                    {"velocity_scale": ParameterValue(velocity_scale, value_type=float)},
+                    {"max_vel_scale": ParameterValue(max_vel_scale, value_type=float)},
+                    {"max_acc_scale": ParameterValue(max_acc_scale, value_type=float)},
+                    {"goal_pos_tol": ParameterValue(goal_pos_tol, value_type=float)},
+                    {"goal_ori_tol": ParameterValue(goal_ori_tol, value_type=float)},
                     {"pregrasp_z_offset": ParameterValue(pregrasp_z_offset, value_type=float)},
                     {"place_offset_y": ParameterValue(place_offset_y, value_type=float)},
                     {"print_metrics": ParameterValue(print_metrics, value_type=bool)},
