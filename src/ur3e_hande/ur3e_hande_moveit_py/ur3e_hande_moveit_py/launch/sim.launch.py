@@ -11,7 +11,7 @@ Brings up:
 Usage:
   ros2 launch ur3e_hande_moveit_py sim.launch.py
   ros2 launch ur3e_hande_moveit_py sim.launch.py \
-      pregrasp_z_offset:=0.04 place_offset_y:=0.05 velocity_scale:=0.3
+      pregrasp_z_offset:=0.04 place_offset_y:=0.05 max_vel_scale:=0.3
 """
 
 from launch import LaunchDescription
