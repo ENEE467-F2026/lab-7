@@ -59,6 +59,7 @@ def launch_setup(context, *args, **kwargs):
     ur_hande_description_package = LaunchConfiguration("ur_hande_description_package")
     ur_hande_description_file = LaunchConfiguration("ur_hande_description_file")
     warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
+    use_fake_hardware = LaunchConfiguration("use_fake_hardware")
 
     # Robot description 
     robot_description_content = Command(
@@ -71,7 +72,7 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "name:=", "ur", " ",
             "ur_type:=", ur_type, " ",
-            "use_fake_hardware:=", "false", " ",
+            "use_fake_hardware:=", use_fake_hardware, " ",
             "prefix:=", prefix, " ",
         ]
     )
@@ -257,6 +258,7 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     declared_arguments = [
         DeclareLaunchArgument("use_sim_time", default_value="false"),
+        DeclareLaunchArgument("use_fake_hardware", default_value="false"),
         DeclareLaunchArgument("namespace", default_value=""),
         DeclareLaunchArgument("prefix", default_value='""'),
         DeclareLaunchArgument("launch_rviz", default_value="true"),
