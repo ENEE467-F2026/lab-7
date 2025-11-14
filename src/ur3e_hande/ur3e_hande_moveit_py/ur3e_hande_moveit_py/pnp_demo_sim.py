@@ -16,7 +16,7 @@
 # limitations under the License.
 
 """
-Pick-and-Place Node for the UR3e-Hand-E robot in Simulation.
+Pick-and-Place Node for the UR3e-Hand-E robot in simulation.
 
 Behavior:
     - If 'obj_pos' is passed as a ROS parameter (3 floats), it uses it directly.
@@ -41,6 +41,7 @@ from pymoveit2 import MoveIt2
 from pymoveit2.robots import ur3e_hande as robot
 from control_msgs.action import ParallelGripperCommand
 from ur3e_hande_planning_interfaces.action import GetTargetObjPose
+from visualization_msgs.msg import Marker, MarkerArray
 
 ur_approach = [
     -1.8605,         # pan 
@@ -85,6 +86,13 @@ class PickAndPlaceSim(Node):
         super().__init__("pnp_demo_sim")
         self.rtb_model = rtb.models.UR3()
         self.cb_group = ReentrantCallbackGroup()
+
+        self.pcd_plane_sub = self.create_subscription(
+            MarkerArray,
+            "plane_marker",
+            self.scene_cb,
+            10
+        )
 
         # params
         self.declare_parameter("obj_pos", [])
@@ -263,6 +271,62 @@ class PickAndPlaceSim(Node):
                 return False
 
         return True
+        
+    def scene_cb(self, msg: MarkerArray):
+        """
+        Callback for adding segmented plane to MoveIt planning scene.
+        Expects a MarkerArray containing ONE plane marker published by perception.
+        The marker must have:
+            - pose (position + orientation)
+            - scale.x, scale.y, scale.z describing box dimensions
+        """
+
+        if msg is None or len(msg.markers) == 0:
+            return
+
+        if "segmented_plane" in self.objects:
+            self.moveit2.remove_collision_object(id="segmented_plane")
+            del self.objects["segmented_plane"]
+            
+        plane_marker = msg.markers[0]   # get first marker
+
+        # Extract pose
+        pos = [
+            plane_marker.pose.position.x,
+            plane_marker.pose.position.y,
+            plane_marker.pose.position.z,
+        ]
+
+        quat = [
+            plane_marker.pose.orientation.x,
+            plane_marker.pose.orientation.y,
+            plane_marker.pose.orientation.z,
+            plane_marker.pose.orientation.w,
+        ]
+
+        # Extract dimensions
+        dims = [
+            max(plane_marker.scale.x, 0.001),
+            max(plane_marker.scale.y, 0.001),
+            max(plane_marker.scale.z, 0.001),
+        ]
+
+        obj = {
+            "shape": "box",
+            "id": "segmented_plane",
+            "position": pos,
+            "quat_xyzw": quat,
+            "dimensions": dims,
+        }
+
+        self.add_collision_object(obj)
+        self.get_logger().info(
+            f"Added plane collision box at {pos} with dims {dims} and quat {quat}"
+        )
+
+        # small sleep to ensure MoveIt processes scene updates
+        time.sleep(0.05)
+
 
     def _start_move(self):
         """One-shot starter: cancel timer, wait for joint states, then run sequence."""
@@ -371,6 +435,31 @@ class PickAndPlaceSim(Node):
     def close_gripper(self):
         self.get_logger().info("Closing gripper…")
         self.send_gripper_goal(0.001)
+    
+    # Core helpers
+    def add_collision_object(self, obj):
+        shape = obj["shape"]
+        obj_id = obj["id"]
+        pos = obj.get("position", [0, 0, 0])
+        quat = obj.get("quat_xyzw", [0, 0, 0, 1])
+        dims = obj.get("dimensions", [0.1, 0.1, 0.1])
+
+        if shape == "box":
+            self.moveit2.add_collision_box(id=obj_id, position=pos, quat_xyzw=quat, size=dims)
+        elif shape == "sphere":
+            self.moveit2.add_collision_sphere(id=obj_id, position=pos, radius=dims[0])
+        elif shape == "cylinder":
+            self.moveit2.add_collision_cylinder(
+                id=obj_id, position=pos, quat_xyzw=quat, height=dims[0], radius=dims[1]
+            )
+        elif shape == "cone":
+            self.moveit2.add_collision_cone(
+                id=obj_id, position=pos, quat_xyzw=quat, height=dims[0], radius=dims[1]
+            )
+        else:
+            raise ValueError(f"Unknown shape '{shape}'")
+        self.objects[obj_id] = obj
+        self.get_logger().info(f"Added {shape} '{obj_id}' at {pos}")
 
 
 def main(args=None):

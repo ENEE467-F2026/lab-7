@@ -105,6 +105,7 @@ def generate_launch_description():
             {"output_topic": "/filtered_cloud"},
             {"leaf_size": 0.005},
             {"crop_enabled": True},
+            {"stop_after_first": True},
             # {"crop_bounds": [0.33, 2.00, -0.72, 1.00, -0.50, 0.45]},
         ],
     )
@@ -118,6 +119,7 @@ def generate_launch_description():
         parameters=[
             {"use_sim_time": True},
             {"input_topic": "/filtered_cloud"},
+            {"stop_after_first_pub": True},
         ],
     )
 

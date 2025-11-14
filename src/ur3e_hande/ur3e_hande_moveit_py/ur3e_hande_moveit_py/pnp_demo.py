@@ -40,7 +40,7 @@ import spatialmath as sm
 from pymoveit2 import MoveIt2
 from pymoveit2.robots import ur3e_hande as robot
 from control_msgs.action import ParallelGripperCommand
-from ur3e_hande_planning_interfaces.action import GetTargetObjPose, DetectedSurfaces
+from ur3e_hande_planning_interfaces.action import GetTargetObjPose
 from visualization_msgs.msg import Marker, MarkerArray
 
 ur_approach = [
@@ -271,31 +271,56 @@ class PickAndPlaceSim(Node):
                 return False
 
         return True
-    
+        
     def scene_cb(self, msg: MarkerArray):
         """
-        Callback for adding segmented plane to MoveIt scene to prevent collisions with the table
+        Callback for adding segmented plane to MoveIt planning scene.
+        Expects a MarkerArray containing ONE plane marker published by perception.
+        The marker must have:
+            - pose (position + orientation)
+            - scale.x, scale.y, scale.z describing box dimensions
         """
-        # cast markerarray to collision obj
-        if msg is None:
+
+        if msg is None or len(msg.markers) == 0:
             return
-        
-        plane = msg[0] # get the first Marker in the MarkerArray
-        #TODO: get obj parameters from plane
-        shape = "box"
-        obj_id = int(0)
-        pos = [0, 0, 0]
-        quat = [0, 0, 0, 1]
-        dims = [0.1, 0.1, 0.1]
+
+        plane_marker = msg.markers[0]   # get first marker
+
+        # Extract pose
+        pos = [
+            plane_marker.pose.position.x,
+            plane_marker.pose.position.y,
+            plane_marker.pose.position.z,
+        ]
+
+        quat = [
+            plane_marker.pose.orientation.x,
+            plane_marker.pose.orientation.y,
+            plane_marker.pose.orientation.z,
+            plane_marker.pose.orientation.w,
+        ]
+
+        # Extract dimensions
+        dims = [
+            max(plane_marker.scale.x, 0.001),
+            max(plane_marker.scale.y, 0.001),
+            max(plane_marker.scale.z, 0.001),
+        ]
+
         obj = {
-            "shape": shape,
-            "obj_id": obj_id,
+            "shape": "box",
+            "id": "segmented_plane",
             "position": pos,
             "quat_xyzw": quat,
-            "dimensions": dims
+            "dimensions": dims,
         }
+
         self.add_collision_object(obj)
-        # Small pause so MoveIt has time to process the published CollisionObject
+        self.get_logger().info(
+            f"Added plane collision box at {pos} with dims {dims} and quat {quat}"
+        )
+
+        # small sleep to ensure MoveIt processes scene updates
         time.sleep(0.05)
 
 
