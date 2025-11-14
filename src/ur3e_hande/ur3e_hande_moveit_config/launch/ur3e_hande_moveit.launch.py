@@ -28,178 +28,115 @@
 
 #
 # Author: Denis Stogl
+# Modified by: Clinton Enwerem
+
 
 import os
-
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler
+from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
+from launch.substitutions import (
+    LaunchConfiguration,
+    PathJoinSubstitution,
+    Command,
+    FindExecutable,
+)
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from ur3e_moveit_config.launch_common import load_yaml
 
-from launch_ros.parameter_descriptions import ParameterValue
-
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
-from launch.conditions import IfCondition
-from launch.substitutions import (
-    Command,
-    FindExecutable,
-    LaunchConfiguration,
-    PathJoinSubstitution,
-)
-
 
 def launch_setup(context, *args, **kwargs):
 
-    # Initialize Arguments
-    ur_type = "ur3e" # FIXED TYPE
-    safety_limits = LaunchConfiguration("safety_limits")
-    safety_pos_margin = LaunchConfiguration("safety_pos_margin")
-    safety_k_position = LaunchConfiguration("safety_k_position")
-    # General arguments
-    ur_description_package = LaunchConfiguration("ur_description_package")
-    ur_hande_description_package = LaunchConfiguration("ur_hande_description_package")
-    ur_hande_description_file = LaunchConfiguration("ur_hande_description_file")
-    kinematics_params_file = LaunchConfiguration("kinematics_params_file")
-    _publish_robot_description_semantic = LaunchConfiguration("publish_robot_description_semantic")
-    moveit_config_package = LaunchConfiguration("moveit_config_package")
-    moveit_joint_limits_file = LaunchConfiguration("moveit_joint_limits_file")
-    moveit_srdf_filename = LaunchConfiguration("moveit_srdf_filename")
-    warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
-    prefix = LaunchConfiguration("prefix")
+    ur_type = "ur3e"
     use_sim_time = LaunchConfiguration("use_sim_time")
+    prefix = LaunchConfiguration("prefix")
+    namespace = LaunchConfiguration("namespace")
     launch_rviz = LaunchConfiguration("launch_rviz")
     launch_servo = LaunchConfiguration("launch_servo")
-    namespace = LaunchConfiguration("namespace")
+    moveit_config_package = LaunchConfiguration("moveit_config_package")
+    ur_hande_description_package = LaunchConfiguration("ur_hande_description_package")
+    ur_hande_description_file = LaunchConfiguration("ur_hande_description_file")
+    warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
 
-    joint_limit_params = PathJoinSubstitution(
-        [FindPackageShare(ur_description_package), "config", "joint_limits.yaml"]
-    )
-    kinematics_params = PathJoinSubstitution(
-        [os.environ.get("KINEMATICS_CONFIG_PATH", "/home/robot/ros2_ws/config"), kinematics_params_file]
-    )
-    physical_params = PathJoinSubstitution(
-        [FindPackageShare(ur_description_package), "config", "physical_parameters.yaml"]
-    )
-    visual_params = PathJoinSubstitution(
-        [FindPackageShare(ur_description_package), "config", "visual_parameters.yaml"]
-    )
-
+    # Robot description 
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare(ur_hande_description_package), "urdf", ur_hande_description_file]),
+            PathJoinSubstitution(
+                [FindPackageShare(ur_hande_description_package), "urdf", ur_hande_description_file]
+            ),
             " ",
-            "robot_ip:=192.168.77.22",
-            " ",
-            "joint_limit_params:=",
-            joint_limit_params,
-            " ",
-            "kinematics_params:=",
-            kinematics_params,
-            " ",
-            "physical_params:=",
-            physical_params,
-            " ",
-            "visual_params:=",
-            visual_params,
-            " ",
-            "safety_limits:=",
-            safety_limits,
-            " ",
-            "safety_pos_margin:=",
-            safety_pos_margin,
-            " ",
-            "safety_k_position:=",
-            safety_k_position,
-            " ",
-            "name:=",
-            "ur",
-            " ",
-            "ur_type:=",
-            ur_type,
-            " ",
-            "script_filename:=ros_control.urscript",
-            " ",
-            "input_recipe_filename:=rtde_input_recipe.txt",
-            " ",
-            "output_recipe_filename:=rtde_output_recipe.txt",
-            " ",
-            "prefix:=",
-            prefix,
-            " ",
+            "name:=", "ur", " ",
+            "ur_type:=", ur_type, " ",
+            "use_fake_hardware:=", "false", " ",
+            "prefix:=", prefix, " ",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
 
-    # MoveIt Configuration
+    # SRDF
     robot_description_semantic_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare(moveit_config_package), "config", moveit_srdf_filename]
+                [FindPackageShare(moveit_config_package), "config", "ur3e_hande.srdf.xacro"]
             ),
             " ",
-            "name:=",
-            # Also ur_type parameter could be used but then the planning group names in yaml
-            # configs has to be updated!
-            "ur",
-            " ",
-            "prefix:=",
-            prefix,
-            " ",
+            "name:=", "ur", " ",
+            "prefix:=", prefix, " ",
         ]
     )
-    robot_description_semantic = {"robot_description_semantic": ParameterValue(robot_description_semantic_content, value_type=str)}
-
-    publish_robot_description_semantic = {
-        "publish_robot_description_semantic": _publish_robot_description_semantic
+    robot_description_semantic = {
+        "robot_description_semantic": robot_description_semantic_content
     }
 
+    # Kinematics and planning params
     robot_description_kinematics = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), "config", "kinematics.yaml"]
     )
-
     robot_description_planning = {
         "robot_description_planning": load_yaml(
             str(moveit_config_package.perform(context)),
-            os.path.join("config", str(moveit_joint_limits_file.perform(context))),
+            os.path.join("config", "joint_limits.yaml"),
         )
     }
 
-    # Planning Configuration
+    # Load MoveIt controllers
+    moveit_controllers = load_yaml(
+        "ur3e_hande_moveit_config", "config/moveit_controllers.yaml"
+    )
+    controllers_yaml = load_yaml(
+        "ur3e_hande_moveit_config", "config/ros2_controllers.yaml"
+    )
+
+    # OMPL planner config
     ompl_planning_pipeline_config = {
         "move_group": {
             "planning_plugin": "ompl_interface/OMPLPlanner",
-            "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+            "request_adapters": (
+                "default_planner_request_adapters/AddTimeOptimalParameterization "
+                "default_planner_request_adapters/FixWorkspaceBounds "
+                "default_planner_request_adapters/FixStartStateBounds "
+                "default_planner_request_adapters/FixStartStateCollision "
+                "default_planner_request_adapters/FixStartStatePathConstraints"
+            ),
             "start_state_max_bounds_error": 0.1,
         }
     }
-    ompl_planning_yaml = load_yaml("ur3e_moveit_config", "config/ompl_planning.yaml")
+    ompl_planning_yaml = load_yaml(
+        "ur3e_hande_moveit_config", "config/ompl_planning.yaml"
+    )
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
-
-    # Trajectory Execution Configuration
-    controllers_yaml = load_yaml("ur3e_hande_moveit_config", "config/ros2_controllers.yaml")
-    # the scaled_joint_trajectory_controller does not work on fake hardware
-    change_controllers = context.perform_substitution(use_sim_time)
-    if change_controllers == "true":
-        controllers_yaml["scaled_joint_trajectory_controller"]["default"] = False
-        controllers_yaml["joint_trajectory_controller"]["default"] = True
-
-    # moveit_controllers = {
-    #     "moveit_simple_controller_manager": controllers_yaml,
-    #     "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
-    # }
-    moveit_controllers = load_yaml("ur3e_hande_moveit_config", "config/moveit_controllers.yaml")
 
     trajectory_execution = {
         "moveit_manage_controllers": False,
         "trajectory_execution.allowed_execution_duration_scaling": 1.2,
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
         "trajectory_execution.allowed_start_tolerance": 0.01,
-        # Execution time monitoring can be incompatible with the scaled JTC
-        "trajectory_execution.execution_duration_monitoring": False,
     }
 
     planning_scene_monitor_parameters = {
@@ -214,7 +151,31 @@ def launch_setup(context, *args, **kwargs):
         "warehouse_host": warehouse_sqlite_path,
     }
 
-    # Start the actual move_group node/action server
+    
+    # Controller spawners
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        output="screen",
+    )
+
+    ur_joint_traj_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_trajectory_controller", "--controller-manager", "/controller_manager"],
+        output="screen",
+    )
+
+    gripper_action_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["gripper_action_controller", "--controller-manager", "/controller_manager"],
+        output="screen",
+    )
+
+    
+    # MoveIt move_group node
     move_group_node = Node(
         package="moveit_ros_move_group",
         executable="move_group",
@@ -223,7 +184,6 @@ def launch_setup(context, *args, **kwargs):
         parameters=[
             robot_description,
             robot_description_semantic,
-            publish_robot_description_semantic,
             robot_description_kinematics,
             robot_description_planning,
             ompl_planning_pipeline_config,
@@ -231,43 +191,40 @@ def launch_setup(context, *args, **kwargs):
             moveit_controllers,
             planning_scene_monitor_parameters,
             {"use_sim_time": use_sim_time},
+            controllers_yaml,
             warehouse_ros_config,
         ],
         remappings=[
-            # namespace (relative) topic
-            ("/joint_states", "/combined_joint_states"),
-              # ("/joint_states", "/ur3e/joint_states"),
-        ]
+            ("/joint_states", "/joint_states"),
+        ],
     )
 
-    # rviz with moveit configuration
+    
+    # RViz  
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(moveit_config_package), "config", "moveit_pnp.rviz"]
     )
+
     rviz_node = Node(
         package="rviz2",
         condition=IfCondition(launch_rviz),
         executable="rviz2",
         name="rviz2_moveit",
         namespace=namespace,
-        output="log",
+        output="screen",
         arguments=["-d", rviz_config_file],
         parameters=[
             robot_description,
             robot_description_semantic,
-            ompl_planning_pipeline_config,
             robot_description_kinematics,
             robot_description_planning,
-            warehouse_ros_config,
-            {
-                "use_sim_time": use_sim_time,
-            },
-        ]
+            {"use_sim_time": use_sim_time},
+        ],
     )
 
-    # Servo node for realtime control
     servo_yaml = load_yaml("ur3e_moveit_config", "config/ur_servo.yaml")
     servo_params = {"moveit_servo": servo_yaml}
+
     servo_node = Node(
         package="moveit_servo",
         condition=IfCondition(launch_servo),
@@ -279,137 +236,34 @@ def launch_setup(context, *args, **kwargs):
             robot_description_semantic,
         ],
         output="screen",
-        remappings=[
-            ("/joint_states", "/combined_joint_states"),
-        ]
     )
 
-    nodes_to_start = [move_group_node, rviz_node, servo_node]
+    # Ensure controllers spawn before move_group
+    controller_event_handler = RegisterEventHandler(
+        OnProcessExit(
+            target_action=ur_joint_traj_spawner,
+            on_exit=[gripper_action_spawner, move_group_node, rviz_node, servo_node],
+        )
+    )
 
+    nodes_to_start = [
+        joint_state_broadcaster_spawner,
+        ur_joint_traj_spawner,
+        controller_event_handler,
+    ]
     return nodes_to_start
 
 
 def generate_launch_description():
-
-    declared_arguments = []
-    # UR specific arguments
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "safety_limits",
-            default_value="true",
-            description="Enables the safety limits controller if true.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "safety_pos_margin",
-            default_value="0.15",
-            description="The margin to lower and upper limits in the safety controller.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "safety_k_position",
-            default_value="20",
-            description="k-position factor in the safety controller.",
-        )
-    )
-    # General arguments
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ur_hande_description_package",
-            default_value="ur3e_hande_description",
-            description="Combined UR and Hand-E Description package with robot URDF/XACRO files. Usually the argument "
-            "is not set, it enables use of a custom description.",
-        )
-    )
-
-    declared_arguments.append(
-      DeclareLaunchArgument(
-          "ur_description_package",
-          default_value="ur3e_description",
-          description="Description package with robot URDF/XACRO files. Usually the argument "
-          "is not set, it enables use of a custom description.",
-      )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ur_hande_description_file",
-            default_value="ur3e_hande.urdf.xacro",
-            description="URDF/XACRO description file with the robot.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "kinematics_params_file",
-            default_value=os.environ.get("KINEMATICS_CONFIG_FILENAME", "ur3e_mrc.yaml"),
-            description="The file name of the calibration configuration of the actual robot used.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "publish_robot_description_semantic",
-            default_value="True",
-            description="Whether to publish the SRDF description on topic /robot_description_semantic.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "moveit_config_package",
-            default_value="ur3e_hande_moveit_config",
-            description="MoveIt config package with robot SRDF/XACRO files. Usually the argument "
-            "is not set, it enables use of a custom moveit config.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "moveit_srdf_filename",
-            default_value="ur3e_hande.srdf.xacro",
-            description="MoveIt SRDF/XACRO description file with the robot.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "moveit_joint_limits_file",
-            default_value="joint_limits.yaml",
-            description="MoveIt joint limits that augment or override the values from the URDF robot_description.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "warehouse_sqlite_path",
-            default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite"),
-            description="Path where the warehouse database should be stored",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "use_sim_time",
-            default_value="false",
-            description="Make MoveIt to use simulation time. This is needed for the trajectory planing in simulation.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "prefix",
-            default_value='""',
-            description="Prefix of the joint names, useful for "
-            "multi-robot setup. If changed than also joint names in the controllers' configuration "
-            "have to be updated.",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "namespace",
-            default_value="",
-            description="Namespace",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument("launch_servo", default_value="false", description="Launch Servo?")
-    )
-
+    declared_arguments = [
+        DeclareLaunchArgument("use_sim_time", default_value="false"),
+        DeclareLaunchArgument("namespace", default_value=""),
+        DeclareLaunchArgument("prefix", default_value='""'),
+        DeclareLaunchArgument("launch_rviz", default_value="true"),
+        DeclareLaunchArgument("launch_servo", default_value="false"),
+        DeclareLaunchArgument("moveit_config_package", default_value="ur3e_hande_moveit_config"),
+        DeclareLaunchArgument("ur_hande_description_package", default_value="ur3e_hande_description"),
+        DeclareLaunchArgument("ur_hande_description_file", default_value="ur3e_hande_hw.urdf.xacro"),
+        DeclareLaunchArgument("warehouse_sqlite_path", default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite")),
+    ]
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

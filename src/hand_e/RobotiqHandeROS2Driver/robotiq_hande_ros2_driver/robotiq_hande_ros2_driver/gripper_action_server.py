@@ -85,21 +85,11 @@ class HandEGripperActionServer(Node):
         p_diff = abs(target_position - self.gripper.get_current_position())
         u_diff = abs(target_speed - self.gripper.get_current_speed())
         f_diff = abs(target_force - self.gripper.get_current_force())
-        # if p_diff <= self.p_diff_thresh:
-        #     self.get_logger().warn(f'Goal position {target_position} is already within {p_diff} units of current position ({self.gripper.get_current_position()})!')
-        #     feedback.current_position = self.gripper.get_current_position()
-        #     feedback.current_speed = 0
-        #     feedback.current_force = self.gripper.get_current_force()
-        #     goal_h.publish_feedback(feedback)
-        #     result.position_error = p_diff
-        #     result.speed_error = u_diff
-        #     result.force_error = f_diff
-        #     goal_h.abort()
-        #     return result
+
         
         # self.get_logger().info("moving the gripper. position = {}, speed={}, force={}".format(target_position, target_speed, target_force))
         self.gripper.move_and_wait_for_pos(target_position, target_speed, target_force)
-        # self.get_logger().info('Successfully reached goal!')
+        self.get_logger().info('Successfully reached goal!')
         feedback.current_position = self.gripper.get_current_position()
         feedback.current_force = self.gripper.get_current_force()
         feedback.current_speed = self.gripper.get_current_speed()

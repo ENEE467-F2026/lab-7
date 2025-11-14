@@ -10,7 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(robotiq_hande_description REQUIRED)
 
 install(DIRECTORY
-  launch rviz scripts
+  launch rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
