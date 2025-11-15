@@ -70,7 +70,7 @@ class PickAndPlaceSim(Node):
         self.declare_parameter("obj_pos", [])
         self.declare_parameter("target_obj_bounds", [0.3, 0.5, -0.2, 0.2])
         self.declare_parameter("target_height", 0.13)
-        self.declare_parameter("target_position", [0.29, 0.51, 0.07])
+        self.declare_parameter("target_position", [0.29, 0.51, 0.076])
         self.declare_parameter("pregrasp_z", 0.28)
         self.declare_parameter("lift_z_offset", 0.12)
         self.declare_parameter("place_offset_y", 0.0)
@@ -156,7 +156,7 @@ class PickAndPlaceSim(Node):
         x_obj, y_obj, z_obj = self.obj_pos
 
         # Mirror the object across the robot base
-        x_place = -x_obj
+        x_place = -x_obj * 1.1
 
         # Optionally, clamp to a safe zone
         TABLE_X, TABLE_Y, SAFE_Z = self.table_dims[0], self.table_dims[1], self.lift_z
