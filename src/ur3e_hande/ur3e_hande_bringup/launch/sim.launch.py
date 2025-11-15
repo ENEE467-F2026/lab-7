@@ -27,7 +27,7 @@ from launch.conditions import IfCondition
 def generate_launch_description():
     # Launch configurations
     launch_rviz = LaunchConfiguration("launch_rviz")
-    pregrasp_z_offset = LaunchConfiguration("pregrasp_z_offset")
+    pregrasp_z = LaunchConfiguration("pregrasp_z")
     place_offset_y = LaunchConfiguration("place_offset_y")
     world_to_spawn = LaunchConfiguration("world_to_spawn")
     pnp = LaunchConfiguration("pnp")
@@ -37,6 +37,7 @@ def generate_launch_description():
     max_vel_scale = LaunchConfiguration("max_vel_scale")
     goal_pos_tol = LaunchConfiguration("goal_pos_tol")
     goal_ori_tol = LaunchConfiguration("goal_ori_tol")
+    obj_pos = LaunchConfiguration("obj_pos")
 
 
     # Declared arguments
@@ -62,12 +63,17 @@ def generate_launch_description():
             description="Position tolerance for MoveIt2 goals (meters).",
         ),
         DeclareLaunchArgument(
+            "obj_pos",
+            default_value="0.30 0.50 0.10",
+            description="Manual (x y z) object position (used only when use_perception=false)."
+        ),
+        DeclareLaunchArgument(
             "goal_ori_tol",
             default_value="0.01",
             description="Orientation tolerance for MoveIt2 goals (radians).",
         ),
         DeclareLaunchArgument(
-            "pregrasp_z_offset",
+            "pregrasp_z",
             default_value="0.0",
             description="Extra Z-offset added to the pre-grasp pose (meters).",
         ),
@@ -175,10 +181,10 @@ def generate_launch_description():
                     {"max_acc_scale": ParameterValue(max_acc_scale, value_type=float)},
                     {"goal_pos_tol": ParameterValue(goal_pos_tol, value_type=float)},
                     {"goal_ori_tol": ParameterValue(goal_ori_tol, value_type=float)},
-                    {"pregrasp_z_offset": ParameterValue(pregrasp_z_offset, value_type=float)},
+                    {"pregrasp_z": ParameterValue(pregrasp_z, value_type=float)},
                     {"place_offset_y": ParameterValue(place_offset_y, value_type=float)},
                     {"print_metrics": ParameterValue(print_metrics, value_type=bool)},
-                    # If omitted, PickAndPlaceSim will query GetTargetObjPose
+                    # {"obj_pos": obj_pos}, # If obj_pos is omitted, PickAndPlaceSim will query GetTargetObjPose
                 ],
             )
         ],

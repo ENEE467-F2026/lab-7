@@ -44,7 +44,7 @@ from ur3e_hande_planning_interfaces.action import GetTargetObjPose
 from std_msgs.msg import Bool
 from visualization_msgs.msg import Marker, MarkerArray
 
-class PickAndPlaceSim(Node):
+class PickAndPlace(Node):
     def __init__(self):
         super().__init__("pnp_demo")
         self.rtb_model = rtb.models.UR3()
@@ -69,7 +69,7 @@ class PickAndPlaceSim(Node):
         self.declare_parameter("target_obj_bounds", [0.3, 0.5, -0.2, 0.2])
         self.declare_parameter("target_height", 0.13)
         self.declare_parameter("target_position", [0.29, 0.51, 0.10])
-        self.declare_parameter("pregrasp_z", 0.28)
+        self.declare_parameter("pregrasp_z", 0.11)
         self.declare_parameter("place_z", 0.4)
         self.declare_parameter("lift_z_offset", 0.12)
         self.declare_parameter("place_offset_y", 0.0)
@@ -527,7 +527,7 @@ class PickAndPlaceSim(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = PickAndPlaceSim()
+    node = PickAndPlace()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

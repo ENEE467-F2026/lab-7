@@ -25,6 +25,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.parameter_descriptions import ParameterValue
+from launch.launch_description_sources import AnyLaunchDescriptionSource
 
 from launch.substitutions import (
     Command,
@@ -43,8 +44,6 @@ def generate_launch_description():
 
     # launch arguments
     use_perception = LaunchConfiguration("use_perception")
-    description_package = LaunchConfiguration("description_package")
-    description_filepath = LaunchConfiguration("description_filepath")
     obj_pos = LaunchConfiguration("obj_pos")
     robot_ip = LaunchConfiguration("robot_ip")
     launch_rviz = LaunchConfiguration("launch_rviz")
@@ -62,15 +61,10 @@ def generate_launch_description():
     rviz_config = LaunchConfiguration("rviz_config")
     use_sim_time = LaunchConfiguration("use_sim_time")
     log_level = LaunchConfiguration("log_level")
-    camera_mount_frame = LaunchConfiguration("camera_mount_frame")
-    kinematics_params_file = LaunchConfiguration("kinematics_params_file")
     controllers_file = LaunchConfiguration("controllers_file")
-    tf_prefix = LaunchConfiguration('tf_prefix')
-
-    # Load calibration file
-    camera_calib_file = os.getenv("CAMERA_CALIBRATION_FILE")
-    if camera_calib_file is None:
-        raise RuntimeError("CAMERA_CALIBRATION_FILE not set!")
+    description_launchfile = LaunchConfiguration("description_launchfile")
+    pregrasp_z = LaunchConfiguration("pregrasp_z")
+    place_offset_y = LaunchConfiguration("place_offset_y")
 
     declared_arguments = [
         DeclareLaunchArgument(
@@ -102,7 +96,7 @@ def generate_launch_description():
             default_value=PathJoinSubstitution(
                 [FindPackageShare("ur3e_hande_description"), "config", "controllers.yaml"]
             ),
-            description="YAML file with the controllers configuration.",
+            description="YAML file with the combined controllers configuration.",
         ),
         DeclareLaunchArgument(
             "use_mock_hardware",
@@ -118,11 +112,6 @@ def generate_launch_description():
             "use_tool_communication",
             default_value="false",
             description="Start robot with mock hardware mirroring command to its states.",
-        ),
-        DeclareLaunchArgument(
-            "camera_mount_frame",
-            default_value="camera_mount",
-            description="Frame ID for the camera mount.",
         ),
         DeclareLaunchArgument(
             "use_sim_time",
@@ -170,12 +159,10 @@ def generate_launch_description():
             description="Path to URDF/Xacro file, relative to share of `description_package`.",
         ),
         DeclareLaunchArgument(
-            "pregrasp_z_offset",
-            default_value="0.0",
+            "pregrasp_z",
+            default_value="0.11",
             description="Extra Z-offset added to the pre-grasp pose (meters).",
         ),
-        DeclareLaunchArgument("kinematics_params_file", 
-                              default_value=os.environ.get("KINEMATICS_CONFIG_FILE", "/home/robot/kinematic_config/ur3e_mrc.yaml")),
         DeclareLaunchArgument(
             "place_offset_y",
             default_value="0.0",
@@ -220,25 +207,21 @@ def generate_launch_description():
             ),
             description="Path to configuration for RViz2.",
         ),
+        DeclareLaunchArgument(
+            "description_launchfile",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("ur3e_hande_description"), "launch", "ur3e_hande_rsp.launch.py"]
+            ),
+            description="Launchfile (absolute path) providing the description. "
+            "The launchfile has to start a robot_state_publisher node that "
+            "publishes the description topic.",
+        )
     ]
 
     # package directories
     ur3e_hardware_bringup_pkg = get_package_share_directory("ur_robot_driver")
     moveit_pkg = get_package_share_directory("ur3e_hande_moveit_config")
-    perception_pkg = get_package_share_directory("ur3e_hande_perception")
 
-    # robot_description
-    robot_description_content = Command([
-        PathJoinSubstitution([FindExecutable(name="xacro")]),
-        " ",
-        PathJoinSubstitution([FindPackageShare(description_package), description_filepath]),
-        " ",
-        "kinematics_parameters_file:=", kinematics_params_file, " ",
-    ])
-
-    robot_description = {
-        "robot_description": ParameterValue(robot_description_content, value_type=str)
-    }
     ld = LaunchDescription(declared_arguments)
 
     # RealSense Bringup
@@ -265,7 +248,22 @@ def generate_launch_description():
         )
     )
 
-    
+    ld.add_action(
+        TimerAction(
+            period=2.0,
+            actions=[
+
+            IncludeLaunchDescription(
+                AnyLaunchDescriptionSource(description_launchfile),
+                launch_arguments={
+                    "robot_ip": robot_ip,
+                    "ur_type": ur_type,
+             }.items(),
+                )
+            ]
+        )
+    )
+
     # UR3e Hardware Bringup
     ld.add_action(
         TimerAction(
@@ -282,49 +280,12 @@ def generate_launch_description():
                         "use_tool_communication": use_tool_communication,
                         "use_mock_hardware": use_mock_hardware,
                         "controllers_file": controllers_file,
+                        "description_launchfile": description_launchfile,
                     }.items(),
                 )
             ],
         )
         )
-    
-    # rsp
-    ld.add_action(
-        TimerAction(
-            period=6.0,
-            actions=[
-                Node(
-                package="robot_state_publisher",
-                executable="robot_state_publisher",
-                output="screen",
-                arguments=["--ros-args", "--log-level", log_level],
-                parameters=[
-                    robot_description,
-                    {"publish_frequency": 50.0, "frame_prefix": "", "use_sim_time": use_sim_time},
-                ],
-            ),
-            ])
-    )
-
-    # gripper controller
-    ld.add_action(
-        TimerAction(
-            period=6.0,
-            actions=[
-                Node(
-                    package="controller_manager",
-                    executable="spawner",
-                    arguments=[
-                        "gripper_action_controller",
-                        "--param-file", controllers_file,
-                        "--controller-manager", "/controller_manager"
-                    ],
-                    parameters=[{'tf_prefix': tf_prefix}],
-                    output="screen"
-                ),
-            ],
-        )
-    )
 
     # rviz2
     ld.add_action(
@@ -333,7 +294,9 @@ def generate_launch_description():
             actions=[
                 Node(
                     package="rviz2",
-                    condition=IfCondition(launch_rviz),
+                    condition=IfCondition(
+                        PythonExpression(["'", launch_rviz, "' == 'true' and not ('", use_moveit, "' == 'true')"])
+                    ),
                     executable="rviz2",
                     output="log",
                     arguments=[
@@ -347,6 +310,7 @@ def generate_launch_description():
                 )
                 ])
     )
+
     # Perception Nodes
     ld.add_action(
         TimerAction(
@@ -403,7 +367,8 @@ def generate_launch_description():
                         os.path.join(moveit_pkg, "launch", "ur3e_hande_moveit.launch.py")
                     ),
                     launch_arguments={
-                        "use_sim_time": "false",
+                        "use_sim_time": use_sim_time,
+                        "log_level": log_level,
                         "launch_rviz": launch_rviz,
                     }.items(),
                 )
@@ -414,7 +379,7 @@ def generate_launch_description():
     # Pick-and-Place Node
     ld.add_action(
         TimerAction(
-            period=15.0,
+            period=14.0,
             condition=IfCondition(pnp),
             actions=[
                 Node(
@@ -422,6 +387,17 @@ def generate_launch_description():
                     executable="pnp_demo",
                     name="pnp_demo",
                     output="screen",
+                    parameters=[
+                    {"use_sim_time": True},
+                    {"max_vel_scale": ParameterValue(max_vel_scale, value_type=float)},
+                    {"max_acc_scale": ParameterValue(max_acc_scale, value_type=float)},
+                    {"goal_pos_tol": ParameterValue(goal_pos_tol, value_type=float)},
+                    {"goal_ori_tol": ParameterValue(goal_ori_tol, value_type=float)},
+                    {"pregrasp_z": ParameterValue(pregrasp_z, value_type=float)},
+                    {"place_offset_y": ParameterValue(place_offset_y, value_type=float)},
+                    {"print_metrics": ParameterValue(print_metrics, value_type=bool)},
+                    # {"obj_pos": obj_pos}, # If obj_pos is omitted, PickAndPlace will query GetTargetObjPose
+                ],
                 )
             ],
         )

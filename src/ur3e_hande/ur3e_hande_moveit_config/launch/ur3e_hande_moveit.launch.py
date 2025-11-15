@@ -45,32 +45,21 @@ from ur3e_moveit_config.launch_common import load_yaml
 def launch_setup(context, *args, **kwargs):
     # Launch configurations
     use_sim_time = LaunchConfiguration("use_sim_time")
-    prefix = LaunchConfiguration("prefix")
     namespace = LaunchConfiguration("namespace")
     launch_rviz = LaunchConfiguration("launch_rviz")
     warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
-    use_fake_hardware = LaunchConfiguration("use_fake_hardware")
-    kinematics_params_file = LaunchConfiguration("kinematics_params_file")
 
-    # Resolve package paths (static resolution)
+    # resolve package paths
     desc_pkg = FindPackageShare("ur3e_hande_description").find("ur3e_hande_description")
     moveit_pkg = FindPackageShare("ur3e_hande_moveit_config").find("ur3e_hande_moveit_config")
 
     urdf_path = f"{desc_pkg}/urdf/ur3e_hande_hw.urdf.xacro"
     srdf_path = f"{moveit_pkg}/config/ur3e_hande.srdf"
     kin_path = f"{moveit_pkg}/config/kinematics.yaml"
-    ompl_path = f"{moveit_pkg}/config/ompl_planning.yaml"
     ctrl_path = f"{moveit_pkg}/config/moveit_controllers.yaml"
-    ros2_ctrl_path = f"{moveit_pkg}/config/ros2_controllers.yaml"
     rviz_config_file = f"{moveit_pkg}/config/moveit_pnp.rviz"
-    kinematics_params = PathJoinSubstitution(
-        [FindPackageShare(os.path.join(desc_pkg), 
-                          "config", 
-                          kinematics_params_file)]
-    )
-    
 
-    # Build MoveIt config from scratch
+    # build MoveIt config from scratch
     moveit_config = (
         MoveItConfigsBuilder("ur3e_hande", package_name="ur3e_hande_moveit_config")
         .robot_description(file_path=urdf_path)
@@ -123,28 +112,6 @@ def launch_setup(context, *args, **kwargs):
         "warehouse_host": warehouse_sqlite_path,
     }
 
-    # Controller spawners (unchanged)
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-        output="screen",
-    )
-
-    ur_joint_traj_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_trajectory_controller", "--controller-manager", "/controller_manager"],
-        output="screen",
-    )
-
-    gripper_action_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["gripper_action_controller", "--controller-manager", "/controller_manager"],
-        output="screen",
-    )
-
     # MoveIt move_group node using the constructed moveit_config
     move_group_node = Node(
         package="moveit_ros_move_group",
@@ -172,7 +139,6 @@ def launch_setup(context, *args, **kwargs):
         package="rviz2",
         condition=IfCondition(launch_rviz),
         executable="rviz2",
-        name="rviz2_moveit",
         namespace=namespace,
         output="screen",
         arguments=["-d", rviz_config_file],
@@ -184,18 +150,10 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    # Ensure controllers spawn before move_group
-    controller_event_handler = RegisterEventHandler(
-        OnProcessExit(
-            target_action=ur_joint_traj_spawner,
-            on_exit=[gripper_action_spawner, move_group_node, rviz_node],
-        )
-    )
 
     nodes_to_start = [
-        joint_state_broadcaster_spawner,
-        ur_joint_traj_spawner,
-        controller_event_handler,
+        move_group_node,
+        rviz_node,
     ]
     return nodes_to_start
 
@@ -212,6 +170,5 @@ def generate_launch_description():
         DeclareLaunchArgument("ur_hande_description_package", default_value="ur3e_hande_description"),
         DeclareLaunchArgument("ur_hande_description_file", default_value="ur3e_hande_hw.urdf.xacro"),
         DeclareLaunchArgument("warehouse_sqlite_path", default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite")),
-        DeclareLaunchArgument("kinematics_params_file", default_value=os.environ.get("KINEMATICS_CONFIG_FILE", "/home/robot/kinematic_config/ur3e_mrc.yaml")),
     ]
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

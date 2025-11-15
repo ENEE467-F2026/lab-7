@@ -30,7 +30,6 @@ def generate_launch_description() -> LaunchDescription:
     # Launch configurations
     description_package = LaunchConfiguration("description_package")
     description_filepath = LaunchConfiguration("description_filepath")
-    default_world = LaunchConfiguration("default_world")
     world_file = LaunchConfiguration("world_file")
     robot_model = LaunchConfiguration("robot_model")
     use_sim_time = LaunchConfiguration("use_sim_time")
@@ -40,17 +39,10 @@ def generate_launch_description() -> LaunchDescription:
     launch_rviz = LaunchConfiguration("launch_rviz")
     use_teleop =  LaunchConfiguration("use_teleop")
 
-    # ros_gz_bridge
-    bridge_name = LaunchConfiguration('bridge_name')
-    config_file = LaunchConfiguration('config_file')
-
     # add models from package share so Gazebo Sim can find package:// URIs
     description_pkg_share = get_package_share_directory("ur3e_hande_description")
     gazebo_pkg_share = get_package_share_directory("ur3e_hande_gz")
     local_model_path = os.path.join(description_pkg_share, "meshes")
-
-    # Nodes
-    aruco_marker_id = LaunchConfiguration("aruco_marker_id")
 
     # add gz-specific models folder
     gz_models_path = os.path.join(gazebo_pkg_share, "models")
@@ -138,20 +130,6 @@ def generate_launch_description() -> LaunchDescription:
             parameters=[{"use_sim_time": use_sim_time}],
         ),
 
-        # Load controllers using controller manager
-        # TimerAction(
-        #     period=2.0,
-        #     actions=[
-        #         Node(
-        #         package="controller_manager",
-        #         executable="ros2_control_node",
-        #         parameters=[controllers_config],
-        #         output="both",
-        #         remappings=[
-        #             ("~/robot_description", "/robot_description"),
-        #         ],
-        #         )]),
-
         TimerAction(
             period=2.0,
             actions=[
@@ -169,12 +147,7 @@ def generate_launch_description() -> LaunchDescription:
                 ),
             ],
         ),
-        # Node(
-        #     package="controller_manager",
-        #     executable="spawner",
-        #     arguments=["forward_velocity_controller", "--param-file", controllers_config, "--controller-manager", "/controller_manager"],
-        #     output="screen",
-        # ),
+
         TimerAction(
             period=2.0,
             actions=[
@@ -186,6 +159,7 @@ def generate_launch_description() -> LaunchDescription:
                 ),
             ],
         ),
+
         # Switch to forward_velocity_controller if use_teleop is specified
         ExecuteProcess(
             condition=IfCondition(use_teleop),
@@ -231,26 +205,6 @@ def generate_launch_description() -> LaunchDescription:
             ],
             parameters=[{"use_sim_time": use_sim_time}],
         ),
-
-        # ArUco detection
-        # Node(
-        #     package="aruco_pose_estimation",
-        #     executable="detect_aruco.py",
-        #     parameters=[{
-        #         "aruco_marker_id": aruco_marker_id,
-        #         "use_sim_time": use_sim_time,
-        #     }],
-        #     output="screen",
-        # ),
-
-        # Custom marker-to-arm motion node
-        # Node(
-        #     package="aruco_pose_estimation",
-        #     condition=IfCondition(LaunchConfiguration("move_to_aruco")),
-        #     parameters=[{"use_sim_time": use_sim_time}],
-        #     executable="move_to_aruco.py",
-        #     output="screen",
-        # )
     ]
 
     return LaunchDescription(declared_arguments + launch_descriptions + nodes)

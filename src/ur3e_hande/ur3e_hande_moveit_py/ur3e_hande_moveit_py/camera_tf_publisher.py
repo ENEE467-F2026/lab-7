@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+# Not helpful but keeping around in case of future reference.
+# As it stands, xacro does not allow for in place modification or injection of frames.
 import os
 import yaml
 import rclpy
