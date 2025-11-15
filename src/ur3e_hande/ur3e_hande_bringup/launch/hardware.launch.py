@@ -64,6 +64,8 @@ def generate_launch_description():
     log_level = LaunchConfiguration("log_level")
     camera_mount_frame = LaunchConfiguration("camera_mount_frame")
     kinematics_params_file = LaunchConfiguration("kinematics_params_file")
+    controllers_file = LaunchConfiguration("controllers_file")
+    tf_prefix = LaunchConfiguration('tf_prefix')
 
     # Load calibration file
     camera_calib_file = os.getenv("CAMERA_CALIBRATION_FILE")
@@ -96,9 +98,21 @@ def generate_launch_description():
             default_value="ur3e",
         ),
         DeclareLaunchArgument(
+            "controllers_file",
+            default_value=PathJoinSubstitution(
+                [FindPackageShare("ur3e_hande_description"), "config", "controllers.yaml"]
+            ),
+            description="YAML file with the controllers configuration.",
+        ),
+        DeclareLaunchArgument(
             "use_mock_hardware",
             default_value="false",
             description="Start robot with mock hardware mirroring command to its states.",
+        ),
+        DeclareLaunchArgument(
+            "tf_prefix",
+            default_value="",
+            description="TF prefix.",
         ),
         DeclareLaunchArgument(
             "use_tool_communication",
@@ -219,7 +233,7 @@ def generate_launch_description():
         " ",
         PathJoinSubstitution([FindPackageShare(description_package), description_filepath]),
         " ",
-        "kinematics_params:=", kinematics_params_file, " ",
+        "kinematics_parameters_file:=", kinematics_params_file, " ",
     ])
 
     robot_description = {
@@ -252,23 +266,6 @@ def generate_launch_description():
     )
 
     
-
-    # Static TF Publisher for Camera
-    ld.add_action(
-        TimerAction(
-        period=0.0,
-        actions=[Node(
-            package="ur3e_hande_moveit_py",
-            executable="camera_tf_publisher",
-            parameters=[{
-                "config_file": camera_calib_file,
-                "use_sim_time": use_sim_time,
-                "camera_mount_frame": camera_mount_frame
-            }],
-            output="screen",
-        )])
-        )
-    
     # UR3e Hardware Bringup
     ld.add_action(
         TimerAction(
@@ -283,7 +280,8 @@ def generate_launch_description():
                         "robot_ip": robot_ip,
                         "launch_rviz": launch_ur_rviz,
                         "use_tool_communication": use_tool_communication,
-                        "use_mock_hardware": use_mock_hardware
+                        "use_mock_hardware": use_mock_hardware,
+                        "controllers_file": controllers_file,
                     }.items(),
                 )
             ],
@@ -306,6 +304,26 @@ def generate_launch_description():
                 ],
             ),
             ])
+    )
+
+    # gripper controller
+    ld.add_action(
+        TimerAction(
+            period=6.0,
+            actions=[
+                Node(
+                    package="controller_manager",
+                    executable="spawner",
+                    arguments=[
+                        "gripper_action_controller",
+                        "--param-file", controllers_file,
+                        "--controller-manager", "/controller_manager"
+                    ],
+                    parameters=[{'tf_prefix': tf_prefix}],
+                    output="screen"
+                ),
+            ],
+        )
     )
 
     # rviz2

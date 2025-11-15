@@ -22,7 +22,7 @@ class StaticCameraTFPublisher(Node):
             "camera_mount_frame", "camera_mount"
         ).value
 
-        if not camera_calib_file or not os.path.exists(camera_calib_file):
+        if not camera_calib_file or not os.path.exists(str(camera_calib_file)):
             raise FileNotFoundError(
                 f"Camera calibration file not found: {camera_calib_file}"
             )
