@@ -1,0 +1,81 @@
+serial_no: _337322074715
+robot_name: ur3e_hande
+device_type: d435i  
+reconnect_timeout: 20.0
+wait_for_device_timeout: 1200.0
+world_frame_id: world
+display_images: true
+enable_rgbd: true
+enable_sync: true
+align_depth_enable: true 
+enable_color: true
+enable_depth: true
+
+# moveit2
+moveit2:
+    max_velocity: 0.5
+    max_accn: 0.5
+
+# launch params
+queue_size: 10
+use_rviz: true
+
+# Physical camera params
+camera_height: 0.025
+camera_length: 0.09
+camera_depth: 0.025
+
+intrinsic_params:
+    accelerometer:
+        scale_factor: 1.0
+        bias: 0.0
+    gyro:
+        bias: 0.0
+    depth:
+        frame_rate: 90
+        fov:
+            hor: 87
+            vert: 58
+        resolution: 
+            height: 720
+            width: 1280
+        principal_point:
+            x: 636.720153808594
+            y: 370.6181640625
+        focal_length:
+            x:  642.312133789062
+            y:  642.312133789062
+        distortion: brown_conrady
+        window_size: [25, 350]
+    rgbd:
+        frame_rate: 30
+        fov:
+            hor: 69
+            vert: 43.47
+        resolution: 
+            height: 720
+            width: 1280
+        principal_point:
+            x: 643.51513671875
+            y: 369.371307373047
+        focal_length:
+            x:  903.686645507812
+            y:  902.850952148438
+        distortion: inverse_brown_conrady
+        window_size: [25, 75]
+
+extrinsic_params:
+    # experiment 
+    vention_table_width: 1.092
+    vention_table_depth: 0.822
+    vention_table_height: 0.755
+    camera_mount_bar_length: 0.2413
+    camera_mount_height: 0.47625 # 0.778585
+    clamp_offset: [0.1524, 0.03175]
+    alp_to_cam_rpy: [0.69486183, 0.0, 0.0]
+    mount_to_cam_xyz: [0.0398, 0.033175, 0.0125] 
+    mount_to_cam_rpy: [0.6948618321360263, 0, 0]
+
+
+
+    

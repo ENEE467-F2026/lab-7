@@ -3,9 +3,9 @@
 <package format="3">
   <name>ur3e_hande_description</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Description package for the UR3E-Hand-E robot</description>
   <maintainer email="me@clintonenwerem.com">Clinton Enwerem</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -13,9 +13,11 @@
   <test_depend>ament_lint_common</test_depend>
 
   <depend>robotiq_hande_description</depend>
+  <depend>robotiq_hande_driver</depend>
   <depend>ur_description</depend>
   <depend>ur_robot_driver</depend>
-  <depend>ur3e_description</depend>
+  <exec_depend>urdf_launch</exec_depend>
+
 
   <export>
     <build_type>ament_cmake</build_type>

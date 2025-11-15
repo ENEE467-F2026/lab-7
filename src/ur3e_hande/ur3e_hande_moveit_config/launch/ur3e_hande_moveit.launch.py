@@ -30,89 +30,62 @@
 # Author: Denis Stogl
 # Modified by: Clinton Enwerem
 
-
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, RegisterEventHandler
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
-from launch.substitutions import (
-    LaunchConfiguration,
-    PathJoinSubstitution,
-    Command,
-    FindExecutable,
-)
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, FindExecutable
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from moveit_configs_utils import MoveItConfigsBuilder
 from ur3e_moveit_config.launch_common import load_yaml
 
 
 def launch_setup(context, *args, **kwargs):
-
-    ur_type = "ur3e"
+    # Launch configurations
     use_sim_time = LaunchConfiguration("use_sim_time")
     prefix = LaunchConfiguration("prefix")
     namespace = LaunchConfiguration("namespace")
     launch_rviz = LaunchConfiguration("launch_rviz")
-    launch_servo = LaunchConfiguration("launch_servo")
-    moveit_config_package = LaunchConfiguration("moveit_config_package")
-    ur_hande_description_package = LaunchConfiguration("ur_hande_description_package")
-    ur_hande_description_file = LaunchConfiguration("ur_hande_description_file")
     warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
+    kinematics_params_file = LaunchConfiguration("kinematics_params_file")
 
-    # Robot description 
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [FindPackageShare(ur_hande_description_package), "urdf", ur_hande_description_file]
-            ),
-            " ",
-            "name:=", "ur", " ",
-            "ur_type:=", ur_type, " ",
-            "use_fake_hardware:=", use_fake_hardware, " ",
-            "prefix:=", prefix, " ",
-        ]
-    )
-    robot_description = {"robot_description": robot_description_content}
+    # Resolve package paths (static resolution)
+    desc_pkg = FindPackageShare("ur3e_hande_description").find("ur3e_hande_description")
+    moveit_pkg = FindPackageShare("ur3e_hande_moveit_config").find("ur3e_hande_moveit_config")
 
-    # SRDF
-    robot_description_semantic_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [FindPackageShare(moveit_config_package), "config", "ur3e_hande.srdf.xacro"]
-            ),
-            " ",
-            "name:=", "ur", " ",
-            "prefix:=", prefix, " ",
-        ]
+    urdf_path = f"{desc_pkg}/urdf/ur3e_hande_hw.urdf.xacro"
+    srdf_path = f"{moveit_pkg}/config/ur3e_hande.srdf"
+    kin_path = f"{moveit_pkg}/config/kinematics.yaml"
+    ompl_path = f"{moveit_pkg}/config/ompl_planning.yaml"
+    ctrl_path = f"{moveit_pkg}/config/moveit_controllers.yaml"
+    ros2_ctrl_path = f"{moveit_pkg}/config/ros2_controllers.yaml"
+    rviz_config_file = f"{moveit_pkg}/config/moveit_pnp.rviz"
+    kinematics_params = PathJoinSubstitution(
+        [FindPackageShare(os.path.join(desc_pkg), 
+                          "config", 
+                          kinematics_params_file)]
     )
-    robot_description_semantic = {
-        "robot_description_semantic": robot_description_semantic_content
-    }
+    
 
-    # Kinematics and planning params
-    robot_description_kinematics = PathJoinSubstitution(
-        [FindPackageShare(moveit_config_package), "config", "kinematics.yaml"]
+    # Build MoveIt config from scratch
+    moveit_config = (
+        MoveItConfigsBuilder("ur3e_hande", package_name="ur3e_hande_moveit_config")
+        .robot_description(file_path=urdf_path)
+        .robot_description_semantic(file_path=srdf_path)
+        .robot_description_kinematics(file_path=kin_path)
+        .planning_pipelines(default_planning_pipeline="ompl", pipelines=["ompl"])
+        .trajectory_execution(file_path=ctrl_path)
+        .to_moveit_configs()
     )
-    robot_description_planning = {
-        "robot_description_planning": load_yaml(
-            str(moveit_config_package.perform(context)),
-            os.path.join("config", "joint_limits.yaml"),
-        )
-    }
 
-    # Load MoveIt controllers
-    moveit_controllers = load_yaml(
-        "ur3e_hande_moveit_config", "config/moveit_controllers.yaml"
-    )
-    controllers_yaml = load_yaml(
-        "ur3e_hande_moveit_config", "config/ros2_controllers.yaml"
-    )
+    # Load additional YAMLs
+    moveit_controllers = load_yaml("ur3e_hande_moveit_config", "config/moveit_controllers.yaml")
+    controllers_yaml = load_yaml("ur3e_hande_moveit_config", "config/ros2_controllers.yaml")
+    ompl_planning_yaml = load_yaml("ur3e_hande_moveit_config", "config/ompl_planning.yaml")
+    joint_limits = load_yaml("ur3e_hande_moveit_config", "config/joint_limits.yaml")
 
     # OMPL planner config
     ompl_planning_pipeline_config = {
@@ -128,10 +101,8 @@ def launch_setup(context, *args, **kwargs):
             "start_state_max_bounds_error": 0.1,
         }
     }
-    ompl_planning_yaml = load_yaml(
-        "ur3e_hande_moveit_config", "config/ompl_planning.yaml"
-    )
-    ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
+    if ompl_planning_yaml:
+        ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
 
     trajectory_execution = {
         "moveit_manage_controllers": False,
@@ -152,8 +123,7 @@ def launch_setup(context, *args, **kwargs):
         "warehouse_host": warehouse_sqlite_path,
     }
 
-    
-    # Controller spawners
+    # Controller spawners (unchanged)
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -175,24 +145,21 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
     )
 
-    
-    # MoveIt move_group node
+    # MoveIt move_group node using the constructed moveit_config
     move_group_node = Node(
         package="moveit_ros_move_group",
         executable="move_group",
         namespace=namespace,
         output="screen",
         parameters=[
-            robot_description,
-            robot_description_semantic,
-            robot_description_kinematics,
-            robot_description_planning,
+            moveit_config.to_dict(),
+            {"use_sim_time": use_sim_time},
+            controllers_yaml,
+            {"robot_description_planning": {"joint_limits": joint_limits} if joint_limits else {}},
             ompl_planning_pipeline_config,
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
-            {"use_sim_time": use_sim_time},
-            controllers_yaml,
             warehouse_ros_config,
         ],
         remappings=[
@@ -200,12 +167,7 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    
-    # RViz  
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare(moveit_config_package), "config", "moveit_pnp.rviz"]
-    )
-
+    # RViz node using the generated config
     rviz_node = Node(
         package="rviz2",
         condition=IfCondition(launch_rviz),
@@ -215,35 +177,18 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
         arguments=["-d", rviz_config_file],
         parameters=[
-            robot_description,
-            robot_description_semantic,
-            robot_description_kinematics,
-            robot_description_planning,
+            moveit_config.robot_description,
+            moveit_config.robot_description_semantic,
+            moveit_config.robot_description_kinematics,
             {"use_sim_time": use_sim_time},
         ],
-    )
-
-    servo_yaml = load_yaml("ur3e_moveit_config", "config/ur_servo.yaml")
-    servo_params = {"moveit_servo": servo_yaml}
-
-    servo_node = Node(
-        package="moveit_servo",
-        condition=IfCondition(launch_servo),
-        executable="servo_node_main",
-        namespace=namespace,
-        parameters=[
-            servo_params,
-            robot_description,
-            robot_description_semantic,
-        ],
-        output="screen",
     )
 
     # Ensure controllers spawn before move_group
     controller_event_handler = RegisterEventHandler(
         OnProcessExit(
             target_action=ur_joint_traj_spawner,
-            on_exit=[gripper_action_spawner, move_group_node, rviz_node, servo_node],
+            on_exit=[gripper_action_spawner, move_group_node, rviz_node],
         )
     )
 
@@ -267,5 +212,6 @@ def generate_launch_description():
         DeclareLaunchArgument("ur_hande_description_package", default_value="ur3e_hande_description"),
         DeclareLaunchArgument("ur_hande_description_file", default_value="ur3e_hande_hw.urdf.xacro"),
         DeclareLaunchArgument("warehouse_sqlite_path", default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite")),
+        DeclareLaunchArgument("kinematics_params_file", default_value=os.environ.get("KINEMATICS_CONFIG_FILE", "/home/robot/kinematic_config/ur3e_mrc.yaml")),
     ]
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

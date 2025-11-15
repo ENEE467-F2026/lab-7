@@ -16,6 +16,8 @@ Components launched:
 import os
 from os import path
 from os.path import expanduser
+
+import yaml
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDescription, ExecuteProcess
 from launch.conditions import IfCondition, UnlessCondition
@@ -60,7 +62,13 @@ def generate_launch_description():
     rviz_config = LaunchConfiguration("rviz_config")
     use_sim_time = LaunchConfiguration("use_sim_time")
     log_level = LaunchConfiguration("log_level")
+    camera_mount_frame = LaunchConfiguration("camera_mount_frame")
+    kinematics_params_file = LaunchConfiguration("kinematics_params_file")
 
+    # Load calibration file
+    camera_calib_file = os.getenv("CAMERA_CALIBRATION_FILE")
+    if camera_calib_file is None:
+        raise RuntimeError("CAMERA_CALIBRATION_FILE not set!")
 
     declared_arguments = [
         DeclareLaunchArgument(
@@ -96,6 +104,11 @@ def generate_launch_description():
             "use_tool_communication",
             default_value="false",
             description="Start robot with mock hardware mirroring command to its states.",
+        ),
+        DeclareLaunchArgument(
+            "camera_mount_frame",
+            default_value="camera_mount",
+            description="Frame ID for the camera mount.",
         ),
         DeclareLaunchArgument(
             "use_sim_time",
@@ -147,6 +160,8 @@ def generate_launch_description():
             default_value="0.0",
             description="Extra Z-offset added to the pre-grasp pose (meters).",
         ),
+        DeclareLaunchArgument("kinematics_params_file", 
+                              default_value=os.environ.get("KINEMATICS_CONFIG_FILE", "/home/robot/kinematic_config/ur3e_mrc.yaml")),
         DeclareLaunchArgument(
             "place_offset_y",
             default_value="0.0",
@@ -166,11 +181,6 @@ def generate_launch_description():
             "obj_pos",
             default_value="0.30 0.50 0.10",
             description="Manual (x y z) object position (used only when use_perception=false)."
-        ),
-        DeclareLaunchArgument(
-            "cam_loc",
-            default_value="right",
-            description="Location of camera wrt robot base frame. \n right: -0.30 0.50 0.10; left: 0.30 0.50 0.10"
         ),
         DeclareLaunchArgument(
             "robot_ip",
@@ -204,11 +214,12 @@ def generate_launch_description():
     perception_pkg = get_package_share_directory("ur3e_hande_perception")
 
     # robot_description
-
     robot_description_content = Command([
         PathJoinSubstitution([FindExecutable(name="xacro")]),
         " ",
-        PathJoinSubstitution([FindPackageShare(description_package), description_filepath])
+        PathJoinSubstitution([FindPackageShare(description_package), description_filepath]),
+        " ",
+        "kinematics_params:=", kinematics_params_file, " ",
     ])
 
     robot_description = {
@@ -240,6 +251,24 @@ def generate_launch_description():
         )
     )
 
+    
+
+    # Static TF Publisher for Camera
+    ld.add_action(
+        TimerAction(
+        period=0.0,
+        actions=[Node(
+            package="ur3e_hande_moveit_py",
+            executable="camera_tf_publisher",
+            parameters=[{
+                "config_file": camera_calib_file,
+                "use_sim_time": use_sim_time,
+                "camera_mount_frame": camera_mount_frame
+            }],
+            output="screen",
+        )])
+        )
+    
     # UR3e Hardware Bringup
     ld.add_action(
         TimerAction(
@@ -259,6 +288,24 @@ def generate_launch_description():
                 )
             ],
         )
+        )
+    
+    # rsp
+    ld.add_action(
+        TimerAction(
+            period=6.0,
+            actions=[
+                Node(
+                package="robot_state_publisher",
+                executable="robot_state_publisher",
+                output="screen",
+                arguments=["--ros-args", "--log-level", log_level],
+                parameters=[
+                    robot_description,
+                    {"publish_frequency": 50.0, "frame_prefix": "", "use_sim_time": use_sim_time},
+                ],
+            ),
+            ])
     )
 
     # rviz2
@@ -282,25 +329,6 @@ def generate_launch_description():
                 )
                 ])
     )
-
-    # rsp
-    ld.add_action(
-        TimerAction(
-            period=6.0,
-            actions=[
-                Node(
-                package="robot_state_publisher",
-                executable="robot_state_publisher",
-                output="screen",
-                arguments=["--ros-args", "--log-level", log_level],
-                parameters=[
-                    robot_description,
-                    {"publish_frequency": 50.0, "frame_prefix": "", "use_sim_time": use_sim_time},
-                ],
-            ),
-            ])
-    )
-
     # Perception Nodes
     ld.add_action(
         TimerAction(
@@ -332,7 +360,7 @@ def generate_launch_description():
                         {"use_sim_time": use_sim_time},
                         {"input_topic": "/filtered_cloud"},
                         {"base_frame": "base_link"},
-                        {"camera_frame": "camera_depth_frame"},
+                        {"camera_frame": "camera_depth_optical_frame"},
                         {"stop_after_first_pub": False}, # keep publishing segmentation results
                         ],
                 ),

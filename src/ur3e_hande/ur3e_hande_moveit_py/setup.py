@@ -31,7 +31,8 @@ setup(
         'console_scripts': [
             'pnp_demo_sim = ur3e_hande_moveit_py.pnp_demo_sim:main',
             'pnp_demo = ur3e_hande_moveit_py.pnp_demo:main',
-            'ur3_joint_goal = ur3e_hande_moveit_py.ur3_joint_goal:main'
+            'ur3_joint_goal = ur3e_hande_moveit_py.ur3_joint_goal:main',
+            'camera_tf_publisher = ur3e_hande_moveit_py.camera_tf_publisher:main',
         ],
     },
 )

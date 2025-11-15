@@ -16,7 +16,7 @@
     </group>
     <group name="gripper">
         <joint name="gripper_robotiq_hande_left_finger_joint"/>
-        <!-- <joint name="gripper_robotiq_hande_right_finger_joint"/> -->
+        <joint name="gripper_robotiq_hande_right_finger_joint"/>
     </group>
   <!--GROUP STATES-->
   <group_state group="ur_manipulator" name="ur_home">

@@ -40,6 +40,9 @@ from scipy.spatial.transform import Rotation as R
 # custom interfaces
 from ur3e_hande_planning_interfaces.msg import ObjectMetaData, DetectedObjects
 
+# qos
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+
 class PCSegmentationNode(Node):
     def __init__(self):
         super().__init__('pc_segmentation_node')
@@ -73,7 +76,12 @@ class PCSegmentationNode(Node):
             10
         )
 
-        self.surface_pub = self.create_publisher(MarkerArray, '/plane_marker', 10)
+        # qos
+        plane_qos = QoSProfile(depth=1)
+        plane_qos.reliability = ReliabilityPolicy.RELIABLE
+        plane_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
+
+        self.surface_pub = self.create_publisher(MarkerArray, '/plane_marker', plane_qos)
         self.object_pub = self.create_publisher(MarkerArray, '/object_markers', 10)
         self.obj_metadata_pub = self.create_publisher(ObjectMetaData, "/object_metadata", 10)
         self.obj_detected_pub = self.create_publisher(DetectedObjects, "/object_detected", 10)

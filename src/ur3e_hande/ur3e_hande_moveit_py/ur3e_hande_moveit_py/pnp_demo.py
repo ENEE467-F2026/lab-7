@@ -57,6 +57,8 @@ class PickAndPlaceSim(Node):
             10
         )
 
+        self.objects = {}
+
         # variables for metrics
         self.plan_time = None
         self.exec_time = None
@@ -79,6 +81,7 @@ class PickAndPlaceSim(Node):
         self.declare_parameter("max_acc_scale", 0.15)
         self.declare_parameter("goal_pos_tol", 0.003)
         self.declare_parameter("goal_ori_tol", 0.01)
+        self.declare_parameter("place_margin", 0.1)  # m
 
         self.pregrasp_z = self.get_parameter("pregrasp_z").value
         self.lift_z_offset = self.get_parameter("lift_z_offset").value
@@ -94,6 +97,7 @@ class PickAndPlaceSim(Node):
         self.print_metrics = self.get_parameter("print_metrics").get_parameter_value().bool_value
         self.max_vel_scale = self.get_parameter("max_vel_scale").get_parameter_value().double_value
         self.max_acc_scale = self.get_parameter("max_acc_scale").get_parameter_value().double_value
+        self.place_margin = self.get_parameter("place_margin").get_parameter_value().double_value
 
         self.declare_parameter("ur_approach",
         [-1.8605, -2.99056, 0.675617, -2.00445, 1.61112, -0.00712473])
@@ -159,7 +163,12 @@ class PickAndPlaceSim(Node):
 
         self.lift_pos = [self.obj_pos[0], self.obj_pos[1], self.lift_z]
 
-        self.place_pos = [float(x) for x in self.place_pos_arg] if self.place_pos_arg else self.compute_place_pos(self.grasp_pos)
+        if hasattr(self, "last_plane_marker"):
+            self.place_pos = self.compute_place_from_plane(self.obj_pos, self.last_plane_marker, self.place_margin)
+            self.get_logger().info(f"Auto-chosen place position: {self.place_pos}")
+        else:
+            # fallback 
+            self.place_pos = self.compute_place_pos(self.grasp_pos)
 
         # MoveIt2 Interface
         self.moveit2 = MoveIt2(
@@ -274,7 +283,47 @@ class PickAndPlaceSim(Node):
                 return False
 
         return True
-        
+    
+    def compute_place_from_plane(self, obj_pos, plane_marker, margin):
+        """
+        Compute a place position ON the segmented plane, clamped to its bounds.
+        """
+
+        # Extract plane pose
+        plane_pos = np.array([
+            plane_marker.pose.position.x,
+            plane_marker.pose.position.y,
+            plane_marker.pose.position.z
+        ])
+
+        quat = plane_marker.pose.orientation
+        plane_quat = np.array([quat.x, quat.y, quat.z, quat.w])
+
+        # Plane rotation matrix in world frame
+        R_plane = R.from_quat(plane_quat).as_matrix()
+
+        # Dimensions of plane's collision box
+        dx, dy, dz = plane_marker.scale.x, plane_marker.scale.y, plane_marker.scale.z
+
+        # Transform object into plane local coords
+        obj_world = np.array(obj_pos)
+        obj_local = R_plane.T @ (obj_world - plane_pos)
+
+        # Clamp XY coordinates inside plane footprint
+        half_x = dx / 2.0 - margin
+        half_y = dy / 2.0 - margin
+
+        obj_local[0] = np.clip(obj_local[0], -half_x, half_x)
+        obj_local[1] = np.clip(obj_local[1], -half_y, half_y)
+
+        # Place Z at the plane surface
+        place_local = np.array([obj_local[0], obj_local[1], dz / 2.0 + 0.02])  # 2cm above plane
+
+        # Convert back to world coordinates
+        place_world = plane_pos + R_plane @ place_local
+
+        return place_world.tolist()
+   
     def scene_cb(self, msg: MarkerArray):
         """
         Callback for adding segmented plane to MoveIt planning scene.
@@ -292,6 +341,7 @@ class PickAndPlaceSim(Node):
             del self.objects["segmented_plane"]
 
         plane_marker = msg.markers[0]   # get first marker
+        self.last_plane_marker = plane_marker  # cache for place position computation
 
         # Extract pose
         pos = [

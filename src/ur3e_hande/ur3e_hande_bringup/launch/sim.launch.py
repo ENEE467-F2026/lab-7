@@ -138,7 +138,7 @@ def generate_launch_description():
         parameters=[
             {"use_sim_time": True},
             {"input_topic": "/filtered_cloud"},
-            {"stop_after_first_pub": True},
+            {"stop_after_first_pub": False},
         ],
     )
 

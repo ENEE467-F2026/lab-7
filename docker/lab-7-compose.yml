@@ -13,8 +13,9 @@ services:
       - QT_X11_NO_MITSHM=1
       - LIBGL_ALWAYS_SOFTWARE=0
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-      - KINEMATICS_CONFIG_PATH=/home/robot/ros2_ws/config
-      - KINEMATICS_CONFIG_FILENAME=ur3e_mrc.yaml
+      - CAMERA_CALIBRATION_FILE=/home/robot/camera_config/realsense_mrc.yaml
+      - KINEMATIC_CONFIG_FILE=/home/robot/kinematic_config/ur3e_mrc.yaml
+
     # Required for communicating over the network
     network_mode: "host"
     ipc: "host"
@@ -25,7 +26,8 @@ services:
     stdin_open: true
     volumes:
       - ../src:/home/robot/ros2_ws/src:rw
-      - ../config:/home/robot/ros2_ws/config:rw
+      - ~/Documents/camera_config:/home/robot/camera_config:ro
+      - ~/Documents/kinematic_config:/home/robot/kinematic_config:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     devices:
       - /dev/bus/usb:/dev/bus/usb     
