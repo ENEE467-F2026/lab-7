@@ -156,7 +156,7 @@ class PickAndPlaceSim(Node):
         x_obj, y_obj, z_obj = self.obj_pos
 
         # Mirror the object across the robot base
-        x_place = -x_obj * 1.1
+        x_place = -x_obj * 1.2
 
         # Optionally, clamp to a safe zone
         TABLE_X, TABLE_Y, SAFE_Z = self.table_dims[0], self.table_dims[1], self.lift_z

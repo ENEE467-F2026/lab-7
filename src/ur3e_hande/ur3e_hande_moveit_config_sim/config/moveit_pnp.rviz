@@ -386,7 +386,7 @@ Visualization Manager:
         Value: /rgbd_camera/image
       Value: true
     - Class: rviz_default_plugins/MarkerArray
-      Enabled: false
+      Enabled: true
       Name: MarkerArray
       Namespaces:
         {}
@@ -396,7 +396,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /plane_marker
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: MarkerArray
@@ -503,10 +503,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.07039884477853775
+      Pitch: 0.120399110019207
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.4103859066963196
+      Yaw: 1.1003848314285278
     Saved: ~
 Window Geometry:
   Displays:
