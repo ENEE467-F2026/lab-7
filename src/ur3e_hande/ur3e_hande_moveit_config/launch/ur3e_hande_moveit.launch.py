@@ -161,14 +161,8 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     declared_arguments = [
         DeclareLaunchArgument("use_sim_time", default_value="false"),
-        DeclareLaunchArgument("use_fake_hardware", default_value="false"),
         DeclareLaunchArgument("namespace", default_value=""),
-        DeclareLaunchArgument("prefix", default_value='""'),
         DeclareLaunchArgument("launch_rviz", default_value="true"),
-        DeclareLaunchArgument("launch_servo", default_value="false"),
-        DeclareLaunchArgument("moveit_config_package", default_value="ur3e_hande_moveit_config"),
-        DeclareLaunchArgument("ur_hande_description_package", default_value="ur3e_hande_description"),
-        DeclareLaunchArgument("ur_hande_description_file", default_value="ur3e_hande_hw.urdf.xacro"),
         DeclareLaunchArgument("warehouse_sqlite_path", default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite")),
     ]
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

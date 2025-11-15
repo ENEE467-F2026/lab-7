@@ -40,7 +40,10 @@ lab7_packages = [
     "ur3e_hande_planning_interfaces",
     "hande_action_client",
     "robotiq_hande_driver",
-    "robotiq_hande_description"
+    "robotiq_hande_description",
+    "robotiq_api_wrapper",
+    "gripper_action",
+    "gripper_srv",
 ]
 lab7_pkg_share_dirs = [get_package_share_directory(pkg) for pkg in lab7_packages]
 class TestDockerNode(Node):
