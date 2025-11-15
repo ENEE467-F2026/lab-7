@@ -1,7 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import ExecuteProcess, TimerAction, DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
@@ -9,12 +8,18 @@ import os
 
 def generate_launch_description():
     perception_pkg_share = get_package_share_directory('ur3e_hande_perception')
-    moveit_pkg_share = get_package_share_directory('ur3e_hande_moveit_config')
     use_perception = LaunchConfiguration("use_perception")
     rviz_config = os.path.join(perception_pkg_share, 'rviz', 'pc_test.rviz')
+    use_sim_time = LaunchConfiguration("use_sim_time")
+
 
     declared_arguments = [
-        DeclareLaunchArgument("use_perception", default_value="true", description="Whether to use the perception module to detect object pose. \n Must provide the position of the object to be picked as a launch argument (obj_pos) if false, unless the launch file will throw an error."),
+        DeclareLaunchArgument("use_perception", 
+                              default_value="true", 
+                              description="Whether to use the perception module to detect object pose. \n " \
+                              "Must provide the position of the object to be picked as a launch argument (obj_pos) if false, unless the launch file will throw an error."),
+
+        DeclareLaunchArgument("use_sim_time", default_value="false", description="Use sim time?")
     ]
 
     # Realsense (hardware) launch
@@ -61,13 +66,13 @@ def generate_launch_description():
             name="pc_voxel_filter_node",
             output="screen",
             parameters=[
-            {"use_sim_time": True},
+            {"use_sim_time": use_sim_time},
             {"input_topic": "/camera/camera/depth/color/points"},
             {"output_topic": "/filtered_cloud"},
             {"leaf_size": 0.005},
             {"crop_enabled": True},
             {"stop_after_first": False}, # keep processing point clouds since cloud is sparser in real life
-            {"crop_bounds": [0.0, 1.22, 0, 0.51, 0.00, 1.5]},  # xmin, xmax, ymin, ymax, zmin, zmax; Point cloud bounds: x[0.00, 1.22], y[0.00, 0.51], z[0.00, 1.50]
+            {"crop_bounds": [-0.35, 0.18, -0.5, 0.5, 0.00, 0.9]},  # xmin, xmax, ymin, ymax, zmin, zmax; Point cloud bounds: x[0.00, 1.22], y[0.00, 0.51], z[0.00, 1.50]
 
             ],
         )
@@ -84,9 +89,9 @@ def generate_launch_description():
             name="pc_segmentation_node",
             output="screen",
             parameters=[
-            {"use_sim_time": True},
+            {"use_sim_time": use_sim_time},
             {"input_topic": "/filtered_cloud"},
-            {"base_frame": "camera_depth_frame"},
+            {"base_frame": "camera_link"},
             {"camera_frame": "camera_depth_optical_frame"},
             {"stop_after_first_pub": False}, # keep publishing segmentation results
             ],
@@ -105,7 +110,7 @@ def generate_launch_description():
                 name="object_pose_server",
                 output="screen",
                 parameters=[
-                    {"use_sim_time": True},
+                    {"use_sim_time": use_sim_time},
                 ],
             )
         ],

@@ -74,7 +74,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "pregrasp_z",
-            default_value="0.0",
+            default_value="0.28",
             description="Extra Z-offset added to the pre-grasp pose (meters).",
         ),
         DeclareLaunchArgument(

@@ -28,7 +28,6 @@ moveit_simple_controller_manager:
     type: ParallelGripperCommand
     joints:
       - gripper_robotiq_hande_left_finger_joint
-      - gripper_robotiq_hande_right_finger_joint
     action_ns: gripper_cmd
     default: true
 

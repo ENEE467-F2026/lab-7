@@ -3,9 +3,6 @@ controller_manager:
 
     update_rate: 100  # Hz
 
-    gripper_action_controller:
-      type: parallel_gripper_action_controller/GripperActionController
-
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
@@ -51,7 +48,10 @@ controller_manager:
     tool_contact_controller:
       type: ur_controllers/ToolContactController
 
-    enforce_command_limits: false
+    gripper_action_controller:
+      type: parallel_gripper_action_controller/GripperActionController
+
+    # enforce_command_limits: false
 
 speed_scaling_state_broadcaster:
   ros__parameters:

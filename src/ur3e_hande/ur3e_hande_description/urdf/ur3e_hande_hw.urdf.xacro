@@ -115,7 +115,7 @@
       <xacro:robotiq_hande_gripper
         name="$(arg hande_name)"
         prefix=""
-        parent="$(arg parent)"
+        parent="tool0"
         grip_pos_min="$(arg grip_pos_min)"
         grip_pos_max="$(arg grip_pos_max)"
         tty_port="$(arg tty_port)"
@@ -142,7 +142,7 @@
 
   <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
   <xacro:if value="${is_import_ur3e and is_import_camera}">
-    <xacro:sensor_d435i parent="base_link">
+    <xacro:sensor_d435i parent="world">
       <origin rpy="0 0.52 0" xyz="-0.546 0.533 0.467"/>   <!-- right camera -->
       <!-- <origin rpy="0.0 0.698131 0" xyz="-0.522625 0.542925 0.3683"/>   --> <!-- left camera -->
     </xacro:sensor_d435i>

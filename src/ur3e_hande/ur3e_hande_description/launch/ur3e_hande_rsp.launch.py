@@ -76,7 +76,6 @@ def generate_launch_description():
 
     # Hand-E specific arguments
     hande_name = LaunchConfiguration("hande_name")
-    hande_parent = LaunchConfiguration("hande_parent")
     grip_pos_min = LaunchConfiguration("grip_pos_min")
     grip_pos_max = LaunchConfiguration("grip_pos_max")
     tty_port = LaunchConfiguration("tty_port")
@@ -114,16 +113,16 @@ def generate_launch_description():
             "robot_ip:=",
             robot_ip,
             " ",
-            "joint_limit_params:=",
+            "joint_limits_parameters_file:=",
             joint_limit_params_file,
             " ",
-            "kinematics_params:=",
+            "kinematics_parameters_file:=",
             kinematics_params_file,
             " ",
             "physical_params:=",
             physical_params_file,
             " ",
-            "visual_params:=",
+            "visual_parameters_file:=",
             visual_params_file,
             " ",
             "safety_limits:=",
@@ -203,9 +202,6 @@ def generate_launch_description():
             " ",
             "hande_name:=",
             hande_name,
-            " ",
-            "hande_parent:=",
-            hande_parent,
             " ",            
             "grip_pos_min:=",
             grip_pos_min,
@@ -307,9 +303,8 @@ def generate_launch_description():
             "joint_limit_params_file",
             default_value=PathJoinSubstitution(
                 [
-                    FindPackageShare("ur_description"),
+                    FindPackageShare("ur3e_hande_description"),
                     "config",
-                    ur_type,
                     "joint_limits.yaml",
                 ]
             ),
@@ -391,7 +386,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_tool_communication",
-            default_value="false",
+            default_value="true",
             description="Only available for e series!",
         )
     )
@@ -497,7 +492,6 @@ def generate_launch_description():
 
     # hande
     declared_arguments.append(DeclareLaunchArgument("hande_name", default_value="robotiq_hande_gripper"))
-    declared_arguments.append(DeclareLaunchArgument("hande_parent", default_value="tool0"))
     declared_arguments.append(DeclareLaunchArgument("grip_pos_min", default_value="0.0"))
     declared_arguments.append(DeclareLaunchArgument("grip_pos_max", default_value="0.025"))
     declared_arguments.append(DeclareLaunchArgument("tty_port", default_value="/tmp/ttyUR"))
