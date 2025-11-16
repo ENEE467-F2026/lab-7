@@ -103,7 +103,6 @@ def generate_launch_description():
         [FindPackageShare("ur_robot_driver"), "resources", "rtde_output_recipe.txt"]
     )
 
-
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
@@ -305,6 +304,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("ur3e_hande_description"),
                     "config",
+                    ur_type,
                     "joint_limits.yaml",
                 ]
             ),
@@ -386,7 +386,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "use_tool_communication",
-            default_value="true",
+            default_value="false",
             description="Only available for e series!",
         )
     )
@@ -450,7 +450,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "tool_voltage",
-            default_value="0",  # 0 being a conservative value that won't destroy anything
+            default_value="24",  # 0 being a conservative value that won't destroy anything
             description="Tool voltage that will be setup.",
         )
     )

@@ -65,7 +65,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "socat_ip_address",
-            default_value="192.168.100.10",
+            default_value="192.168.77.22",
             description="Set IP address for TCP connection.",
         )
     )

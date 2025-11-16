@@ -117,7 +117,7 @@ ros2 launch robotiq_hande_driver gripper_controller_preview.launch.py \
 
 You can also start `socat` manually, for example:
 ```bash
-socat pty,link=/tmp/ttyUR,raw,ignoreeof,waitslave tcp:192.168.100.10:54321
+socat pty,link=/tmp/ttyUR,raw,ignoreeof,waitslave tcp:192.168.77.22:54321
 ```
 
 > [!WARNING]

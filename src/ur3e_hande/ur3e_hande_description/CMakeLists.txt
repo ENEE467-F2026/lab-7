@@ -8,6 +8,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(robotiq_hande_description REQUIRED)
 find_package(ur_description REQUIRED)
+find_package(ur_robot_driver REQUIRED)
+
 
 install(DIRECTORY
   urdf config rviz meshes launch

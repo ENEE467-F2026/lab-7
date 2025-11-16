@@ -19,7 +19,7 @@
 
   <xacro:include filename="$(find robotiq_hande_description)/urdf_hw/robotiq_hande_gripper.xacro"/>
 
-  <!-- <link name="$(arg parent)"/> -->
+  <link name="$(arg parent)"/>
   <xacro:robotiq_hande_gripper
     name="robotiq_hande_gripper"
     prefix=""

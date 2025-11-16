@@ -23,7 +23,7 @@
             use_fake_hardware
             frequency_hz:=10
             create_socat_tty:=false
-            socat_ip_address:=192.168.100.10
+            socat_ip_address:=192.168.77.22
             socat_port:=54321
             coupler_mass:=0.119
             xyz:='0 0 0'
