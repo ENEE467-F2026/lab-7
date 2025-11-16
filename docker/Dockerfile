@@ -55,7 +55,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-ros2-control ros-${ROS_DISTRO}-ros2-controllers \
     ros-${ROS_DISTRO}-gz-ros2-control ros-${ROS_DISTRO}-ros-gz-bridge \
     ros-${ROS_DISTRO}-foxglove-bridge ros-${ROS_DISTRO}-joint-state-publisher-gui \
-    ros-${ROS_DISTRO}-moveit* \
+    ros-${ROS_DISTRO}-moveit* ros-${ROS_DISTRO}-ur* \
     ros-${ROS_DISTRO}-rqt-image-view ros-${ROS_DISTRO}-gz-* \
     && rm -rf /var/lib/apt/lists/*
 
@@ -101,20 +101,9 @@ ENV USER=robot \
   LIBGL_ALWAYS_SOFTWARE=0 \
   TZ=America/New_York
 
-# ROS 2 workspace + build UR driver from source
+# ROS 2 workspace
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
-    mkdir -p ~/ros2_ws/src && \
-    cd ~/ros2_ws && \
-    git clone -b ${ROS_DISTRO} https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git src/Universal_Robots_ROS2_Driver && \
-    vcs import src --skip-existing --input src/Universal_Robots_ROS2_Driver/Universal_Robots_ROS2_Driver-not-released.${ROS_DISTRO}.repos && \
-    rosdep update && \
-    rosdep install --from-paths src --ignore-src -y --rosdistro ${ROS_DISTRO} && \
-    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release && \
-    echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc
-    # git clone -b ${ROS_DISTRO} https://github.com/AGH-CEAI/robotiq_hande_driver.git
-    # vcs import . < robotiq_hande_driver/robotiq_hande_driver/robotiq_hande_driver.repos && \
-    # cd ~/ros2_ws && \
-    # colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+    mkdir -p ~/ros2_ws/src
 
 # code-server and VSCode ROS extension
 RUN curl -fsSL https://code-server.dev/install.sh | sh && \
@@ -136,7 +125,7 @@ RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc && \
     echo "alias clc=clear" >> ~/.bashrc && \
     # clear terminal when starting
     echo "clear" >> ~/.bashrc && \
-    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7 '" >> ~/.bashrc
+    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7  '" >> ~/.bashrc
 
 # tmux Config
 ADD --chown=robot:robot \
