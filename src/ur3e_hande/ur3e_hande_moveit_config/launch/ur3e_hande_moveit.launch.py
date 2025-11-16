@@ -66,7 +66,6 @@ def launch_setup(context, *args, **kwargs):
         .robot_description_semantic(file_path=srdf_path)
         .robot_description_kinematics(file_path=kin_path)
         .planning_pipelines(default_planning_pipeline="ompl", pipelines=["ompl"])
-        .trajectory_execution(file_path=ctrl_path)
         .to_moveit_configs()
     )
 

@@ -14,7 +14,7 @@ services:
       - LIBGL_ALWAYS_SOFTWARE=0
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - CAMERA_CALIBRATION_FILE=/home/robot/camera_config/realsense_mrc.yaml
-      - KINEMATIC_CONFIG_FILE=/home/robot/kinematic_config/ur3e_mrc.yaml
+      - KINEMATICS_CONFIG_FILE=/home/robot/kinematic_config/ur3e_mrc.yaml
 
     # Required for communicating over the network
     network_mode: "host"

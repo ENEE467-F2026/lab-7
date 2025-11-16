@@ -1,6 +1,42 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ur3e_hande">
 
+  <!-- Required by UR macros -->
+  <xacro:arg name="name" default="ur3e"/>
+  <xacro:arg name="ur_type" default="ur3e"/>
+  <xacro:arg name="tf_prefix" default=""/>
+  <xacro:arg name="prefix" default=""/>
+
+  <!-- Extrusion -->
+  <xacro:arg name="extrusion_x" default="-0.5762625"/>
+  <xacro:arg name="extrusion_y" default="0.542925"/>
+  <xacro:arg name="extrusion_z" default="0.291"/>
+
+  <xacro:arg name="extrusion_roll" default="0.0"/>
+  <xacro:arg name="extrusion_pitch" default="0.0"/>
+  <xacro:arg name="extrusion_yaw" default="0.0"/>
+
+  <xacro:arg name="cam_offset_x" default="0.02"/>
+  <xacro:arg name="cam_offset_y" default="0.0"/>
+  <xacro:arg name="cam_offset_z" default="0.01"/>
+
+  <xacro:arg name="cam_roll" default="2.03"/>
+  <xacro:arg name="cam_pitch" default="0.0"/>
+  <xacro:arg name="cam_yaw" default="1.57"/>
+
+  <xacro:property name="cam_offset_x" value="$(arg cam_offset_x)"/>
+  <xacro:property name="cam_offset_y" value="$(arg cam_offset_y)"/>
+  <xacro:property name="cam_offset_z" value="$(arg cam_offset_z)"/>
+  <xacro:property name="cam_roll" value="$(arg cam_roll)"/>
+  <xacro:property name="cam_pitch" value="$(arg cam_pitch)"/>
+  <xacro:property name="cam_yaw" value="$(arg cam_yaw)"/>
+  <xacro:property name="extrusion_x" value="$(arg extrusion_x)"/>
+  <xacro:property name="extrusion_y" value="$(arg extrusion_y)"/>
+  <xacro:property name="extrusion_z" value="$(arg extrusion_z)"/>
+  <xacro:property name="extrusion_roll" value="$(arg extrusion_roll)"/>
+  <xacro:property name="extrusion_pitch" value="$(arg extrusion_pitch)"/>
+  <xacro:property name="extrusion_yaw" value="$(arg extrusion_yaw)"/>
+
   <!-- ros2 control -->
   <xacro:include filename="$(find ur3e_hande_description)/urdf/ur3e_hande.ros2_control.xacro"/>
 
@@ -17,7 +53,7 @@
   <xacro:include filename="$(find ur3e_hande_description)/urdf/table.urdf.xacro"/>
 
     <!-- include urdf for the camera mount -->
-  <xacro:include filename="$(find ur3e_hande_description)/urdf/side_extrusion_20.urdf"/>
+  <xacro:include filename="$(find ur3e_hande_description)/urdf/side_extrusion_20.urdf.xacro"/>
 
   <!-- insert hand-e using the macro -->
   <xacro:robotiq_hande_gripper
@@ -41,18 +77,24 @@
     <origin xyz="0 0 -0" rpy="0 0 0"/>
   </joint>
 
-  <!-- joint between the table and side extrusion -->
-  <joint name="side_extrusion_table_joint" type="fixed">
-      <parent link="table"/>
-      <child link="side_extrusion_20"/>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-  </joint> 
+  <xacro:side_extrusion_20 
+  parent="table"
+  x="$(arg extrusion_x)"
+  y="$(arg extrusion_y)"
+  z="$(arg extrusion_z)"
+  roll="$(arg extrusion_roll)"
+  pitch="$(arg extrusion_pitch)"
+  yaw="$(arg extrusion_yaw)"
+  />
 
   <!-- Joint between camera and side extrusion -->
   <joint name="camera_joint" type="fixed">
     <parent link="side_extrusion_20" />
     <child link="camera_bottom_screw_frame" />
-    <origin rpy="2.03 0.0 1.57" xyz="-0.5562625 0.542925 0.30"/>  
+    <origin
+    xyz="${cam_offset_x} ${cam_offset_y} ${cam_offset_z}"
+    rpy="${cam_roll} ${cam_pitch} ${cam_yaw}"
+    />
   </joint>
 
   <!-- ROS 2 control -->

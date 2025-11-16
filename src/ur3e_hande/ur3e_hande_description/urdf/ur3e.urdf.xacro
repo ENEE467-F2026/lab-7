@@ -9,10 +9,11 @@
    <!-- the default value should raise an error in case this was called without defining the type -->
    <xacro:arg name="ur_type" default="ur3e"/>
 
+
    <!-- parameters -->
    <xacro:arg name="tf_prefix" default="" />
    <xacro:arg name="joint_limit_params" default="$(find ur_description)/config/$(arg ur_type)/joint_limits.yaml"/>
-   <xacro:arg name="kinematics_params" default="/home/robot/kinematic_config/ur3e_mrc.yaml"/>
+   <xacro:arg name="kinematics_params" default="$(find ur3e_hande_description)/config/ur3e_mrc.yaml"/>
    <xacro:arg name="physical_params" default="$(find ur_description)/config/$(arg ur_type)/physical_parameters.yaml"/>
    <xacro:arg name="visual_params" default="$(find ur_description)/config/$(arg ur_type)/visual_parameters.yaml"/>
    <xacro:arg name="transmission_hw_interface" default=""/>
