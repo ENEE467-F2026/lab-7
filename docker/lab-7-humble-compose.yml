@@ -1,13 +1,13 @@
 services:
-  lab-7-docker:
+  lab-7-humble-docker:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.humble
       args:
         userid: ${userid}
         groupid: ${groupid}
-    image: lab-7-image:latest
-    container_name: lab-7-container
+    image: lab-7-humble-image:latest
+    container_name: lab-7-humble-container
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
@@ -36,8 +36,6 @@ services:
       - ~/Documents/kinematic_config:/home/robot/kinematic_config:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
-      - /dev/ttyUSB1:/dev/ttyUSB1
       - /dev/bus/usb:/dev/bus/usb     
     device_cgroup_rules:
       - 'c 81:* rmw'     
