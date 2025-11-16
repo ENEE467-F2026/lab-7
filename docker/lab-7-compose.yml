@@ -24,6 +24,12 @@ services:
     privileged: true
     tty: true
     stdin_open: true
+    # rt kernel access    
+    cap_add:
+      - SYS_NICE
+    ulimits:
+      rtprio: 99
+      rttime: -1 
     volumes:
       - ../src:/home/robot/ros2_ws/src:rw
       - ~/Documents/camera_config:/home/robot/camera_config:ro
