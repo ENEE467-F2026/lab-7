@@ -173,7 +173,7 @@
   </xacro:if>
 
   <!-- Include mount -->
-  <xacro:include filename="$(find ur3e_hande_description)/urdf/mounts/side_extrusion_mount.xacro"/>
+  <xacro:include filename="$(find ur3e_hande_description)/urdf/side_extrusion_20.urdf.xacro"/>
 
   <!-- Instantiate mount -->
   <xacro:side_extrusion_20 

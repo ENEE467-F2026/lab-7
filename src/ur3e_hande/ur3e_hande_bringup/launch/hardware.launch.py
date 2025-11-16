@@ -98,9 +98,9 @@ def generate_launch_description():
     # UR Driver
     ur_control = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            str(PathJoinSubstitution([
+            [PathJoinSubstitution([
                 pkg("ur_robot_driver"), "launch", "ur_control.launch.py"
-            ]))
+            ])]
         ),
         launch_arguments={
             "ur_type": ur_type,
@@ -122,11 +122,10 @@ def generate_launch_description():
         output="screen"
         )
 
-    start_gripper_after_ur_control = RegisterEventHandler(
-    OnProcessStart(
-        target_action=ur_control,
-        on_start=[gripper_action_spawner],
-    ))
+    start_gripper_after_ur_control = TimerAction(
+        period=4.5,
+        actions=[gripper_action_spawner],
+    )
 
     # URDF and RSP
     description = IncludeLaunchDescription(
@@ -164,9 +163,9 @@ def generate_launch_description():
     # MoveIt hardware launch
     moveit = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            str(PathJoinSubstitution([
+            [PathJoinSubstitution([
                 pkg("ur3e_hande_moveit_config"), "launch", "ur3e_hande_moveit.launch.py"
-            ]))
+            ])]
         ),
         condition=IfCondition(use_moveit),
         launch_arguments={
@@ -221,7 +220,7 @@ def generate_launch_description():
         realsense_launch,
         moveit,
         pnp_demo,
-        start_gripper_after_ur_control,
+        # start_gripper_after_ur_control,
 
         # launch perception if requested
         *[TimerAction(period=3.0, actions=[node], condition=IfCondition(use_perception))

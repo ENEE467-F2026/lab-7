@@ -36,8 +36,6 @@ services:
       - ~/Documents/kinematic_config:/home/robot/kinematic_config:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
-      - /dev/ttyUSB1:/dev/ttyUSB1
       - /dev/bus/usb:/dev/bus/usb     
     device_cgroup_rules:
       - 'c 81:* rmw'     
