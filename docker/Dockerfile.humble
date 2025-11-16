@@ -12,7 +12,7 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 SHELL ["/bin/bash", "-c"]
 
-# Core dependencies (unchanged)
+# Core dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     autoconf automake bash-completion build-essential cmake make pkg-config g++ git curl wget unzip \
     ca-certificates software-properties-common python3-pip python3-apt sudo \
@@ -37,7 +37,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 # Python packages
 RUN pip install ipython roboticstoolbox-python==1.1.0 python-fcl==0.7.0.8 transforms3d==0.4.2 scikit-image scikit-learn
 
-# Librealsense setup (unchanged)
+# Librealsense setup
 ARG LIBREALSENSE_TAG=v2.57.3
 RUN git clone --depth 1 --branch ${LIBREALSENSE_TAG} https://github.com/IntelRealSense/librealsense.git /opt/librealsense \
  && cd /opt/librealsense && mkdir build && cd build \
@@ -48,7 +48,7 @@ RUN git clone --depth 1 --branch ${LIBREALSENSE_TAG} https://github.com/IntelRea
 RUN python3 -m pip install pyrealsense2 --no-cache-dir --ignore-installed \
  || (cd /opt/librealsense && python3 -m pip install . --no-cache-dir --ignore-installed)
 
-# MoveIt, UR Drivers, ROS 2 control (NO Gazebo)
+# MoveIt, UR Drivers, ROS 2 control
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-ros2-control \
     ros-${ROS_DISTRO}-ros2-controllers \
@@ -88,7 +88,7 @@ RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc && \
     echo "export QT_QPA_PLATFORM=xcb" >> ~/.bashrc && \
     echo "alias clc=clear" >> ~/.bashrc && \
     echo "clear" >> ~/.bashrc && \
-    echo "toilet -f smblock --filter border:metal -w 24 ' UR3e HARDWARE '" >> ~/.bashrc
+    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7  '" >> ~/.bashrc
 
 ENTRYPOINT ["/bin/bash", "-i"]
 
