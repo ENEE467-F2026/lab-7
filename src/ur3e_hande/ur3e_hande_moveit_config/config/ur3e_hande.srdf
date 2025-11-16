@@ -35,23 +35,6 @@
         <joint name="wrist_3_joint" value="0"/>
     </group_state>
 
-    <group_state group="ur_manipulator" name="ur_approach">
-    <joint name="elbow_joint" value="0.675617"/>
-    <joint name="shoulder_lift_joint" value="-2.99056"/>
-    <joint name="shoulder_pan_joint" value="-1.8605"/>
-    <joint name="wrist_1_joint" value="-2.00445"/>
-    <joint name="wrist_2_joint" value="1.61112"/>
-    <joint name="wrist_3_joint" value="-0.00712473"/>
-  </group_state>
-  <group_state group="ur_manipulator" name="ur_place">
-    <joint name="elbow_joint" value="0.681"/>
-    <joint name="shoulder_lift_joint" value="-3.11"/>
-    <joint name="shoulder_pan_joint" value="-0.626"/>
-    <joint name="wrist_1_joint" value="-2.063"/>
-    <joint name="wrist_2_joint" value="1.471"/>
-    <joint name="wrist_3_joint" value="-0.007"/>
-  </group_state>
-
     <group_state name="ur_test" group="ur_manipulator">
         <joint name="elbow_joint" value="1.5"/>
         <joint name="shoulder_lift_joint" value="-2.5"/>

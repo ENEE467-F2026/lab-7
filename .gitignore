@@ -23,3 +23,6 @@ yolov8n.pt
 **src/ur3e_hande/ur3e_hande_perception/scripts/pc_segmentation_node_o3d.py
 **src/ur3e_hande/ur3e_hande_perception/scripts/yolo_pc_pose_estimation.py
 src/ur3e_hande/ur3e_hande_perception/image.png
+src/hand_e/RobotiqHandeROS2Driver/robotiq_hande_ros2_driver/robotiq_hande_ros2_driver/test.py
+src/hand_e/RobotiqHandeROS2Driver/robotiq_hande_ros2_driver/robotiq_hande_ros2_driver/data_logger.py
+src/hand_e/RobotiqHandeROS2Driver/robotiq_hande_ros2_driver/robotiq_hande_ros2_driver/simple_teleop_hande.py

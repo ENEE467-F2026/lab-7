@@ -1,57 +1,20 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro" name="ur3e_hande">
-
    <!-- robot name parameter -->
   <xacro:arg name="name" default="ur3e"/>
   <xacro:arg name="hande_name" default="robotiq_hande_gripper"/>
 
-  <!-- Extrusion -->
-  <!-- NOTE: this is for a right-mounted camera wrt robot base; maybe need to adjust rpy: 2.03 0.0 1.57 -->
-  <!-- Flip the sign for extrusion_x if your camera is mounted on the left; extrusion_z is the height of the camera optical axis from the table -->
-  <xacro:arg name="extrusion_x" default="0.566"/>
-  <xacro:arg name="extrusion_y" default="0.533"/>
-  <xacro:arg name="extrusion_z" default="0.467"/>
-
-  <xacro:arg name="extrusion_roll" default="0.0"/>
-  <xacro:arg name="extrusion_pitch" default="0.0"/>
-  <xacro:arg name="extrusion_yaw" default="0.0"/>
-
-  <xacro:arg name="cam_offset_x" default="0.02"/>
-  <xacro:arg name="cam_offset_y" default="0.0"/>
-  <xacro:arg name="cam_offset_z" default="0.01"/>
-
-  <xacro:arg name="cam_roll" default="0.0"/>
-  <xacro:arg name="cam_pitch" default="0.52"/>
-  <xacro:arg name="cam_yaw" default="-3.14"/>
-
-  <xacro:property name="cam_offset_x" value="$(arg cam_offset_x)"/>
-  <xacro:property name="cam_offset_y" value="$(arg cam_offset_y)"/>
-  <xacro:property name="cam_offset_z" value="$(arg cam_offset_z)"/>
-  <xacro:property name="cam_roll" value="$(arg cam_roll)"/>
-  <xacro:property name="cam_pitch" value="$(arg cam_pitch)"/>
-  <xacro:property name="cam_yaw" value="$(arg cam_yaw)"/>
-  <xacro:property name="extrusion_x" value="$(arg extrusion_x)"/>
-  <xacro:property name="extrusion_y" value="$(arg extrusion_y)"/>
-  <xacro:property name="extrusion_z" value="$(arg extrusion_z)"/>
-  <xacro:property name="extrusion_roll" value="$(arg extrusion_roll)"/>
-  <xacro:property name="extrusion_pitch" value="$(arg extrusion_pitch)"/>
-  <xacro:property name="extrusion_yaw" value="$(arg extrusion_yaw)"/>
-
-  <!-- args for the hande -->
+   <!-- args for the hande -->
   <xacro:arg name="parent" default="tool0"/>
   <xacro:arg name="grip_pos_min" default="0"/>
   <xacro:arg name="grip_pos_max" default="0.025"/>
-  <xacro:arg name="tty_port" default="/tmp/ttyUR"/>
+  <xacro:arg name="tty" default="/tmp/ttyUR"/>
   <xacro:arg name="baudrate" default="115200"/>
   <xacro:arg name="parity" default="N"/>
   <xacro:arg name="data_bits" default="8"/>
   <xacro:arg name="stop_bit" default="1"/>
   <xacro:arg name="slave_id" default="9"/>
-  <xacro:arg name="frequency_hz" default="10"/>
-
-  <xacro:arg name="create_socat_tty" default="true"/>
-  <xacro:arg name="socat_ip_address" default="192.168.77.22"/>
-  <xacro:arg name="socat_port" default="54321"/>
+  <xacro:arg name="use_fake_hardware" default="false"/>
 
   <xacro:arg name="import_ur3e" default="true"/>
   <xacro:arg name="import_hande" default="true"/>
@@ -63,13 +26,12 @@
 
     <!-- Import hande xacro -->
   <xacro:if value="$(arg import_hande)">
-    <xacro:include filename="$(find robotiq_hande_description)/urdf_hw/robotiq_hande_gripper.xacro"/>
+    <xacro:include filename="$(find robotiq_hande_description)/urdf/robotiq_hande_gripper.urdf.xacro"/>
   </xacro:if>
 
    <!-- import main macro -->
   <xacro:if value="$(arg import_ur3e)">
     <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
-    <xacro:include filename="$(find ur_description)/urdf/ros2_control_mock_hardware.xacro" />
   </xacro:if>
 
    <!-- possible 'ur_type' values: ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e -->
@@ -79,14 +41,13 @@
    <!-- parameters -->
    <xacro:arg name="tf_prefix" default="" />
    <xacro:arg name="joint_limit_params" default="$(find ur_description)/config/$(arg ur_type)/joint_limits.yaml"/>
-   <xacro:arg name="kinematics_params" default="/home/robot/kinematic_config/ur3e_mrc.yaml"/>
+   <xacro:arg name="kinematics_params" default="$(find ur_description)/config/$(arg ur_type)/default_kinematics.yaml"/>
    <xacro:arg name="physical_params" default="$(find ur_description)/config/$(arg ur_type)/physical_parameters.yaml"/>
    <xacro:arg name="visual_params" default="$(find ur_description)/config/$(arg ur_type)/visual_parameters.yaml"/>
+   <xacro:arg name="transmission_hw_interface" default=""/>
    <xacro:arg name="safety_limits" default="false"/>
    <xacro:arg name="safety_pos_margin" default="0.15"/>
    <xacro:arg name="safety_k_position" default="20"/>
-   <xacro:arg name="mock_sensor_commands" default="false" />
-
    <!-- ros2_control related parameters -->
    <xacro:arg name="headless_mode" default="false" />
    <xacro:arg name="robot_ip" default="192.168.77.22" />
@@ -95,12 +56,23 @@
    <xacro:arg name="input_recipe_filename" default=""/>
    <xacro:arg name="reverse_ip" default="0.0.0.0"/>
    <xacro:arg name="script_command_port" default="50004"/>
-
-   <!--When using gazebo simulations absolute paths are necessary.-->
-   <xacro:arg name="force_abs_paths" default="true" />
+   <!--   tool communication related parameters-->
+   <xacro:arg name="use_tool_communication" default="true" />
+   <xacro:arg name="tool_voltage" default="24" />
+   <xacro:arg name="tool_parity" default="N" />
+   <xacro:arg name="tool_baud_rate" default="115200" />
+   <xacro:arg name="tool_stop_bits" default="1" />
+   <xacro:arg name="tool_rx_idle_chars" default="1.5" />
+   <xacro:arg name="tool_tx_idle_chars" default="3.5" />
+   <xacro:arg name="tool_device_name" default="/tmp/ttyUR" />
+   <xacro:arg name="tool_tcp_port" default="54321" />
 
      <!-- Simulation parameters -->
    <xacro:arg name="use_fake_hardware" default="false" />
+   <xacro:arg name="fake_sensor_commands" default="false" />
+   <xacro:arg name="sim_gazebo" default="false" />
+   <xacro:arg name="sim_ignition" default="false" />
+   <xacro:arg name="simulation_controllers" default="" />
 
    <!-- initial position for simulations (Fake Hardware, Gazebo, Ignition) -->
    <xacro:arg name="initial_positions_file" default="$(find ur_description)/config/initial_positions.yaml"/>
@@ -114,54 +86,102 @@
    <!-- arm -->
   <xacro:if value="$(arg import_ur3e)">
     <xacro:ur_robot
-     name="$(arg name)"
-     tf_prefix="$(arg tf_prefix)"
-     parent="world"
-     joint_limits_parameters_file="$(arg joint_limit_params)"
-     physical_parameters_file="$(arg physical_params)"
-     visual_parameters_file="$(arg visual_params)"
-     kinematics_parameters_file="$(arg kinematics_params)"
-     safety_limits="$(arg safety_limits)"
-     safety_pos_margin="$(arg safety_pos_margin)"
-     safety_k_position="$(arg safety_k_position)"
-     force_abs_paths="$(arg force_abs_paths)"
-     >
-     <origin xyz="0 0 0.85" rpy="0 0 0" />          <!-- position robot in the world -->
-   </xacro:ur_robot>
-   </xacro:if>
-
-    <!-- ros2 control instance -->
-    <xacro:ur_ros2_control
       name="$(arg name)"
       tf_prefix="$(arg tf_prefix)"
-      mock_sensor_commands="$(arg mock_sensor_commands)"
+      parent="world"
+      joint_limits_parameters_file="$(arg joint_limit_params)"
+      kinematics_parameters_file="$(arg kinematics_params)"
+      physical_parameters_file="$(arg physical_params)"
+      visual_parameters_file="$(arg visual_params)"
+      transmission_hw_interface="$(arg transmission_hw_interface)"
+      safety_limits="$(arg safety_limits)"
+      safety_pos_margin="$(arg safety_pos_margin)"
+      safety_k_position="$(arg safety_k_position)"
+      use_fake_hardware="$(arg use_fake_hardware)"
+      fake_sensor_commands="$(arg fake_sensor_commands)"
+      sim_gazebo="$(arg sim_gazebo)"
+      sim_ignition="$(arg sim_ignition)"
+      headless_mode="$(arg headless_mode)"
       initial_positions="${xacro.load_yaml(initial_positions_file)}"
-    />
+      use_tool_communication="$(arg use_tool_communication)"
+      tool_voltage="$(arg tool_voltage)"
+      tool_parity="$(arg tool_parity)"
+      tool_baud_rate="$(arg tool_baud_rate)"
+      tool_stop_bits="$(arg tool_stop_bits)"
+      tool_rx_idle_chars="$(arg tool_rx_idle_chars)"
+      tool_tx_idle_chars="$(arg tool_tx_idle_chars)"
+      tool_device_name="$(arg tool_device_name)"
+      tool_tcp_port="$(arg tool_tcp_port)"
+      robot_ip="$(arg robot_ip)"
+      script_filename="$(arg script_filename)"
+      output_recipe_filename="$(arg output_recipe_filename)"
+      input_recipe_filename="$(arg input_recipe_filename)"
+      reverse_ip="$(arg reverse_ip)"
+      script_command_port="$(arg script_command_port)"
+      >
+      <origin xyz="0 0 0" rpy="0 0 0" />          <!-- position robot in the world -->
+    </xacro:ur_robot>
+   </xacro:if>
 
-    <!-- Add tjhe hande -->
-    <xacro:if value="$(arg import_hande)"> 
-      <xacro:robotiq_hande_gripper
+    <!-- <xacro:if value="$(arg import_hande)"> -->
+      <!-- <xacro:robotiq_hande_gripper
         name="$(arg hande_name)"
         prefix=""
-        parent="tool0"
+        parent="$(arg parent)"
         grip_pos_min="$(arg grip_pos_min)"
         grip_pos_max="$(arg grip_pos_max)"
-        tty_port="$(arg tty_port)"
+        tty="$(arg tty)"
         baudrate="$(arg baudrate)"
         parity="$(arg parity)"
         data_bits="$(arg data_bits)"
         stop_bit="$(arg stop_bit)"
         slave_id="$(arg slave_id)"
-        frequency_hz="$(arg frequency_hz)"
-        create_socat_tty="$(arg create_socat_tty)"
-        socat_ip_address="$(arg socat_ip_address)"
-        socat_port="$(arg socat_port)"
         use_fake_hardware="$(arg use_fake_hardware)"
-      />
-    </xacro:if>
+      /> -->
+    <!-- </xacro:if> -->
+
+   <xacro:if value="$(arg sim_gazebo)">
+    <!-- Gazebo plugins -->
+    <gazebo reference="world">
+    </gazebo>
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>$(arg simulation_controllers)</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+  <xacro:if value="$(arg sim_ignition)">
+    <!-- Gazebo plugins -->
+    <gazebo reference="world">
+    </gazebo>
+    <gazebo>
+      <plugin filename="libign_ros2_control-system.so" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+        <parameters>$(arg simulation_controllers)</parameters>
+        <controller_manager_node_name>$(arg tf_prefix)controller_manager</controller_manager_node_name>
+      </plugin>
+    </gazebo>
+  </xacro:if>
 
   <!-- Import table -->
-  <xacro:include filename="$(find ur3e_hande_description)/urdf/table.urdf.xacro"/>
+  <xacro:include filename="$(find ur3e_description)/urdf/table.urdf"/>
+
+  <!-- Import realsense -->
+  <xacro:if value="${is_import_ur3e and is_import_camera}">
+    <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
+  </xacro:if>
+
+  <!-- Use the sensor_d435i macro with a unique name (camera_top)-->
+  <!-- <xacro:sensor_d435i parent="world" name="camera1">
+      <origin rpy="0.0 0.4712 1.57" xyz="0.381 -0.125 0.415925"/>  
+  </xacro:sensor_d435i> -->
+
+  <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
+  <xacro:if value="${is_import_ur3e and is_import_camera}">
+    <xacro:sensor_d435i parent="world">
+        <origin rpy="0.0 0.698131 0" xyz="-0.522625 0.542925 0.3683"/>  
+    </xacro:sensor_d435i>
+  </xacro:if>
 
   <!-- Joint between table and ur -->
   <xacro:if value="$(arg import_ur3e)">
@@ -172,34 +192,14 @@
     </joint>
   </xacro:if>
 
-  <!-- Include mount -->
-  <xacro:include filename="$(find ur3e_hande_description)/urdf/side_extrusion_20.urdf.xacro"/>
+  <!-- Joint between ur3e and hande -->
+<xacro:if value="${is_import_ur3e and is_import_hande}">
+  <joint name="ur3e_hande_joint" type="fixed">
+    <origin rpy="${pi/2} ${-pi/2} 0" xyz="0.00574 .03656 .01111"/>
+    <parent link="tool0"/>
+    <child link="hande_link"/>
+  </joint>
+</xacro:if>
 
-  <!-- Instantiate mount -->
-  <xacro:side_extrusion_20 
-    parent="table"
-    x="$(arg extrusion_x)"
-    y="$(arg extrusion_y)"
-    z="$(arg extrusion_z)"
-    roll="$(arg extrusion_roll)"
-    pitch="$(arg extrusion_pitch)"
-    yaw="$(arg extrusion_yaw)"
-  />
-
-  <!-- Import realsense -->
-  <xacro:if value="${is_import_ur3e and is_import_camera}">
-    <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
-  </xacro:if>
-
-  <!-- Use the sensor_d435i macro; this is the camera on the right -->
-  <!-- You must add a unique namespace (e.g. camera2) if using both multiple cameras -->
-  <xacro:if value="${is_import_ur3e and is_import_camera}">
-    <xacro:sensor_d435i parent="side_extrusion_20">
-      <origin
-      xyz="${cam_offset_x} ${cam_offset_y} ${cam_offset_z}"
-      rpy="${cam_roll} ${cam_pitch} ${cam_yaw}"
-      />   
-    </xacro:sensor_d435i>
-  </xacro:if>
 
 </robot>

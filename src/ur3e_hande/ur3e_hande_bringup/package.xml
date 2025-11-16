@@ -3,9 +3,9 @@
 <package format="3">
   <name>ur3e_hande_bringup</name>
   <version>0.0.0</version>
-  <description>Bringup package for the UR3e hande robot.</description>
-  <maintainer email="me@clintonenwerem.com">Clinton Enwerem</maintainer>
-  <license>Apache-2.0</license>
+  <description>TODO: Package description</description>
+  <maintainer email="callab-b@todo.todo">callab-b</maintainer>
+  <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -16,11 +16,7 @@
   <depend>ur3e_hande_description</depend>
   <depend>ur_description</depend>
   <depend>ur_robot_driver</depend>
-  <depend>robotiq_hande_driver</depend>
-  <depend>realsense2_camera</depend>
-  <depend>moveit</depend>
-  <depend>shape_msgs</depend>
-  <depend>realsense2_camera_msgs</depend>
+  <depend>ur3e_description</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

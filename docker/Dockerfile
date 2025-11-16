@@ -1,7 +1,7 @@
 ############################################################
-# Base Image for the Hardware Lab with UR3e + Robotiq Hand-E
+# Base Image for the Hardware Lab: UR3e + Robotiq Hand-E
 ############################################################
-ARG ROS_DISTRO=jazzy
+ARG ROS_DISTRO=humble
 ARG HOME=/home/robot
 FROM osrf/ros:${ROS_DISTRO}-desktop
 
@@ -12,7 +12,7 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 SHELL ["/bin/bash", "-c"]
 
-# System utilities and core packages
+# Core dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     autoconf automake bash-completion build-essential cmake make pkg-config g++ git curl wget unzip \
     ca-certificates software-properties-common python3-pip python3-apt sudo \
@@ -34,11 +34,10 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     libpcl-dev libboost-dev libblas-dev liblapack-dev python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Python packages 
-RUN pip install ipython roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 transforms3d==0.4.2 scikit-image scikit-learn --break-system-packages && \
-    export PATH=/home/robot/.local/bin:$PATH
+# Python packages
+RUN pip install ipython roboticstoolbox-python==1.1.0 python-fcl==0.7.0.8 transforms3d==0.4.2 scikit-image scikit-learn 
 
-# Librealsense installation
+# Librealsense setup
 ARG LIBREALSENSE_TAG=v2.57.3
 RUN git clone --depth 1 --branch ${LIBREALSENSE_TAG} https://github.com/IntelRealSense/librealsense.git /opt/librealsense \
  && cd /opt/librealsense && mkdir build && cd build \
@@ -46,92 +45,49 @@ RUN git clone --depth 1 --branch ${LIBREALSENSE_TAG} https://github.com/IntelRea
  && make -j"$(nproc)" && make install \
  && install -m 644 /opt/librealsense/config/99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules || true
 
-RUN python3 -m pip install pyrealsense2 --no-cache-dir --ignore-installed --break-system-packages \
- || (cd /opt/librealsense && python3 -m pip install . --no-cache-dir --ignore-installed --break-system-packages)
+RUN python3 -m pip install pyrealsense2 --no-cache-dir --ignore-installed  \
+ || (cd /opt/librealsense && python3 -m pip install . --no-cache-dir --ignore-installed )
 
-# MoveIt, UR Drivers, Gazebo, and Utilities
+# MoveIt, UR Drivers, ROS 2 control
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ros-${ROS_DISTRO}-ros-gz \
-    ros-${ROS_DISTRO}-ros2-control ros-${ROS_DISTRO}-ros2-controllers \
-    ros-${ROS_DISTRO}-gz-ros2-control ros-${ROS_DISTRO}-ros-gz-bridge \
-    ros-${ROS_DISTRO}-foxglove-bridge ros-${ROS_DISTRO}-joint-state-publisher-gui \
-    ros-${ROS_DISTRO}-moveit* ros-${ROS_DISTRO}-ur* \
-    ros-${ROS_DISTRO}-rqt-image-view ros-${ROS_DISTRO}-gz-* \
+    ros-${ROS_DISTRO}-ros2-control \
+    ros-${ROS_DISTRO}-ros2-controllers \
+    ros-${ROS_DISTRO}-joint-state-publisher-gui \
+    ros-${ROS_DISTRO}-moveit* \
+    ros-${ROS_DISTRO}-ur* \
+    ros-${ROS_DISTRO}-foxglove-bridge \
+    ros-${ROS_DISTRO}-rqt-image-view \
     && rm -rf /var/lib/apt/lists/*
 
-# Gazebo tools
-RUN apt-get update && apt-get install -y --no-install-recommends gnupg ca-certificates curl lsb-release && \
-    curl -fsSL https://packages.osrfoundation.org/gazebo.gpg -o /usr/share/keyrings/osrf.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/osrf.gpg] \
-          http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" \
-          > /etc/apt/sources.list.d/gazebo-stable.list && \
-    apt-get update && apt-get install -y libgz-tools2-dev && \
-    rm -rf /var/lib/apt/lists/*
-
-# Initialize and update rosdep
+# rosdep
 RUN sudo rosdep fix-permissions && \
     sudo rosdep init 2>/dev/null || true && \
     rosdep update
 
-# UID/GID matching for host
+# UID/GID
 ARG userid=1002
 ARG groupid=1002
-
-# Create or reuse the user safely
-RUN existing_uid=$(getent passwd ${userid} | cut -d: -f1) && \
-    if [ -n "$existing_uid" ]; then \
-        echo "Reusing existing UID ${userid} (user: $existing_uid) as 'robot'"; \
-        usermod -l robot -d /home/robot -m "$existing_uid"; \
-    else \
-        echo "Creating new user 'robot' with UID ${userid} and GID ${groupid}"; \
-        groupadd -g ${groupid} -o robot || true; \
-        useradd -ms /bin/bash --uid ${userid} -g ${groupid} --groups sudo,video robot; \
-    fi && \
+RUN groupadd -g ${groupid} -o robot || true; \
+    useradd -ms /bin/bash --uid ${userid} -g ${groupid} --groups sudo,video robot; \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER robot
 ENV HOME=/home/robot
 WORKDIR /home/robot
-RUN sudo mkdir -p -m 0700 /run/user/${userid} && sudo chown ${userid}:${groupid} /run/user/${userid}
 
-ENV USER=robot \
-  LANG=en_US.UTF-8 \
-  ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST \
-  XDG_RUNTIME_DIR=/run/user/${userid} \
-  LIBGL_ALWAYS_SOFTWARE=0 \
-  TZ=America/New_York
+# Workspace
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash && mkdir -p ~/ros2_ws/src
 
-# ROS 2 workspace
-RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
-    mkdir -p ~/ros2_ws/src
+# code-server
+RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# code-server and VSCode ROS extension
-RUN curl -fsSL https://code-server.dev/install.sh | sh && \
-    if [ -f ./extensions/ms-iot.vscode-ros-0.9.6.vsix ]; then \
-      code-server --install-extension ./extensions/ms-iot.vscode-ros-0.9.6.vsix; \
-    fi || true
-
-# Shell environment
-RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc && \
+# Shell env
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc && \
     echo "source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash" >> ~/.bashrc && \
     echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc && \
-    # segmentation fault workaround
     echo "export QT_QPA_PLATFORM=xcb" >> ~/.bashrc && \
-    # autocompletion for Gazebo CLI
-    echo "source /usr/share/bash-completion/completions/gz" >> ~/.bashrc && \
-    # echo "export ROS_LOCALHOST_ONLY=1" >> ~/.bashrc && \
-    echo "export ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST" >> ~/.bashrc && \
-    echo "export GZ_VERSION=harmonic" >> ~/.bashrc && \
     echo "alias clc=clear" >> ~/.bashrc && \
-    # clear terminal when starting
     echo "clear" >> ~/.bashrc && \
-    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7  '" >> ~/.bashrc
+    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE467   LAB 7   '" >> ~/.bashrc
 
-# tmux Config
-ADD --chown=robot:robot \
-    https://raw.githubusercontent.com/MarylandRoboticsCenter/someConfigs/refs/heads/master/.tmux_K.conf \
-    /home/robot/.tmux.conf
-
-EXPOSE 11311
 ENTRYPOINT ["/bin/bash", "-i"]
-CMD ["rs-enumerate-devices", "--compact"]
