@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Lab 7: Autonomous Manipulation with ROS 2 on the UR3e-Hand-E Robot in Simulation
+# Lab 7: Autonomous Manipulation with ROS 2 on the Real UR3e-Hand-E Robot
 # Copyright (C) 2025 Clinton Enwerem
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
 # limitations under the License.
 
 """
-Pick-and-Place Node for the real UR3e-Hand-E robot.
+Pick-and-Place Node for the UR3e-Hand-E robot in simulation.
 
 Behavior:
     - If 'obj_pos' is passed as a ROS parameter (3 floats), it uses it directly.
@@ -44,61 +44,64 @@ from ur3e_hande_planning_interfaces.action import GetTargetObjPose
 from std_msgs.msg import Bool
 from visualization_msgs.msg import Marker, MarkerArray
 
-class PickAndPlace(Node):
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+
+class PickAndPlaceSim(Node):
     def __init__(self):
         super().__init__("pnp_demo_sim")
+        # initialize state early to avoid callback exceptions
+        self.objects = {}
+        self.last_plane_marker = None
+
         self.rtb_model = rtb.models.UR3()
         self.cb_group = ReentrantCallbackGroup()
 
-        self.pcd_plane_sub = self.create_subscription(
-            MarkerArray,
-            "plane_marker",
-            self.scene_cb,
-            10
-        )
-
-        self.objects = {}
-
         # variables for metrics
-        self.plan_times = []
-        self.exec_times = []
-        self.start_time = time.time()
+        self.plan_time = None
+        self.exec_time = None
         self.planning_success = None
+
+        # qos
+        qos = QoSProfile(depth=1)
+        qos.reliability = ReliabilityPolicy.RELIABLE
+        qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
         # params
         self.declare_parameter("obj_pos", [])
         self.declare_parameter("target_obj_bounds", [0.3, 0.5, -0.2, 0.2])
         self.declare_parameter("target_height", 0.13)
-        self.declare_parameter("target_position", [0.29, 0.51, 0.10])
-        self.declare_parameter("pregrasp_z", 0.11)
-        self.declare_parameter("place_z", 0.4)
+        self.declare_parameter("target_position", [0.29, 0.51, 0.076])
+        self.declare_parameter("pregrasp_z", 0.28)
         self.declare_parameter("lift_z_offset", 0.12)
         self.declare_parameter("place_offset_y", 0.0)
         self.declare_parameter("ee_frame", "tool0")
-        self.declare_parameter("grip_exec_delay", 0.9) # s
-        self.declare_parameter("safe_lift_z", 0.30)  
+        self.declare_parameter("grip_exec_delay", 0.7) # s
+        self.declare_parameter("safe_lift_z", 0.60)   # 60 cm above table; higher due to simulation artifacts
         self.declare_parameter("print_metrics", False)
-        self.declare_parameter("max_vel_scale", 0.15)
-        self.declare_parameter("max_acc_scale", 0.15)
+        self.declare_parameter("max_vel_scale", 0.25)
+        self.declare_parameter("max_acc_scale", 0.25)
         self.declare_parameter("goal_pos_tol", 0.003)
         self.declare_parameter("goal_ori_tol", 0.01)
-        self.declare_parameter("place_margin", 0.1)  # m
+        self.declare_parameter("place_margin", 0.0)  # m
+        self.declare_parameter("plane_offset_z", 0.002)  # m
+        self.declare_parameter("table_dims", [0.822, 1.092, 0.755])  # x,y,z
 
         self.pregrasp_z = self.get_parameter("pregrasp_z").value
         self.lift_z_offset = self.get_parameter("lift_z_offset").value
         self.place_offset_y = self.get_parameter("place_offset_y").value
         self.target_height = self.get_parameter("target_height").value
-        self.goal_pos_tol = self.get_parameter("goal_pos_tol").get_parameter_value().double_value
-        self.goal_ori_tol = self.get_parameter("goal_ori_tol").get_parameter_value().double_value
         self.target_position = self.get_parameter("target_position").value
         self.ee_frame = self.get_parameter("ee_frame").get_parameter_value().string_value
         self.grip_exec_delay = self.get_parameter("grip_exec_delay").value
-        self.place_z = self.get_parameter("place_z").value
         self.safe_lift_z = self.get_parameter("safe_lift_z").value
         self.print_metrics = self.get_parameter("print_metrics").get_parameter_value().bool_value
         self.max_vel_scale = self.get_parameter("max_vel_scale").get_parameter_value().double_value
         self.max_acc_scale = self.get_parameter("max_acc_scale").get_parameter_value().double_value
+        self.goal_pos_tol = self.get_parameter("goal_pos_tol").get_parameter_value().double_value
+        self.goal_ori_tol = self.get_parameter("goal_ori_tol").get_parameter_value().double_value
         self.place_margin = self.get_parameter("place_margin").get_parameter_value().double_value
+        self.plane_offset_z = self.get_parameter("plane_offset_z").get_parameter_value().double_value
+        self.table_dims = self.get_parameter("table_dims").get_parameter_value().double_array_value
 
         self.declare_parameter("ur_approach",
         [-1.8605, -2.99056, 0.675617, -2.00445, 1.61112, -0.00712473])
@@ -150,10 +153,19 @@ class PickAndPlace(Node):
         self.lift_z = max(self.safe_lift_z, self.obj_pos[2] + self.lift_z_offset)
         self.get_logger().info(f"Computed lift_z: {self.lift_z:.3f} m") # always lift to at least safe_lift_z
 
-        self.declare_parameter("place_pos_arg", [-self.target_position[0]-0.1, 
-                                                 self.target_position[1], 
-                                                 self.lift_z])
+        x_obj, y_obj, z_obj = self.obj_pos
+
+        # Mirror the object across the robot base
+        x_place = -x_obj * 1.2
+
+        # Optionally, clamp to a safe zone
+        TABLE_X, TABLE_Y, SAFE_Z = self.table_dims[0], self.table_dims[1], self.lift_z
+        x_place = float(np.clip(x_place, -TABLE_X    / 2, TABLE_X    / 2))
+        y_place = float(np.clip(y_obj, -TABLE_Y / 2, TABLE_Y / 2))
+        self.declare_parameter("place_pos_arg", [x_place, y_place, SAFE_Z])
         self.place_pos_arg = self.get_parameter("place_pos_arg").get_parameter_value().double_array_value
+
+        self.get_logger().info("\x1b[34m" + f"Manual place position: {self.place_pos_arg}" + "\x1b[0m")
         self.approach_z = max(self.obj_pos[2] + self.lift_z_offset, self.pregrasp_z + 0.03)
 
         self.approach_pos = [self.obj_pos[0], self.obj_pos[1], self.approach_z]
@@ -163,13 +175,7 @@ class PickAndPlace(Node):
         self.get_logger().info(f"Grasp position: {self.grasp_pos}")
 
         self.lift_pos = [self.obj_pos[0], self.obj_pos[1], self.lift_z]
-
-        if hasattr(self, "last_plane_marker"):
-            self.place_pos = self.compute_place_from_plane(self.obj_pos, self.last_plane_marker, self.place_margin)
-            self.get_logger().info(f"Auto-chosen place position: {self.place_pos}")
-        else:
-            # fallback 
-            self.place_pos = self.compute_place_pos(self.grasp_pos)
+        self.place_pos = None
 
         # MoveIt2 Interface
         self.moveit2 = MoveIt2(
@@ -186,12 +192,76 @@ class PickAndPlace(Node):
         self.moveit2.goal_position_tolerance = self.goal_pos_tol
         self.moveit2.goal_orientation_tolerance = self.goal_ori_tol
 
+        # subscribe AFTER MoveIt2 and state exist so the first plane message is handled
+        self.pcd_plane_sub = self.create_subscription(
+            MarkerArray,
+            "plane_marker",
+            self.scene_cb,
+            qos,
+        )
+ 
         # begin sequence
         self._start_timer = self.create_timer(1.5, self._start_move, callback_group=self.cb_group)
 
     def compute_place_pos(self, pre_grip_pos: list) -> list[float]:
         return [-pre_grip_pos[0], pre_grip_pos[1], pre_grip_pos[2]]
     
+    def compute_place_from_plane(self, obj_pos, plane_marker, margin):
+        """
+        Compute a safe, graceful placement position ON the segmented plane.
+        - Projects object onto the plane
+        - Applies a small in-plane offset
+        - Clamps inside plane bounds
+        - Places slightly above plane surface
+        """
+
+        # Extract plane geometry
+        plane_pos = np.array([
+            plane_marker.pose.position.x,
+            plane_marker.pose.position.y,
+            plane_marker.pose.position.z
+        ])
+
+        quat = plane_marker.pose.orientation
+        R_plane = R.from_quat([quat.x, quat.y, quat.z, quat.w]).as_matrix()
+
+        x_axis = R_plane[:, 0]
+        y_axis = R_plane[:, 1]
+        z_axis = R_plane[:, 2]  # plane normal
+
+        dx, dy, dz = plane_marker.scale.x, plane_marker.scale.y, plane_marker.scale.z
+        half_x = dx / 2.0 - margin
+        half_y = dy / 2.0 - margin
+
+        # Project object onto plane
+        obj_world = np.array(obj_pos)
+        height = np.dot(obj_world - plane_pos, z_axis)
+        obj_on_plane = obj_world - height * z_axis
+
+        # Initial place candidate:
+        # Move +12 cm along plane-x
+        candidate = obj_on_plane + self.lift_z_offset * x_axis
+
+        # convert place candidate to plane coordinates
+        local = np.array([
+            np.dot(candidate - plane_pos, x_axis),
+            np.dot(candidate - plane_pos, y_axis)
+        ])
+
+        # clamp inside plane bounds
+        local[0] = np.clip(local[0], -half_x, half_x)
+        local[1] = np.clip(local[1], -half_y, half_y)
+
+        # Convert back to world coords
+        place_world = (
+            plane_pos
+            + local[0] * x_axis
+            + local[1] * y_axis
+            + (0.02 * z_axis)    # 2 cm above plane surface
+        )
+
+        return place_world.tolist()
+
     #  helper methods
     def query_object_pose_from_perception(self):
         """Request an object pose from perception via GetTargetObjPose"""
@@ -264,9 +334,9 @@ class PickAndPlace(Node):
             self.get_logger().warn(f"[{label}] Planning/execution threw: {e}")
             return False
         t1 = time.time()
-        t_plan = t1 - t0
-        self.plan_times.append(t_plan)
-
+        if self.plan_time is None:
+            self.plan_time = t1 - t0
+        
         if traj is not None and not getattr(traj, "joint_trajectory", None):
             self.get_logger().warn(f"[{label}] Planning returned an unexpected result.")
 
@@ -277,78 +347,40 @@ class PickAndPlace(Node):
                 self.get_logger().info(f"[{label}] Waiting until execution finished...")
                 self.moveit2.wait_until_executed()
                 t_exec1 = time.time()
-                t_exec = time.time() - (t0 + t_plan)
-                self.exec_times.append(t_exec)
+                if self.exec_time is None:
+                    self.exec_time = t_exec1 - t_exec0
             except Exception as e:
                 self.get_logger().warn(f"[{label}] Waiting for execution failed: {e}")
                 return False
 
         return True
-    
-    def compute_place_from_plane(self, obj_pos, plane_marker, margin):
-        """
-        Compute a place position ON the segmented plane, clamped to its bounds.
-        """
-
-        # Extract plane pose
-        plane_pos = np.array([
-            plane_marker.pose.position.x,
-            plane_marker.pose.position.y,
-            plane_marker.pose.position.z
-        ])
-
-        quat = plane_marker.pose.orientation
-        plane_quat = np.array([quat.x, quat.y, quat.z, quat.w])
-
-        # Plane rotation matrix in world frame
-        R_plane = R.from_quat(plane_quat).as_matrix()
-
-        # Dimensions of plane's collision box
-        dx, dy, dz = plane_marker.scale.x, plane_marker.scale.y, plane_marker.scale.z
-
-        # Transform object into plane local coords
-        obj_world = np.array(obj_pos)
-        obj_local = R_plane.T @ (obj_world - plane_pos)
-
-        # Clamp XY coordinates inside plane footprint
-        half_x = dx / 2.0 - margin
-        half_y = dy / 2.0 - margin
-
-        obj_local[0] = np.clip(obj_local[0], -half_x, half_x)
-        obj_local[1] = np.clip(obj_local[1], -half_y, half_y)
-
-        # Place Z at the plane surface
-        place_local = np.array([obj_local[0], obj_local[1], dz / 2.0 + 0.02])  # 2cm above plane
-
-        # Convert back to world coordinates
-        place_world = plane_pos + R_plane @ place_local
-
-        return place_world.tolist()
-   
+        
     def scene_cb(self, msg: MarkerArray):
         """
         Callback for adding segmented plane to MoveIt planning scene.
         Expects a MarkerArray containing ONE plane marker published by perception.
-        The marker must have:
-            - pose (position + orientation)
-            - scale.x, scale.y, scale.z describing box dimensions
         """
-
         if msg is None or len(msg.markers) == 0:
             return
 
-        if "segmented_plane" in self.objects:
-            self.moveit2.remove_collision_object(id="segmented_plane")
-            del self.objects["segmented_plane"]
+        plane_marker = msg.markers[0]
+        # cache the latest plane marker immediately
+        self.last_plane_marker = plane_marker
+        self.get_logger().info("Cached plane marker for place position computation.")
 
-        plane_marker = msg.markers[0]   # get first marker
-        self.last_plane_marker = plane_marker  # cache for place position computation
-
+        # scene maintenance
+        try:
+            if "segmented_plane" in self.objects:
+                self.moveit2.remove_collision_object(id="segmented_plane")
+                del self.objects["segmented_plane"]
+        except Exception as e:
+            self.get_logger().debug(f"Scene cleanup skipped: {e}")
+ 
         # Extract pose
         pos = [
             plane_marker.pose.position.x,
             plane_marker.pose.position.y,
-            plane_marker.pose.position.z,
+            self.plane_offset_z,
         ]
 
         quat = [
@@ -373,10 +405,11 @@ class PickAndPlace(Node):
             "dimensions": dims,
         }
 
-        self.add_collision_object(obj)
-        self.get_logger().info(
-            f"Added plane collision box at {pos} with dims {dims} and quat {quat}"
-        )
+        # guard if MoveIt2 not yet ready for any reason
+        try:
+            self.add_collision_object(obj)
+        except Exception as e:
+            self.get_logger().debug(f"Add collision object skipped: {e}")
 
         # small sleep to ensure MoveIt processes scene updates
         time.sleep(0.05)
@@ -403,8 +436,6 @@ class PickAndPlace(Node):
 
         # update cached synchronous flag
         self._synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
-
-        # run the main sequence
         try:
             self.start_sequence()
         except Exception as e:
@@ -415,11 +446,50 @@ class PickAndPlace(Node):
 
     # main sequence 
     def start_sequence(self):
+        # run the main sequence
+        # Wait for plane marker so we can compute place_pos
+        if self.place_pos is None:
+            self.get_logger().info("Waiting for plane marker to compute place position…")
+
+            # wait for plane marker to arrive
+            timeout = 10.0  # seconds
+            start_t = time.time()
+            while self.last_plane_marker is None and (time.time() - start_t) < timeout:
+                # allow callbacks to fire
+                rclpy.spin_once(self, timeout_sec=0.1)
+
+            if self.last_plane_marker is not None:
+                # Compute place pose ON the segmented plane
+                try:
+                    self.place_pos = self.compute_place_from_plane(
+                        self.obj_pos,
+                        self.last_plane_marker,
+                        self.place_margin,
+                    )
+                    if self.place_pos:
+                        # adjust sign and z
+                        self.place_pos[0] = np.sign(self.place_pos_arg[0]) * min(abs(self.place_pos[0]), abs(self.place_pos_arg[0]))
+                        self.place_pos[2] = self.place_pos_arg[2]
+                    self.get_logger().info(
+                        f"\x1b[34mComputed place_pos in start_sequence: {self.place_pos}\x1b[0m"
+                    )
+                except Exception as e:
+                    self.get_logger().error(f"Failed computing place_pos: {e}")
+                    self.get_logger().warn(
+                        "Falling back to manual place_pos_arg due to plane computation error."
+                    )
+                    self.place_pos = list(self.place_pos_arg)
+            else:
+                # No plane ever arrived during timeout
+                self.get_logger().warn(
+                    "Plane marker did not arrive in time. Using fallback manual place_pos_arg."
+                )
+                self.place_pos = list(self.place_pos_arg)
+
         self.get_logger().info("Waiting for gripper action server…")
         self.gripper_client.wait_for_server()
-
         self.open_gripper()
-        time.sleep(self.grip_exec_delay * 5)
+        time.sleep(self.grip_exec_delay * 4)
         # approach
         q_approach = self._ik_rtb(self.approach_pos)
         if not self._plan_then_execute(q_approach, "Approach"):
@@ -443,6 +513,9 @@ class PickAndPlace(Node):
             return
 
         # place
+        if self.place_pos is None:
+            self.get_logger().error("Aborting: no valid place position available.")
+            return
         q_place = self._ik_rtb(self.place_pos, q0=self.ur_place)
         if not self._plan_then_execute(q_place, "Place"):
             self.get_logger().error("Aborting: cannot reach place pose.")
@@ -465,20 +538,11 @@ class PickAndPlace(Node):
         if self.planning_success is None:
             self.planning_success = True
         if self.print_metrics:
-            total_plan_time = sum(self.plan_times)
-            total_exec_time = sum(self.exec_times)
-            avg_plan_time = total_plan_time / len(self.plan_times)
-            avg_exec_time = total_exec_time / len(self.exec_times)
-            total_pipeline = time.time() - self.start_time
-
             self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
-            self.get_logger().info(self.GREEN + "Metrics Summary (SIMULATION):" + self.RESET)
+            self.get_logger().info(self.GREEN + "Metrics Summary:" + self.RESET)
             self.get_logger().info(self.GREEN + f"  1. Planning Success (bool): {int(self.planning_success)}" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  2. Avg. Planning time [s]: {avg_plan_time:.4f} s" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  3. Avg. Execution time [s]: {avg_exec_time:.4f} s" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  4. Total Plan time [s]: {total_plan_time:.4f} s" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  5. Total Execution time [s]: {total_exec_time:.4f} s" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  6. Total (PnP Pipeline) [s]: {total_pipeline:.4f} s" + self.RESET)
+            self.get_logger().info(self.GREEN + f"  2. Planning time [s]: {self.plan_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.GREEN + f"  3. Execution time [s]: {self.exec_time:.4f} s" + self.RESET)
             self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
 
 
@@ -537,7 +601,7 @@ class PickAndPlace(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = PickAndPlace()
+    node = PickAndPlaceSim()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
