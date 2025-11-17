@@ -88,7 +88,7 @@ RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc && \
     echo "export QT_QPA_PLATFORM=xcb" >> ~/.bashrc && \
     echo "alias clc=clear" >> ~/.bashrc && \
     echo "clear" >> ~/.bashrc && \
-    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7  '" >> ~/.bashrc
+    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7 (HW)  '" >> ~/.bashrc
 
 # tmux Config
 ADD --chown=robot:robot \
