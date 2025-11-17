@@ -11,22 +11,21 @@ Autonomous robotic manipulation unites perception, planning, and control to enab
 
 ## Lab Software
 
-To avoid software conflicts and increase portability, all lab software will be packaged as a Docker container. Follow the instructions below to get started.
+To avoid software conflicts and increase portability, a Docker image containing the simulation software has already been built on the lab computers. You can start a container like so:
 
-## Starting the Container
+## Starting the Container (this will only work only on a lab machine)
 
-The lab computers contain a prebuild image and the source files already so you will not have to build the image. Simply navigate to the 
-* Clone this repo to get the lab-7 code if you haven't done so already
-    ```
-    cd ~/Labs
-    git clone -b sim https://github.com/ENEE467-F2025/lab-7.git
-    cd lab-7/docker
-    ```
-* Enable X11 forwarding
+Before beginning, ensure you are on a lab machine. The lab computers contain a prebuild image and the source files already so you will not have to build the image. 
+
+* Start by enabling X11 forwarding:
     ```
     xhost +local:root
     ```
-* Run the Docker container
+* Then change directory to the `~/Labs/lab-7-sim/` folder:
+    ```
+    cd ~/Labs/lab-7-sim/docker
+    ```
+* Start the sim container:
     ```
     userid=$(id -u) groupid=$(id -g) docker compose -f lab-7-sim-compose.yml run --rm lab-7-sim-docker
     ```
@@ -34,25 +33,8 @@ The lab computers contain a prebuild image and the source files already so you w
     ```
     (lab-7) robot@docker-desktop:~$
     ```
-* Edit the lab-7 Python (ROS 2) code  within the `lab-7/src` folder from a VS Code editor on the host machine. The repo directory `lab-7/src`  is mounted to the Docker container located at `/home/robot/ros2_ws/src` so all changes will be reflected **inside** the container.
+* As you will not be editing any files for the simulator part, the repo directory is **NOT** mounted to the Docker container.
 
-## Test Your Setup
-* From within the container, build and source your workspace:
-    ```bash
-    cd ~/ros2_ws/
-    colcon build --symlink-install
-    source install/setup.bash
-    ```
-
-* Then run the following script:
-    ```bash
-    cd ~/ros2_ws/src
-    python3 test_docker.py
-    ```
-    This should print the following output to the terminal (if the message doesn’t appear, stop and contact your TA, otherwise proceed with the lab procedure): 
-    ```txt 
-    All packages for Lab 7 found. Docker setup is correct.
-    ```
 ## Attaching the Docker Container to VSCode
 To enable type hints and IntelliSense, after starting the container, run the following command from a new terminal on the lab machine (host) to attach the running container to VSCode:
 ```bash

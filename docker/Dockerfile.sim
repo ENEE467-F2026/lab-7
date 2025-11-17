@@ -94,6 +94,8 @@ ENV USER=robot \
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     mkdir -p ~/ros2_ws/src
 
+COPY --chown=robot:robot ./src /home/robot/ros2_ws/src
+
 # code-server and VSCode ROS extension
 RUN curl -fsSL https://code-server.dev/install.sh | sh && \
     if [ -f ./extensions/ms-iot.vscode-ros-0.9.6.vsix ]; then \
