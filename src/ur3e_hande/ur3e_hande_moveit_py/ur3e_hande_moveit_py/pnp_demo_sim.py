@@ -264,8 +264,9 @@ class PickAndPlace(Node):
             self.get_logger().warn(f"[{label}] Planning/execution threw: {e}")
             return False
         t1 = time.time()
-        self.plan_times.append(t1 - t0)
-        
+        t_plan = t1 - t0
+        self.plan_times.append(t_plan)
+
         if traj is not None and not getattr(traj, "joint_trajectory", None):
             self.get_logger().warn(f"[{label}] Planning returned an unexpected result.")
 
@@ -466,8 +467,8 @@ class PickAndPlace(Node):
         if self.print_metrics:
             total_plan_time = sum(self.plan_times)
             total_exec_time = sum(self.exec_times)
-            avg_plan_time = total_plan / len(self.plan_times)
-            avg_exec_time = total_exec_time / self.exect_times
+            avg_plan_time = total_plan_time / len(self.plan_times)
+            avg_exec_time = total_exec_time / len(self.exec_times)
             total_pipeline = time.time() - self.start_time
 
             self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
