@@ -7,7 +7,7 @@ This repository contains a Docker container for Lab 7 (Autonomous Manipulation w
 
 ![ROS 2 Jazzy](https://img.shields.io/badge/ROS2-Jazzy-orange)
 
-Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. This lab brings these elements together in ROS 2, enabling the real UR3e-Hand-E robot to detect, grasp, and place an object. Students will explore how these subsystems interact in real time and how autonomy developed in simulation transfers to physical hardware.
+Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. This lab brings these elements together in ROS 2, enabling the real UR3e-Hand-E robot to detect, grasp, and place an object. Through this lab, students will explore how these subsystems interact in real time and how autonomy developed in simulation transfers to physical hardware.
 
 ## Lab Software
 
@@ -17,15 +17,17 @@ To avoid software conflicts and increase portability, a Docker image containing 
 
 Before beginning, ensure you are on a lab machine. The lab computers contain a prebuild image and the source files already so you will not have to build the image. 
 
-* Start by enabling X11 forwarding:
+* Run `docker images` on the host, and confirm that `lab-7-sim-image` is in the printed list.
+
+* If yes, then enable X11 forwarding:
     ```
     xhost +local:root
     ```
-* Then change directory to the `~/Labs/lab-7-sim/` folder:
+* Next change directory to the `~/Labs/lab-7-sim/` folder:
     ```
     cd ~/Labs/lab-7-sim/docker
     ```
-* Start the sim container:
+* Start the **simulator-only** container (do not use this for hardware-related parts of the procedure):
     ```
     userid=$(id -u) groupid=$(id -g) docker compose -f lab-7-sim-compose.yml run --rm lab-7-sim-docker
     ```

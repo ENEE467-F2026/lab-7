@@ -1,6 +1,3 @@
-# to build the image
-userid=$(id -u) groupid=$(id -g) docker compose -f lab-7-sim-compose.yml build
-
 # to start the container
 userid=$(id -u) groupid=$(id -g) docker compose -f lab-7-sim-compose.yml run --rm lab-7-sim-docker
 
