@@ -227,7 +227,7 @@
   <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
  <xacro:sensor_d435i parent="table" use_nominal_extrinsics="true" add_plug="true" use_mesh="true" publish_pointcloud="true">
       <origin
-      xyz="${cam_offset_x} ${cam_offset_y} ${mount_height}"
+      xyz="${extrusion_x} ${extrusion_y} ${mount_height}"
       rpy="${camera_roll} ${camera_pitch} ${camera_yaw}"
       />   
   </xacro:sensor_d435i>
