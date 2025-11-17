@@ -12,6 +12,10 @@ def generate_launch_description():
     rviz_config = os.path.join(perception_pkg_share, 'rviz', 'pc_test.rviz')
     use_sim_time = LaunchConfiguration("use_sim_time")
     launch_rviz = LaunchConfiguration("launch_rviz")
+    stop_after_first = LaunchConfiguration("stop_after_first")
+    stop_after_first_pub = LaunchConfiguration("stop_after_first_pub")
+    crop_enabled = LaunchConfiguration("crop_enabled")
+    leaf_size = LaunchConfiguration("leaf_size")
 
 
     declared_arguments = [
@@ -22,7 +26,13 @@ def generate_launch_description():
 
         DeclareLaunchArgument("use_sim_time", default_value="false", description="Use sim time?"),
 
-        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
+        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?"),
+        DeclareLaunchArgument("stop_after_first", default_value="false", description="Stop processing point clouds after the first segmented result?"),
+        DeclareLaunchArgument("stop_after_first_pub", default_value="false", description="Stop publishing segmented point cloud after the first result?"),
+        DeclareLaunchArgument("crop_enabled", default_value="true", description="Enable cropping of filtered point cloud?" ),
+        DeclareLaunchArgument("leaf_size", default_value="0.005", description="Leaf size for voxel grid filter?" ),
+
+
     ]
 
     # Realsense (hardware) launch
@@ -73,10 +83,10 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time},
             {"input_topic": "/camera/camera/depth/color/points"},
             {"output_topic": "/filtered_cloud"},
-            {"leaf_size": 0.005},
-            {"crop_enabled": True},
-            {"stop_after_first": False}, # keep processing point clouds since cloud is sparser in real life
-            {"crop_bounds": [-0.35, 0.18, -0.5, 0.5, 0.00, 0.9]},  # xmin, xmax, ymin, ymax, zmin, zmax; Point cloud bounds: x[0.00, 1.22], y[0.00, 0.51], z[0.00, 1.50]
+            {"leaf_size": leaf_size},
+            {"crop_enabled": crop_enabled},
+            {"stop_after_first": stop_after_first}, # keep processing point clouds since cloud is sparser in real life
+            {"crop_bounds": [0.10, 0.65, -0.5, 0.5, 0.00, 0.9]},  # xmin, xmax, ymin, ymax, zmin, zmax; Point cloud bounds: x[0.00, 1.22], y[0.00, 0.51], z[0.00, 1.50]
 
             ],
         )
@@ -96,8 +106,8 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time},
             {"input_topic": "/filtered_cloud"},
             {"base_frame": "world"},
-            {"camera_frame": "camera_optical_link"},
-            {"stop_after_first_pub": False}, # keep publishing segmentation results
+            {"camera_frame": "camera_depth_optical_frame"}, # set automatically from point cloud header in pc_segmentation_node.py
+            {"stop_after_first_pub": stop_after_first_pub}, # keep publishing segmentation results
             ],
         )
         ]

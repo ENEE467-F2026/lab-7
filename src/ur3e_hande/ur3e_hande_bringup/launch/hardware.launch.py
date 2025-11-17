@@ -1,6 +1,6 @@
 # Copyright (c) 2021 PickNik, Inc.
 
-import os
+import os, yaml
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, OpaqueFunction, IncludeLaunchDescription
@@ -22,6 +22,24 @@ except ImportError:
     MOVEIT_AVAILABLE = False
     def load_yaml(package, file_path):
         return {}
+
+try:
+    calib_file = os.environ["CAMERA_CALIBRATION_FILE"]
+except KeyError:
+    calib_file = "/home/robot/camera_config/realsense_mrc.yaml"
+
+calib = yaml.safe_load(open(calib_file, 'r'))
+
+cam = calib["camera_mount"]
+
+xacro_args = [
+    f"camera_x:={cam['translation'][0]}",
+    f"camera_y:={cam['translation'][1]}",
+    f" mount_height:={cam['translation'][2]}",
+    f"camera_roll:={cam['rotation_rpy'][0]}",
+    f"camera_pitch:={cam['rotation_rpy'][1]}",
+    f"camera_yaw:={cam['rotation_rpy'][2]}",
+]
 
 def launch_setup(context, *args, **kwargs):
     robot_ip = LaunchConfiguration("robot_ip")

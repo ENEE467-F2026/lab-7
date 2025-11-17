@@ -51,7 +51,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 def launch_setup(context, *args, **kwargs):
 
     # Initialize Arguments
-    ur_type = "ur3e" # FIXED TYPE
+    ur_type = "ur3e" 
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")

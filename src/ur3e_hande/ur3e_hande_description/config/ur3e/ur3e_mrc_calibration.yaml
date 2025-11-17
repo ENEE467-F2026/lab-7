@@ -42,3 +42,4 @@ kinematics:
     pitch: 3.1415926535897931
     yaw: 3.1415924791350971
   hash: calib_8999255340950484458
+  # default; not used

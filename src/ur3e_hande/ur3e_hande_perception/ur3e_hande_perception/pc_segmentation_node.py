@@ -89,18 +89,7 @@ class PCSegmentationNode(Node):
         self.get_logger().info(f"Listening to {self.input_topic} for segmentation...")
         self.get_logger().info("Waiting for TF transform between camera and base_link...")
         rclpy.spin_once(self, timeout_sec=2.0)
-        self.tf_ready = False
-        try:
-            self.tf_camera_to_base = self.tf_buffer.lookup_transform(
-                self.base_frame,
-                self.camera_frame,
-                rclpy.time.Time(),
-                timeout=rclpy.duration.Duration(seconds=3.0)
-            )
-            self.get_logger().info("TF transform successfully acquired.")
-            self.tf_ready = True
-        except TransformException as e:
-            self.get_logger().error(f"Transform lookup failed: {e}")
+        self.get_logger().info("TF buffer initialized. Will transform clouds at runtime.")
 
     def pointcloud_callback(self, msg: PointCloud2):
         if self.segmentation_done and self.stop_after_first_pub:
@@ -117,8 +106,12 @@ class PCSegmentationNode(Node):
 
             pts = gen.reshape(-1, 3)
 
+            # source frame params
+            source_frame = msg.header.frame_id
+            time_stamp = msg.header.stamp
+
             # Transform from camera frame to base_link frame
-            pts = self.transform_points(pts)
+            pts = self.transform_points(pts, source_frame, time_stamp)
 
             # Proceed with segmentation in the base_link frame
             self.segment_plane_and_objects(pts, msg.header)
@@ -181,14 +174,23 @@ class PCSegmentationNode(Node):
         )
         return plane_pts, nonplane_pts, best_eq
 
-    def transform_points(self, points_cam):
+    def transform_points(self, points_cam, source_frame: str, time_stamp):
         """Transform Nx3 points from camera to base_link frame"""
-        if not self.tf_ready:
-            self.get_logger().warning("TF not ready; returning raw points.")
-            return points_cam
+        try:
+            tf = self.tf_buffer.lookup_transform(
+                self.base_frame,      # target frame
+                source_frame,         # source frame
+                time_stamp,
+                timeout=rclpy.duration.Duration(seconds=0.25)
+            )
+        except TransformException as e:
+            self.get_logger().warn(
+                f"TF lookup failed ({source_frame} --- > {self.base_frame}): {e}"
+            )
+            return points_cam  #
 
-        t = self.tf_camera_to_base.transform.translation
-        q = self.tf_camera_to_base.transform.rotation
+        t = tf.transform.translation
+        q = tf.transform.rotation
 
         T = np.array([t.x, t.y, t.z])
         R_mat = R.from_quat([q.x, q.y, q.z, q.w]).as_matrix()

@@ -6,7 +6,7 @@
 
 ![alt text](imgs/rviz_perc_image.png)
 
-To run the perception nodes for the real D435i, use the following launch file:
+To run the perception nodes for the real D435i, use the following launch file (add `launch_rviz:=false` if you do not want to bring up RViz)
 ```bash
 ros2 launch ur3e_hande_perception perception_launch.py
 ```

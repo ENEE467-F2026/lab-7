@@ -35,7 +35,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     && rm -rf /var/lib/apt/lists/*
 
 # Python packages
-RUN pip install ipython roboticstoolbox-python==1.1.0 python-fcl==0.7.0.8 transforms3d==0.4.2 scikit-image scikit-learn
+RUN pip install ipython scikit-image==0.21.0 numpy==1.26.4 scipy==1.10.1 scikit-learn roboticstoolbox-python==1.1.0 python-fcl==0.7.0.8 transforms3d==0.4.2 
 
 # Librealsense setup
 ARG LIBREALSENSE_TAG=v2.57.3

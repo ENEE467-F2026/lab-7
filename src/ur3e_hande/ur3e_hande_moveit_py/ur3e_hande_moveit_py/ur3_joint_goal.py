@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
 """
 ROS 2 node to move the UR3e HandE robot to a specified joint goal using PyMoveIt2.
+
+This script assumes that the MoveIt2 configuration for the UR3e HandE robot is properly set up
+and that the robot is either simulated or connected for real-world operation.
+
+Usage:
+    ros2 run ur3e_hande_moveit_py ur3_joint_goal
+
+Adapted from https://github.com/AndrejOrsula/pymoveit2/blob/main/examples/ex_joint_goal.py
+
+Author: Clinton Enwerem
+Developed for the course ENEE467: Robotics Projects Laboratory, Fall 2025, University of Maryland, College Park, MD.
 """
 
 from threading import Thread
@@ -24,7 +35,7 @@ class Ur3JointGoalNode(Node):
         # Parameters
         self.declare_parameter("synchronous", False)
         self.declare_parameter("cancel_after_secs", 0.0)
-        self.declare_parameter("planner_id", "RRTConnectkConfigDefault") # Same as the RRT* algorithm from Part I
+        self.declare_parameter("planner_id", "RRTConnectkConfigDefault") # Same as the RRT* algorithm from Lab 5, Part I
 
         if self.group_states is not None:
                 self.declare_parameter("def_group_state", "ur_test")
@@ -97,7 +108,6 @@ class Ur3JointGoalNode(Node):
  
         # Ensure we have at least one joint state before sending the motion request
         # to avoid repeated "Joint states are not available yet!" warnings.
-
         try:
             self.get_logger().info(f"Moving to {{joint_positions: {list(jp)}}}")
         except Exception:

@@ -15,41 +15,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Pick-and-Place Node for the real UR3e-Hand-E robot.
+"""ROS 2 node to perform a pick-and-place operation using the UR3e HandE robot.
 
-Behavior:
-    - If 'obj_pos' is passed as a ROS parameter (3 floats), it uses it directly.
-    - Otherwise, it uses the GetTargetObjPose action client to request
-      a detected object's pose from perception based on provided bounds.
+MoveIt operations are handled via PyMoveIt2. The node subscribes to a MarkerArray topic to also populate the planning scene with a segmented plane for placing objects.
 
 Author: Clinton Enwerem
 Developed for the course ENEE467: Robotics Projects Laboratory, Fall 2025, University of Maryland, College Park, MD.
 """
 
 import rclpy
+import time
 from rclpy.node import Node
 from rclpy.action import ActionClient
 from rclpy.callback_groups import ReentrantCallbackGroup
-from scipy.spatial.transform import Rotation as R
+
 import numpy as np
-import time
+from scipy.spatial.transform import Rotation as R
+from typing import List, Optional
+
+from gripper_action.action import GripperAction
+from pymoveit2 import MoveIt2
+from pymoveit2.robots import ur
+
 import roboticstoolbox as rtb
 import spatialmath as sm
 
-from pymoveit2 import MoveIt2
-from pymoveit2.robots import ur3e_hande as robot
-from control_msgs.action import ParallelGripperCommand
-from ur3e_hande_planning_interfaces.action import GetTargetObjPose
-from std_msgs.msg import Bool
 from visualization_msgs.msg import Marker, MarkerArray
+
+# Simple “home” joint config 
+home_q = [0.0, -1.5707, 0.0, -1.5707, 0.0, 0.0]
 
 class PickAndPlace(Node):
     def __init__(self):
         super().__init__("pnp_demo")
         self.rtb_model = rtb.models.UR3()
-        self.cb_group = ReentrantCallbackGroup()
+        self.start_time = time.time()
 
+        # Subscriber to plane markers from perception
         self.pcd_plane_sub = self.create_subscription(
             MarkerArray,
             "plane_marker",
@@ -60,44 +62,28 @@ class PickAndPlace(Node):
         self.objects = {}
 
         # variables for metrics
-        self.plan_time = None
-        self.exec_time = None
+        self.plan_times = []
+        self.exec_times = []
         self.planning_success = None
 
-        # params
-        self.declare_parameter("obj_pos", [-0.33931674, 0.3942382, 0.2380788])
-        self.declare_parameter("target_obj_bounds", [0.3, 0.5, -0.2, 0.2])
-        self.declare_parameter("target_height", 0.13)
-        self.declare_parameter("target_position", [0.29, 0.51, 0.10])
-        self.declare_parameter("pregrasp_z", 0.11)
-        self.declare_parameter("place_z", 0.4)
-        self.declare_parameter("lift_z_offset", 0.12)
-        self.declare_parameter("place_offset_y", 0.0)
+        # Parameters
+        self.declare_parameter("synchronous", True)
+        self.declare_parameter("obj_pos", "")       # "x y z" 
+        self.declare_parameter("z_pregrip", 0.23846336)
+        self.declare_parameter("z_offset", 0.08)
+        self.declare_parameter("place_pos", "")     
         self.declare_parameter("ee_frame", "tool0")
-        self.declare_parameter("grip_exec_delay", 0.9) # s
-        self.declare_parameter("safe_lift_z", 0.30)  
         self.declare_parameter("print_metrics", False)
         self.declare_parameter("max_vel_scale", 0.15)
         self.declare_parameter("max_acc_scale", 0.15)
-        self.declare_parameter("goal_pos_tol", 0.003)
-        self.declare_parameter("goal_ori_tol", 0.01)
-        self.declare_parameter("place_margin", 0.1)  # m
 
-        self.pregrasp_z = self.get_parameter("pregrasp_z").value
-        self.lift_z_offset = self.get_parameter("lift_z_offset").value
-        self.place_offset_y = self.get_parameter("place_offset_y").value
-        self.target_height = self.get_parameter("target_height").value
-        self.goal_pos_tol = self.get_parameter("goal_pos_tol").get_parameter_value().double_value
-        self.goal_ori_tol = self.get_parameter("goal_ori_tol").get_parameter_value().double_value
-        self.target_position = self.get_parameter("target_position").value
+        self.synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
+        self.zpregrip = self.get_parameter("z_pregrip").get_parameter_value().double_value
+        self.zoffset = self.get_parameter("z_offset").get_parameter_value().double_value
         self.ee_frame = self.get_parameter("ee_frame").get_parameter_value().string_value
-        self.grip_exec_delay = self.get_parameter("grip_exec_delay").value
-        self.place_z = self.get_parameter("place_z").value
-        self.safe_lift_z = self.get_parameter("safe_lift_z").value
         self.print_metrics = self.get_parameter("print_metrics").get_parameter_value().bool_value
         self.max_vel_scale = self.get_parameter("max_vel_scale").get_parameter_value().double_value
         self.max_acc_scale = self.get_parameter("max_acc_scale").get_parameter_value().double_value
-        self.place_margin = self.get_parameter("place_margin").get_parameter_value().double_value
 
         self.declare_parameter("ur_approach",
         [-1.8605, -2.99056, 0.675617, -2.00445, 1.61112, -0.00712473])
@@ -116,116 +102,90 @@ class PickAndPlace(Node):
         self.ur_pregrip       = list(self.get_parameter("ur_pregrip").value)
         self.ur_place         = list(self.get_parameter("ur_place").value)
 
-        self.GREEN = "\x1b[32m"
+        self.BRIGHT_BLUE = "\x1b[94m"
         self.RESET = "\x1b[0m"
 
-        # synchronous execution
-        self.declare_parameter("synchronous", True)
-        self._synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
 
-        # gripper client
-        self.gripper_client = ActionClient(
-            self,
-            ParallelGripperCommand,
-            "/gripper_action_controller/gripper_cmd",
-            callback_group=self.cb_group,
-        )
+        obj_pos_str = self.get_parameter("obj_pos").get_parameter_value().string_value
+        self.obj_pos = [float(x) for x in obj_pos_str.split()] if obj_pos_str else None
 
-        # resolve object position
-        obj_param = list(self.get_parameter("obj_pos").value or [])
-        if obj_param and len(obj_param) == 3:
-            self.obj_pos = [float(x) for x in obj_param]
-            self.get_logger().info(f"Using hard-coded object position: {self.obj_pos}")
-        else:
-            self.get_logger().info("No obj_pos given ;  querying perception node…")
-            self.obj_pos = self.query_object_pose_from_perception()
-
-        if self.obj_pos is None:
-            self.get_logger().error("No object position available. Exiting.")
+        if not self.obj_pos or len(self.obj_pos) != 3:
+            self.get_logger().error("Invalid or missing 'obj_pos' parameter. Exiting...")
             rclpy.shutdown()
             return
 
-        # derived waypoints
-        self.lift_z = max(self.safe_lift_z, self.obj_pos[2] + self.lift_z_offset)
-        self.get_logger().info(f"Computed lift_z: {self.lift_z:.3f} m") # always lift to at least safe_lift_z
+        # Cartesian waypoints from object pose
+        self.approach_pos = [
+            self.obj_pos[0],
+            self.obj_pos[1],
+            self.zpregrip + self.zoffset,
+        ]
+        self.pre_grip_pos = [
+            self.obj_pos[0],
+            self.obj_pos[1],
+            self.zpregrip,
+        ]
 
-        self.declare_parameter("place_pos_arg", [-self.target_position[0]-0.1, 
-                                                 self.target_position[1], 
-                                                 self.lift_z])
-        self.place_pos_arg = self.get_parameter("place_pos_arg").get_parameter_value().double_array_value
-        self.approach_z = max(self.obj_pos[2] + self.lift_z_offset, self.pregrasp_z + 0.03)
+        place_pos_str = self.get_parameter("place_pos").get_parameter_value().string_value
+        self.place_pos = (
+            [float(x) for x in place_pos_str.split()]
+            if place_pos_str
+            else self.compute_place_pos()
+        )
 
-        self.approach_pos = [self.obj_pos[0], self.obj_pos[1], self.approach_z]
-        self.get_logger().info(f"Approach position: {self.approach_pos}")
+        # MoveIt setup
+        self.robot = ur
+        self.joint_names = self.robot.joint_names()
+        self.group_name = self.robot.MOVE_GROUP_ARM
+        self.end_effector_name = self.robot.end_effector_name()
+        self.callback_group = ReentrantCallbackGroup()
 
-        self.grasp_pos = [self.obj_pos[0], self.obj_pos[1], self.pregrasp_z]
-        self.get_logger().info(f"Grasp position: {self.grasp_pos}")
-
-        self.lift_pos = [self.obj_pos[0], self.obj_pos[1], self.lift_z]
-
-        if hasattr(self, "last_plane_marker"):
-            self.place_pos = self.compute_place_from_plane(self.obj_pos, self.last_plane_marker, self.place_margin)
-            self.get_logger().info(f"Auto-chosen place position: {self.place_pos}")
-        else:
-            # fallback 
-            self.place_pos = self.compute_place_pos(self.grasp_pos)
-
-        # MoveIt2 Interface
         self.moveit2 = MoveIt2(
             node=self,
-            joint_names=robot.joint_names(),
-            base_link_name=robot.base_link_name(),
-            end_effector_name=robot.end_effector_name(),
-            group_name=robot.MOVE_GROUP_ARM,
-            callback_group=self.cb_group,
+            joint_names=self.joint_names,
+            base_link_name=self.robot.base_link_name(),
+            end_effector_name=self.end_effector_name,
+            group_name=self.group_name,
+            callback_group=self.callback_group,
         )
         self.moveit2.planner_id = "RRTConnectkConfigDefault"
-        self.moveit2.max_velocity = self.max_vel_scale
-        self.moveit2.max_acceleration = self.max_acc_scale
-        self.moveit2.goal_position_tolerance = self.goal_pos_tol
-        self.moveit2.goal_orientation_tolerance = self.goal_ori_tol
+        self.moveit2.max_velocity = 0.2
+        self.moveit2.max_acceleration = 0.2
 
-        # begin sequence
-        self._start_timer = self.create_timer(1.5, self._start_move, callback_group=self.cb_group)
+        self.quat_xyzw = R.from_matrix(np.eye(3)).as_quat().tolist()
 
-    def compute_place_pos(self, pre_grip_pos: list) -> list[float]:
-        return [-pre_grip_pos[0], pre_grip_pos[1], pre_grip_pos[2]]
-    
-    #  helper methods
-    def query_object_pose_from_perception(self):
-        """Request an object pose from perception via GetTargetObjPose"""
-        self.pose_client = ActionClient(self, GetTargetObjPose, "get_target_obj_pose")
-        self.pose_client.wait_for_server()
+        # Compute joint targets with IK
+        self.get_logger().info(f"Computing IK for approach at {self.approach_pos}")
+        self.approach_q = self.solve_ik(self.approach_pos, seed=home_q)
 
-        goal_msg = GetTargetObjPose.Goal()
-        goal_msg.target_position.x = self.target_position[0]
-        goal_msg.target_position.y = self.target_position[1]
-        goal_msg.target_position.z = self.target_position[2]
-        goal_msg.target_height = self.target_height
+        self.get_logger().info(f"Computing IK for pre-grip at {self.pre_grip_pos}")
+        self.pre_grip_q = self.solve_ik(self.pre_grip_pos, seed=self.approach_q)
 
-        self.get_logger().info(f"Requesting nearest object to {self.target_position}…")
+        self.get_logger().info(f"Computing IK for place at {self.place_pos}")
+        self.place_q = self.solve_ik(self.place_pos, seed=home_q)
 
-        send_future = self.pose_client.send_goal_async(goal_msg)
-        rclpy.spin_until_future_complete(self, send_future)
-        goal_handle = send_future.result()
-        if not goal_handle.accepted:
-            self.get_logger().error("Pose goal rejected.")
-            return None
+        # lift reuses the approach config with higher Z
+        self.after_pick_q = self.approach_q
+        self.retreat_q = home_q
 
-        result_future = goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, result_future)
-        result = result_future.result().result
+        # Gripper goals 
+        self.p_grip_close = 255
+        self.p_grip_open = 1
+        self.f_grip = 1
+        self.u_grip = 1
+        self.close_goal = [self.p_grip_close, self.u_grip, self.f_grip]
+        self.open_goal = [self.p_grip_open, self.u_grip, self.f_grip]
 
-        if result.target_obj_found:
-            pose = result.target_obj_pose.pose.position
-            obj_pos = [pose.x, pose.y, pose.z]
-            self.get_logger().info(f"Received object pose: {obj_pos}")
-            return obj_pos
-        else:
-            self.get_logger().warn("No matching object found.")
-            return None
+        self.gripper_action_client = ActionClient(
+            self,
+            GripperAction,
+            "robotiq_grip_action",
+            callback_group=self.callback_group,
+        )
 
-    # IK + planning utils
+        # Start sequence
+        self.start_pnp_sequence()
+
     def _ik_rtb(self, pos_xyz, q0=None):
         """Compute IK using Robotics Toolbox as fallback"""
 
@@ -241,48 +201,13 @@ class PickAndPlace(Node):
             ilimit=2000,
             end=self.ee_frame,
             tol=1e-1)
-        self.get_logger().info(f"RTB IK error norm for pos_xyz: {pos_xyz}: {q_rtb.residual:.6f}")
+        self.get_logger().info(f"RTB IK error norm for pos_xyz with RTB: {pos_xyz}: {q_rtb.residual:.6f}")
         if q_rtb.success:
-            self.get_logger().info(f"\x1b[32mRTB IK success at pos_xyz: {pos_xyz}, with q: {q_rtb.q.tolist()}\x1b[0m")
+            self.get_logger().info(f"\x1b[32mRTB IK success at pos_xyz with RTB: {pos_xyz}, with q: {q_rtb.q.tolist()}\x1b[0m")
             return q_rtb.q.tolist()
         else:
-            self.get_logger().debug(f"IK failed for pos_xyz: {pos_xyz}")
+            self.get_logger().debug(f"IK failed for pos_xyz with RTB: {pos_xyz}")
             return None
-
-    def _plan_then_execute(self, q, label):
-        """Plan a trajectory; only execute if valid"""
-        if q is None:
-            self.get_logger().warn(f"[{label}] No IK solution ;  skipping.")
-            return False
-        synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
-
-        t0 = time.time()
-        try:
-            traj = self.moveit2.move_to_configuration(q)
-        except Exception as e:
-            self.get_logger().warn(f"[{label}] Planning/execution threw: {e}")
-            return False
-        t1 = time.time()
-        if self.plan_time is None:
-            self.plan_time = t1 - t0
-        
-        if traj is not None and not getattr(traj, "joint_trajectory", None):
-            self.get_logger().warn(f"[{label}] Planning returned an unexpected result.")
-
-        if synchronous:
-            # Wait until execution finishes before continuing 
-            try:
-                t_exec0 = time.time()
-                self.get_logger().info(f"[{label}] Waiting until execution finished...")
-                self.moveit2.wait_until_executed()
-                t_exec1 = time.time()
-                if self.exec_time is None:
-                    self.exec_time = t_exec1 - t_exec0
-            except Exception as e:
-                self.get_logger().warn(f"[{label}] Waiting for execution failed: {e}")
-                return False
-
-        return True
     
     def compute_place_from_plane(self, obj_pos, plane_marker, margin):
         """
@@ -379,125 +304,6 @@ class PickAndPlace(Node):
 
         # small sleep to ensure MoveIt processes scene updates
         time.sleep(0.05)
-
-    def _start_move(self):
-        """One-shot starter: cancel timer, wait for joint states, then run sequence."""
-        try:
-            self._start_timer.cancel()
-        except Exception:
-            pass
-
-        # Wait briefly for joint states to populate
-        wait_logged = False
-        start = self.get_clock().now()
-        rate = self.create_rate(20)
-        while rclpy.ok() and self.moveit2.joint_state is None:
-            if not wait_logged:
-                self.get_logger().info("Waiting for joint states before starting pick-and-place...")
-                wait_logged = True
-
-            rate.sleep()
-            if (self.get_clock().now() - start).nanoseconds / 1e9 > 3.0:
-                break
-
-        # update cached synchronous flag
-        self._synchronous = self.get_parameter("synchronous").get_parameter_value().bool_value
-
-        # run the main sequence
-        try:
-            self.start_sequence()
-        except Exception as e:
-            self.get_logger().error(f"Start sequence failed: {e}")
-
-        # prevent re-running
-        self._start_move = lambda: None
-
-    # main sequence 
-    def start_sequence(self):
-        self.get_logger().info("Waiting for gripper action server…")
-        self.gripper_client.wait_for_server()
-
-        self.open_gripper()
-        time.sleep(self.grip_exec_delay * 5)
-        # approach
-        q_approach = self._ik_rtb(self.approach_pos)
-        if not self._plan_then_execute(q_approach, "Approach"):
-            self.get_logger().error("Aborting: cannot reach approach pose.")
-            return
-        
-        # grasp
-        # use cube-specific approach as IK seed for grasp
-        q_grasp = self._ik_rtb(self.grasp_pos, q0=self.ur_pregrip)
-        if not self._plan_then_execute(q_grasp, "Grasp"):
-            self.get_logger().error("Aborting: cannot reach grasp pose.")
-            return
-
-        self.close_gripper()
-        time.sleep(self.grip_exec_delay)
-
-        # lift
-        q_lift = self._ik_rtb(self.lift_pos, q0=q_grasp)
-        if not self._plan_then_execute(q_lift, "Lift"):
-            self.get_logger().error("Aborting: cannot lift after grasp.")
-            return
-
-        # place
-        q_place = self._ik_rtb(self.place_pos, q0=self.ur_place)
-        if not self._plan_then_execute(q_place, "Place"):
-            self.get_logger().error("Aborting: cannot reach place pose.")
-            return
-        time.sleep(self.grip_exec_delay)
-        self.open_gripper()
-        # return home
-        try:
-            home = robot.get_named_group_states("")["ur_home"]
-            if not self._plan_then_execute(home, "Home"):
-                self.get_logger().warn("Could not return to home pose.")
-            else:
-                # close the gripper once the arm retreats to home
-                self.get_logger().info("Retreated to home; closing gripper.")
-                self.close_gripper()
-        except Exception as e:
-            self.get_logger().warn(f"Home pose retrieval/plan failed: {e}")
-
-        self.get_logger().info("Pick-and-place sequence complete.")
-        if self.planning_success is None:
-            self.planning_success = True
-        if self.print_metrics:
-            self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
-            self.get_logger().info(self.GREEN + "Metrics Summary:" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  1. Planning Success (bool): {int(self.planning_success)}" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  2. Planning time [s]: {self.plan_time:.4f} s" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  3. Execution time [s]: {self.exec_time:.4f} s" + self.RESET)
-            self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
-
-
-
-    # gripper methods
-    def send_gripper_goal(self, position: float):
-        goal = ParallelGripperCommand.Goal()
-        goal.command.position = [position]
-        future = self.gripper_client.send_goal_async(goal)
-        future.add_done_callback(self._goal_response_cb)
-
-    def _goal_response_cb(self, future):
-        handle = future.result()
-        if not handle.accepted:
-            self.get_logger().warn("Gripper goal rejected.")
-            return
-        handle.get_result_async().add_done_callback(self._result_cb)
-
-    def _result_cb(self, future):
-        result = future.result().result
-        self.get_logger().debug(f"Gripper result: {result}")
-
-    def open_gripper(self):
-        self.get_logger().info("Opening gripper…")
-        self.send_gripper_goal(0.025)
-
-    def close_gripper(self):
-        self.get_logger().info("Closing gripper…")
-        self.send_gripper_goal(0.001)
     
     # Core helpers
     def add_collision_object(self, obj):
@@ -525,13 +331,146 @@ class PickAndPlace(Node):
         self.get_logger().info(f"Added {shape} '{obj_id}' at {pos}")
 
 
+    # ik helper using MoveIt2 with warm-start
+    def solve_ik(self, pos, seed=None):
+        if seed is None:
+            seed = self.moveit2.joint_state if self.moveit2.joint_state is not None else home_q
+
+        # MoveIt IK
+        q = self.moveit2.compute_ik(pos, self.quat_xyzw, start_joint_state=seed)
+        if q is not None:
+            return list(q)
+
+        # RTB IK
+        q_rtb = self._ik_rtb(pos, q0=seed)
+        if q_rtb is not None:
+            return q_rtb
+
+        # give up
+        return None
+
+    # Miror place position if not provided
+    def compute_place_pos(self) -> List[float]:
+        return [-self.pre_grip_pos[0], self.pre_grip_pos[1], self.pre_grip_pos[2]]
+
+    # Timed motion with metrics logging
+    """
+     Perform a timed motion to joint configuration q, logging planning and execution times.
+    """
+    def timed_motion(self, q, label=""):
+        self.get_logger().info(f"[{label}] Planning...")
+
+        t0 = time.time()
+        self.moveit2.move_to_configuration(q)
+        t1 = time.time()
+
+        plan_dt = t1 - t0
+        self.plan_times.append(plan_dt)
+
+        self.get_logger().info(f"[{label}] Plan time: {plan_dt:.4f} s")
+
+        # wait for exec
+        t2 = time.time()
+        self.moveit2.wait_until_executed()
+        t3 = time.time()
+
+        exec_dt = t3 - t2
+        self.exec_times.append(exec_dt)
+        self.get_logger().info(f"[{label}] Exec time: {exec_dt:.4f} s")
+
+    # Pick-and-place sequence
+    def start_pnp_sequence(self):
+        self.get_logger().info("Waiting for custom Hand-E gripper action server...")
+        self.gripper_action_client.wait_for_server()
+        self.get_logger().info("Starting pick-and-place sequence...")
+
+        # Approach
+        self.get_logger().info("Moving to approach_q")
+        self.timed_motion(self.approach_q, "APPROACH")
+
+        # Pre-grip
+        self.get_logger().info("Moving to pre_grip_q")
+        self.timed_motion(self.pre_grip_q, "PRE-GRIP")
+
+        # Close gripper
+        self.send_gripper_goal(self.close_goal, self.after_gripper_closed)
+
+    def after_gripper_closed(self):
+        # Lift
+        self.get_logger().info("Gripper closed, lifting...")
+        self.timed_motion(self.after_pick_q, "LIFT")
+
+        # Place
+        self.get_logger().info("Moving to place_q")
+        self.timed_motion(self.place_q, "PLACE")
+
+        # Open gripper
+        self.send_gripper_goal(self.open_goal, self.after_gripper_opened)
+
+    def after_gripper_opened(self):
+        self.get_logger().info("Gripper opened, retreating to home...")
+        self.timed_motion(self.retreat_q, "RETREAT")
+
+        # Summary
+        self.get_logger().info("Pick-and-place sequence complete.")
+        if self.planning_success is None:
+            self.planning_success = True
+        if self.print_metrics:
+            total_plan_time = sum(self.plan_times)
+            total_exec_time = sum(self.exec_times)
+            avg_plan_time = total_plan_time / len(self.plan_times)
+            avg_exec_time = total_exec_time / len(self.exec_times)
+            total_pipeline = time.time() - self.start_time
+            self.get_logger().info(self.BRIGHT_BLUE + "-------------------------------------------------------" + self.RESET)
+            self.get_logger().info(self.BRIGHT_BLUE + "Metrics Summary (HARDWARE):" + self.RESET)
+            self.get_logger().info(self.BRIGHT_BLUE + f"  1. Planning Success (bool): {int(self.planning_success)}" + self.RESET)
+            self.get_logger().info(self.BRIGHT_BLUE + f"  2. Avg. Planning time [s]: {avg_plan_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.BRIGHT_BLUE + f"  3. Avg. Execution time [s]: {avg_exec_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.BRIGHT_BLUE + f"  4. Total Plan time [s]: {total_plan_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.BRIGHT_BLUE + f"  5. Total Execution time [s]: {total_exec_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.BRIGHT_BLUE + f"  6. Total (PnP Pipeline) [s]: {total_pipeline:.4f} s" + self.RESET)
+            self.get_logger().info(self.BRIGHT_BLUE + "-------------------------------------------------------" + self.RESET)
+
+    # Gripper action client
+    def send_gripper_goal(self, goal, done_callback=None):
+        goal_msg = GripperAction.Goal()
+        goal_msg.desired_position = goal[0]
+        goal_msg.desired_speed = goal[1]
+        goal_msg.desired_force = goal[2]
+
+        future = self.gripper_action_client.send_goal_async(goal_msg)
+        future.add_done_callback(
+            lambda fut: self.goal_response_callback(fut, done_callback)
+        )
+
+    def goal_response_callback(self, future, done_callback):
+        try:
+            goal_handle = future.result()
+            if not goal_handle.accepted:
+                self.get_logger().warn("Gripper goal rejected")
+                return
+            self.get_logger().info("Gripper goal accepted, waiting for result...")
+            result_future = goal_handle.get_result_async()
+            result_future.add_done_callback(
+                lambda fut: self.get_result_callback(fut, done_callback)
+            )
+        except Exception as e:
+            self.get_logger().error(f"Gripper goal response error: {e}")
+
+    def get_result_callback(self, future, done_callback):
+        try:
+            result = future.result().result
+            self.get_logger().info(f"Gripper action result: {result}")
+            if done_callback:
+                done_callback()
+        except Exception as e:
+            self.get_logger().error(f"Error in get_result_callback: {e}")
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = PickAndPlace()
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
+    rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
 

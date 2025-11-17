@@ -15,6 +15,7 @@
   <xacro:arg name="extrusion_x" default="0.58"/>
   <xacro:arg name="extrusion_y" default="0.533"/>
   <xacro:arg name="extrusion_z" default="0.50"/>
+  <xacro:arg name="extrusion_width" default="0.04"/>
 
   <xacro:arg name="extrusion_roll" default="0.0"/>
   <xacro:arg name="extrusion_pitch" default="0.0"/>
@@ -22,24 +23,34 @@
 
   <xacro:arg name="cam_offset_x" default="0.002"/>
   <xacro:arg name="cam_offset_y" default="0.0"/>
-  <xacro:arg name="cam_offset_z" default="0.0105"/>
+  <xacro:arg name="cam_offset_z" default="0.0"/>
+    <xacro:arg name="camera_x" default="0.0"/>
+  <xacro:arg name="camera_y" default="0.0"/>
+  <xacro:arg name="mount_height" default="0.467"/>
+  <xacro:arg name="camera_roll" default="0.0"/>
+  <xacro:arg name="camera_pitch" default="0.32"/>
+  <xacro:arg name="camera_yaw" default="-3.14"/>
 
-  <xacro:arg name="cam_roll" default="0.0"/>
-  <xacro:arg name="cam_pitch" default="0.32"/>
-  <xacro:arg name="cam_yaw" default="-3.14"/>
+  <xacro:arg name="realsense_width" default="0.09"/>
+  <xacro:arg name="realsense_depth" default="0.025"/>
+  <xacro:arg name="realsense_height" default="0.025"/>
 
   <xacro:property name="cam_offset_x" value="$(arg cam_offset_x)"/>
   <xacro:property name="cam_offset_y" value="$(arg cam_offset_y)"/>
   <xacro:property name="cam_offset_z" value="$(arg cam_offset_z)"/>
-  <xacro:property name="cam_roll" value="$(arg cam_roll)"/>
-  <xacro:property name="cam_pitch" value="$(arg cam_pitch)"/>
-  <xacro:property name="cam_yaw" value="$(arg cam_yaw)"/>
+  <xacro:property name="camera_x" value="$(arg camera_x)"/>
+  <xacro:property name="camera_y" value="$(arg camera_y)"/>
+  <xacro:property name="mount_height" value="$(arg mount_height)"/>
+  <xacro:property name="camera_roll" value="$(arg camera_roll)"/>
+  <xacro:property name="camera_pitch" value="$(arg camera_pitch)"/>
+  <xacro:property name="camera_yaw" value="$(arg camera_yaw)"/>
   <xacro:property name="extrusion_x" value="$(arg extrusion_x)"/>
   <xacro:property name="extrusion_y" value="$(arg extrusion_y)"/>
   <xacro:property name="extrusion_z" value="$(arg extrusion_z)"/>
   <xacro:property name="extrusion_roll" value="$(arg extrusion_roll)"/>
   <xacro:property name="extrusion_pitch" value="$(arg extrusion_pitch)"/>
   <xacro:property name="extrusion_yaw" value="$(arg extrusion_yaw)"/>
+  <xacro:property name="extrusion_width" value="$(arg extrusion_width)"/>
 
    <!-- parameters -->
    <xacro:arg name="tf_prefix" default="" />
@@ -214,24 +225,48 @@
   </xacro:sensor_d435i> -->
 
   <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
- <!-- <xacro:sensor_d435i parent="side_extrusion_20">
+ <xacro:sensor_d435i parent="table" use_nominal_extrinsics="true" add_plug="true" use_mesh="true" publish_pointcloud="true">
       <origin
-      xyz="${cam_offset_x} ${cam_offset_y} ${cam_offset_z}"
-      rpy="${cam_roll} ${cam_pitch} ${cam_yaw}"
+      xyz="${cam_offset_x} ${cam_offset_y} ${mount_height}"
+      rpy="${camera_roll} ${camera_pitch} ${camera_yaw}"
       />   
+  </xacro:sensor_d435i>
+
+  <!-- <xacro:sensor_d435i parent="table" use_nominal_extrinsics="true" add_plug="true" use_mesh="true" publish_pointcloud="true">
+      <origin rpy="0.0 0.5 -3.14" xyz="0.555 0.5333 0.467"/>  
   </xacro:sensor_d435i> -->
 
-  <xacro:sensor_d435i parent="base_link">
-        <origin rpy="0.0 0.5 -3.14" xyz="0.555 0.5333 0.467"/>  
-    </xacro:sensor_d435i>
-
-  <link name="camera_optical_link"/>
+  <!-- <link name="camera_optical_link"/>
   <joint name="align_camera_joint" type="fixed">
     <parent link="camera_link"/>
     <child link="camera_optical_link"/>
-    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${pi}"/> <!-- sim: -3.14 -1.57 1.57; recc: ${-pi/2} 0 ${-pi/2}--> 
-  </joint>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${pi}"/> 
+  </joint> -->
+<!-- sim: -3.14 -1.57 1.57; recc: ${-pi/2} 0 ${-pi/2}--> 
 
+<link name="back_wall">
+  <visual>
+    <origin xyz="-0.13 0.0 0.50" rpy="0 0 0"/>
+    <geometry>
+      <box size="0.05 1.5 1.0"/> <!-- thickness, width, height -->
+    </geometry>
+    <material name="gray">
+      <color rgba="0.6 0.6 0.6 1.0"/>
+    </material>
+  </visual>
+  <collision>
+    <origin xyz="-0.13 0.0 0.50" rpy="0 0 0"/>
+    <geometry>
+      <box size="0.05 1.5 1.0"/>
+    </geometry>
+  </collision>
+</link>
+
+<joint name="back_wall_fixed" type="fixed">
+  <parent link="base_link"/>
+  <child link="back_wall"/>
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+</joint>
 
 
 </robot>

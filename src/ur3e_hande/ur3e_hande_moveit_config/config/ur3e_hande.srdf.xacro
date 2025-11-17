@@ -54,7 +54,7 @@
     <joint name="robotiq_hande_left_finger_joint" value="0"/>
     <joint name="robotiq_hande_right_finger_joint" value="0"/>
   </group_state>
-  <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
+  <!--END EFFECTOR: Purpose: Represents information about an end effector.-->
   <end_effector group="gripper" name="hand_ee" parent_group="ur_manipulator" parent_link="wrist_3_link"/>
   <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
   <disable_collisions link1="base_link_inertia" link2="camera_link" reason="Adjacent"/>

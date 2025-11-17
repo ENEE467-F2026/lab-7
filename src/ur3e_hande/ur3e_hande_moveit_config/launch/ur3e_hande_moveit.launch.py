@@ -36,6 +36,7 @@ from launch_ros.substitutions import FindPackageShare
 from ur3e_moveit_config.launch_common import load_yaml
 
 from launch_ros.parameter_descriptions import ParameterValue
+from geometry_msgs.msg import PoseStamped
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
@@ -47,11 +48,10 @@ from launch.substitutions import (
     PathJoinSubstitution,
 )
 
-
 def launch_setup(context, *args, **kwargs):
 
     # Initialize Arguments
-    ur_type = "ur3e" # FIXED TYPE
+    ur_type = "ur3e" 
     safety_limits = LaunchConfiguration("safety_limits")
     safety_pos_margin = LaunchConfiguration("safety_pos_margin")
     safety_k_position = LaunchConfiguration("safety_k_position")
@@ -130,7 +130,6 @@ def launch_setup(context, *args, **kwargs):
             " ",
         ]
     )
-    # robot_description = {"robot_description": robot_description_content}
 
     robot_description = {
             "robot_description": ParameterValue(robot_description_content, value_type=str)

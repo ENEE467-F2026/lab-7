@@ -176,7 +176,7 @@
       <origin rpy="0.0 0.4712 1.57" xyz="0.381 -0.125 0.415925"/>  
   </xacro:sensor_d435i> -->
 
-  <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
+  <!-- Use the sensor_d435i macro; this is the camera on the right/left; add a unique namespace (e.g. camera2) if using multiple cameras-->
   <xacro:if value="${is_import_ur3e and is_import_camera}">
     <xacro:sensor_d435i parent="world">
         <origin rpy="0.0 0.698131 0" xyz="-0.522625 0.542925 0.3683"/>  

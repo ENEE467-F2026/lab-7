@@ -44,7 +44,4 @@
       use_fake_hardware="${use_fake_hardware}"
     />
 
-    <!-- HW interface in the works; NA for now -->
-    <!-- <xacro:ur3e_hande_ros2_control name="robotiq_hande_controllers/RobotiqHandeHardwareInterface" initial_positions_file="$(arg initial_positions_file)"/> -->
-
 </robot>
