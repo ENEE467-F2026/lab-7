@@ -1,12 +1,48 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="name">
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+    <xacro:arg name="parent" default="tool0"/>
+    <xacro:arg name="grip_pos_min" default="0"/>
+    <xacro:arg name="grip_pos_max" default="0.025"/>
+    <xacro:arg name="tty_port" default="/tmp/ttyUR"/>
+    <xacro:arg name="baudrate" default="115200"/>
+    <xacro:arg name="parity" default="N"/>
+    <xacro:arg name="data_bits" default="8"/>
+    <xacro:arg name="stop_bit" default="1"/>
+    <xacro:arg name="slave_id" default="9"/>
+    <xacro:arg name="frequency_hz" default="10"/>
+
+    <xacro:arg name="create_socat_tty" default="false"/>
+    <xacro:arg name="socat_ip_address" default="192.168.77.22"/>
+    <xacro:arg name="socat_port" default="54321"/>
+
+    <xacro:arg name="use_fake_hardware" default="true"/>
 
     <!-- Import name urdf file -->
     <xacro:include filename="$(find ur3e_hande_description)/urdf/ur3e_hande.urdf.xacro" />
 
+    <xacro:include filename="$(find robotiq_hande_description)/urdf/robotiq_hande_gripper.ros2_control.xacro"/>
+
     <!-- Import control_xacro -->
     <xacro:include filename="ur3e_hande.ros2_control.xacro" />
+
+    <xacro:robotiq_hande_ros2_control
+      name="${name}"
+      prefix="${prefix}"
+      grip_pos_min="${grip_pos_min}"
+      grip_pos_max="${grip_pos_max}"
+      tty_port="${tty_port}"
+      baudrate="${baudrate}"
+      parity="${parity}"
+      data_bits="${data_bits}"
+      stop_bit="${stop_bit}"
+      slave_id="${slave_id}"
+      frequency_hz="${frequency_hz}"
+      create_socat_tty="${create_socat_tty}"
+      socat_ip_address="${socat_ip_address}"
+      socat_port="${socat_port}"
+      use_fake_hardware="${use_fake_hardware}"
+    />
 
     <!-- HW interface in the works; NA for now -->
     <!-- <xacro:ur3e_hande_ros2_control name="robotiq_hande_controllers/RobotiqHandeHardwareInterface" initial_positions_file="$(arg initial_positions_file)"/> -->

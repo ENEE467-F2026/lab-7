@@ -9,6 +9,38 @@
    <!-- the default value should raise an error in case this was called without defining the type -->
    <xacro:arg name="ur_type" default="ur3e"/>
 
+   <!-- Extrusion -->
+  <!-- NOTE: this is for a right-mounted camera wrt robot base; maybe need to adjust rpy: 2.03 0.0 1.57 -->
+  <!-- Flip the sign for extrusion_x if your camera is mounted on the left; extrusion_z is the height of the camera optical axis from the table -->
+  <xacro:arg name="extrusion_x" default="0.58"/>
+  <xacro:arg name="extrusion_y" default="0.533"/>
+  <xacro:arg name="extrusion_z" default="0.467"/>
+
+  <xacro:arg name="extrusion_roll" default="0.0"/>
+  <xacro:arg name="extrusion_pitch" default="0.0"/>
+  <xacro:arg name="extrusion_yaw" default="0.0"/>
+
+  <xacro:arg name="cam_offset_x" default="-0.005"/>
+  <xacro:arg name="cam_offset_y" default="0.0"/>
+  <xacro:arg name="cam_offset_z" default="0.0105"/>
+
+  <xacro:arg name="cam_roll" default="0.0"/>
+  <xacro:arg name="cam_pitch" default="0.32"/>
+  <xacro:arg name="cam_yaw" default="-3.14"/>
+
+  <xacro:property name="cam_offset_x" value="$(arg cam_offset_x)"/>
+  <xacro:property name="cam_offset_y" value="$(arg cam_offset_y)"/>
+  <xacro:property name="cam_offset_z" value="$(arg cam_offset_z)"/>
+  <xacro:property name="cam_roll" value="$(arg cam_roll)"/>
+  <xacro:property name="cam_pitch" value="$(arg cam_pitch)"/>
+  <xacro:property name="cam_yaw" value="$(arg cam_yaw)"/>
+  <xacro:property name="extrusion_x" value="$(arg extrusion_x)"/>
+  <xacro:property name="extrusion_y" value="$(arg extrusion_y)"/>
+  <xacro:property name="extrusion_z" value="$(arg extrusion_z)"/>
+  <xacro:property name="extrusion_roll" value="$(arg extrusion_roll)"/>
+  <xacro:property name="extrusion_pitch" value="$(arg extrusion_pitch)"/>
+  <xacro:property name="extrusion_yaw" value="$(arg extrusion_yaw)"/>
+
    <!-- parameters -->
    <xacro:arg name="tf_prefix" default="" />
    <xacro:arg name="joint_limit_params" default="$(find ur_description)/config/$(arg ur_type)/joint_limits.yaml"/>
@@ -123,7 +155,7 @@
      script_sender_port="$(arg script_sender_port)"
      trajectory_port="$(arg trajectory_port)"
      >
-     <origin xyz="0 0 0" rpy="0 0 0" />          <!-- position robot in the world -->
+     <origin xyz="0 0 0.85" rpy="0 0 0" />          <!-- position robot in the world -->
    </xacro:ur_robot>
 
    <xacro:if value="$(arg sim_gazebo)">
@@ -150,7 +182,28 @@
   </xacro:if>
 
   <!-- Import table -->
-  <xacro:include filename="$(find ur3e_description)/urdf/table.urdf"/>
+   <xacro:include filename="$(find ur3e_description)/urdf/table.urdf.xacro"/>
+
+  <!-- Joint between table and ur -->
+  <joint name="table_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="base_link"/>
+        <child link="table"/>
+    </joint>
+
+    <!-- Include mount -->
+  <xacro:include filename="$(find ur3e_description)/urdf/side_extrusion_20.urdf.xacro"/>
+
+  <!-- Instantiate mount -->
+  <xacro:side_extrusion_20 
+    parent="table"
+    x="$(arg extrusion_x)"
+    y="$(arg extrusion_y)"
+    z="$(arg extrusion_z)"
+    roll="$(arg extrusion_roll)"
+    pitch="$(arg extrusion_pitch)"
+    yaw="$(arg extrusion_yaw)"
+  />
 
   <!-- Import realsense -->
   <xacro:include filename="$(find realsense2_description)/urdf/_d435i.urdf.xacro"/>
@@ -161,15 +214,13 @@
   </xacro:sensor_d435i> -->
 
   <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
-  <xacro:sensor_d435i parent="world">
-      <origin rpy="0.0 0.4712 0" xyz="-0.5762625 0.542925 0.40005"/>  
+ <xacro:sensor_d435i parent="side_extrusion_20">
+      <origin
+      xyz="${cam_offset_x} ${cam_offset_y} ${cam_offset_z}"
+      rpy="${cam_roll} ${cam_pitch} ${cam_yaw}"
+      />   
   </xacro:sensor_d435i>
 
-  <!-- Joint between table and ur -->
-  <joint name="table_joint" type="fixed">
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <parent link="base_link"/>
-      <child link="table"/>
-  </joint>
+
 
 </robot>

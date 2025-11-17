@@ -11,6 +11,7 @@ def generate_launch_description():
     use_perception = LaunchConfiguration("use_perception")
     rviz_config = os.path.join(perception_pkg_share, 'rviz', 'pc_test.rviz')
     use_sim_time = LaunchConfiguration("use_sim_time")
+    launch_rviz = LaunchConfiguration("launch_rviz")
 
 
     declared_arguments = [
@@ -19,7 +20,9 @@ def generate_launch_description():
                               description="Whether to use the perception module to detect object pose. \n " \
                               "Must provide the position of the object to be picked as a launch argument (obj_pos) if false, unless the launch file will throw an error."),
 
-        DeclareLaunchArgument("use_sim_time", default_value="false", description="Use sim time?")
+        DeclareLaunchArgument("use_sim_time", default_value="false", description="Use sim time?"),
+
+        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
     ]
 
     # Realsense (hardware) launch
@@ -44,6 +47,7 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         name='rviz2',
+        condition=IfCondition(launch_rviz),
         output='screen',
         arguments=['-d', rviz_config]
     )
@@ -91,8 +95,8 @@ def generate_launch_description():
             parameters=[
             {"use_sim_time": use_sim_time},
             {"input_topic": "/filtered_cloud"},
-            {"base_frame": "camera_link"},
-            {"camera_frame": "camera_depth_optical_frame"},
+            {"base_frame": "base_link"},
+            {"camera_frame": "camera_link"},
             {"stop_after_first_pub": False}, # keep publishing segmentation results
             ],
         )

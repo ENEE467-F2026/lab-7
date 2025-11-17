@@ -13,7 +13,7 @@ find_package(robotiq_hande_description REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 install(DIRECTORY
-  launch config rviz
+  launch rviz
   DESTINATION share/${PROJECT_NAME}
 )
 

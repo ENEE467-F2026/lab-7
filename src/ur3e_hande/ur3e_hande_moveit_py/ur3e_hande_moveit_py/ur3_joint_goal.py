@@ -27,8 +27,8 @@ class Ur3JointGoalNode(Node):
         self.declare_parameter("planner_id", "RRTConnectkConfigDefault") # Same as the RRT* algorithm from Part I
 
         if self.group_states is not None:
-                self.declare_parameter("def_group_state", "ur_home")
-                self.declare_parameter("group_state", "ur_home")
+                self.declare_parameter("def_group_state", "ur_test")
+                self.declare_parameter("group_state", "ur_test")
                 self.def_group_state = self.get_parameter("def_group_state").get_parameter_value().string_value
                 requested_state = self.get_parameter("group_state").get_parameter_value().string_value or self.def_group_state
 

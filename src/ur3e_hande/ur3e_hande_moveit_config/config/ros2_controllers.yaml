@@ -1,9 +1,13 @@
 controller_manager:
   ros__parameters:
-    update_rate: 500  # Hz
+    update_rate: 100  # Hz
     # UR Controllers
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
+
+    gripper_action_controller:
+        type: position_controllers/GripperActionController
+        # type: forward_command_controller/ForwardCommandController
 
     io_and_status_controller:
       type: ur_controllers/GPIOController
@@ -88,7 +92,7 @@ joint_trajectory_controller:
     action_monitor_rate: 20.0
     allow_partial_joints_goal: false
     constraints:
-      stopped_velocity_tolerance: 0.2
+      stopped_velocity_tolerance: 0
       goal_time: 0.0
       shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
       shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
@@ -114,11 +118,11 @@ scaled_joint_trajectory_controller:
       - velocity
     state_publish_rate: 100.0
     action_monitor_rate: 20.0
-    allow_partial_joints_goal: false
+    allow_partial_joints_goal: true
     constraints:
-      stopped_velocity_tolerance: 0.2
+      stopped_velocity_tolerance: 0
       goal_time: 0.0
-      shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
+      shoulder_pan_joint: { trajectory: 0.21, goal: 0.1 }
       shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
       elbow_joint: { trajectory: 0.2, goal: 0.1 }
       wrist_1_joint: { trajectory: 0.25, goal: 0.15 }
@@ -144,13 +148,33 @@ passthrough_trajectory_controller:
 forward_velocity_controller:
   ros__parameters:
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - $(var tf_prefix)shoulder_pan_joint
+      - $(var tf_prefix)shoulder_lift_joint
+      - $(var tf_prefix)elbow_joint
+      - $(var tf_prefix)wrist_1_joint
+      - $(var tf_prefix)wrist_2_joint
+      - $(var tf_prefix)wrist_3_joint
     interface_name: velocity
+    constraints:
+      goal_time: 0.6
+      # vel_tolerance is 0 for due to the movegroup/follow_joint_trajectory/goal tolerance is empty
+    stopped_velocity_tolerance: 0
+    shoulder_pan_joint: {trajectory: 0.1, goal: 0.1}
+    shoulder_lift_joint: {trajectory: 0.1, goal: 0.1}
+    elbow_joint: {trajectory: 0.1, goal: 0.1}
+    wrist_1_joint: {trajectory: 0.1, goal: 0.1}
+    wrist_2_joint: {trajectory: 0.1, goal: 0.1}
+    wrist_3_joint: {trajectory: 0.1, goal: 0.1}
+    gains:
+        shoulder_pan_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+        shoulder_lift_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+        elbow_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+        wrist_1_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+        wrist_2_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+        wrist_3_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+    stop_trajectory_duration: 0.5
+    state_publish_rate:  25
+    action_monitor_rate: 10
 
 forward_position_controller:
   ros__parameters:
@@ -176,3 +200,15 @@ tcp_pose_broadcaster:
     pose_name: tcp_pose
     tf:
       child_frame_id: tool0_controller
+
+gripper_action_controller:
+  ros__parameters:
+    action_monitor_rate: 20.0 # Hz
+    joint: $(var tf_prefix)robotiq_hande_left_finger_joint
+    max_effort: 10.0 # N
+    goal_tolerance: 0.01 # m
+    allow_stalling: false
+    stall_velocity_threshold: 0.001 #m/s
+    stall_timeout: 1.0 # s
+    state_interfaces:
+      - position

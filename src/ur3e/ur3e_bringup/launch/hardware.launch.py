@@ -28,8 +28,9 @@
 
 #
 # Author:  Denis Stogl
-# Adapted: Ryan, 2025
+# Adapted: Clinton Enwerem, Ryan Matheu 2025
 
+import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -42,6 +43,8 @@ from launch.substitutions import (
     PathJoinSubstitution,
 )
 
+# Get the value of 'KINEMATICS_CONFIG_FILE env var
+lab_calib_file = os.getenv('KINEMATICS_CONFIG_FILE', '/home/robot/kinematic_config/ur3e_mrc.yaml')
 
 def generate_launch_description():
     # Declare arguments
@@ -113,7 +116,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "kinematics_params_file",
-            default_value="ur3e_mrc_calibration.yaml",
+            default_value=lab_calib_file,
             description="The file name of the calibration configuration of the actual robot used.",
         )
     )
@@ -128,9 +131,9 @@ def generate_launch_description():
     activate_joint_controller = LaunchConfiguration("activate_joint_controller")
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
-    kinematic_params_file = PathJoinSubstitution(
-        [FindPackageShare(LaunchConfiguration("description_package")), "config", "ur3e", LaunchConfiguration("kinematics_params_file")]
-    )
+    kinematic_params_file = LaunchConfiguration("kinematics_params_file") #PathJoinSubstitution(
+        #[FindPackageShare(LaunchConfiguration("description_package")), "config", "ur3e", LaunchConfiguration("kinematics_params_file")]
+    #)
     
     LaunchConfiguration("kinematics_params_file_path")
 

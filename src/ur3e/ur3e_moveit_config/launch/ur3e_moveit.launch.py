@@ -44,6 +44,8 @@ from launch.substitutions import (
     LaunchConfiguration,
     PathJoinSubstitution,
 )
+from launch_ros.parameter_descriptions import ParameterValue
+
 
 
 def launch_setup(context, *args, **kwargs):
@@ -127,7 +129,11 @@ def launch_setup(context, *args, **kwargs):
             " ",
         ]
     )
-    robot_description = {"robot_description": robot_description_content}
+    # robot_description = {"robot_description": robot_description_content}
+
+    robot_description = {
+            "robot_description": ParameterValue(robot_description_content, value_type=str)
+        }
 
     # MoveIt Configuration
     robot_description_semantic_content = Command(
@@ -230,6 +236,7 @@ def launch_setup(context, *args, **kwargs):
             warehouse_ros_config,
         ],
         remappings=[
+            ("~/joint_states", "/joint_states"),
         ]
     )
 

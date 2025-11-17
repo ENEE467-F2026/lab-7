@@ -65,7 +65,7 @@ class PickAndPlace(Node):
         self.planning_success = None
 
         # params
-        self.declare_parameter("obj_pos", [])
+        self.declare_parameter("obj_pos", [-0.33931674, 0.3942382, 0.2380788])
         self.declare_parameter("target_obj_bounds", [0.3, 0.5, -0.2, 0.2])
         self.declare_parameter("target_height", 0.13)
         self.declare_parameter("target_position", [0.29, 0.51, 0.10])

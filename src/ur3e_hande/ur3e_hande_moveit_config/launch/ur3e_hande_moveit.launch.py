@@ -130,7 +130,11 @@ def launch_setup(context, *args, **kwargs):
             " ",
         ]
     )
-    robot_description = {"robot_description": robot_description_content}
+    # robot_description = {"robot_description": robot_description_content}
+
+    robot_description = {
+            "robot_description": ParameterValue(robot_description_content, value_type=str)
+        }
 
     # MoveIt Configuration
     robot_description_semantic_content = Command(
@@ -180,17 +184,18 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
 
     # Trajectory Execution Configuration
-    controllers_yaml = load_yaml("ur3e_hande_moveit_config", "config/ros2_controllers.yaml")
+    controllers_yaml = load_yaml("ur3e_moveit_config", "config/controllers.yaml")
+    # controllers_yaml = load_yaml("ur3e_hande_description", "config/controllers.yaml")
     # the scaled_joint_trajectory_controller does not work on fake hardware
     change_controllers = context.perform_substitution(use_sim_time)
     if change_controllers == "true":
         controllers_yaml["scaled_joint_trajectory_controller"]["default"] = False
         controllers_yaml["joint_trajectory_controller"]["default"] = True
 
-    # moveit_controllers = {
-    #     "moveit_simple_controller_manager": controllers_yaml,
-    #     "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
-    # }
+    moveit_controllers = {
+        "moveit_simple_controller_manager": controllers_yaml,
+        "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
+    }
     moveit_controllers = load_yaml("ur3e_hande_moveit_config", "config/moveit_controllers.yaml")
 
     trajectory_execution = {
@@ -280,7 +285,7 @@ def launch_setup(context, *args, **kwargs):
         ],
         output="screen",
         remappings=[
-            ("/joint_states", "/combined_joint_states"),
+            ("~/joint_states", "/joint_states"),
         ]
     )
 

@@ -90,7 +90,7 @@
       allow_partial_joints_goal: false
       allow_nonzero_velocity_at_trajectory_end: false
       constraints:
-        stopped_velocity_tolerance: 0.2
+        stopped_velocity_tolerance: 0
         goal_time: 0.0
         $(var tf_prefix)shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
         $(var tf_prefix)shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
@@ -118,7 +118,7 @@
       action_monitor_rate: 20.0
       allow_partial_joints_goal: false
       constraints:
-        stopped_velocity_tolerance: 0.2
+        stopped_velocity_tolerance: 0
         goal_time: 0.0
         $(var tf_prefix)shoulder_pan_joint: { trajectory: 0.2, goal: 0.1 }
         $(var tf_prefix)shoulder_lift_joint: { trajectory: 0.2, goal: 0.1 }
@@ -153,6 +153,26 @@
         - $(var tf_prefix)wrist_2_joint
         - $(var tf_prefix)wrist_3_joint
       interface_name: velocity
+      constraints:
+        goal_time: 0.6
+        # vel_tolerance is 0 for due to the movegroup/follow_joint_trajectory/goal tolerance is empty
+      stopped_velocity_tolerance: 0
+      shoulder_pan_joint: {trajectory: 0.1, goal: 0.1}
+      shoulder_lift_joint: {trajectory: 0.1, goal: 0.1}
+      elbow_joint: {trajectory: 0.1, goal: 0.1}
+      wrist_1_joint: {trajectory: 0.1, goal: 0.1}
+      wrist_2_joint: {trajectory: 0.1, goal: 0.1}
+      wrist_3_joint: {trajectory: 0.1, goal: 0.1}
+      gains:
+          shoulder_pan_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+          shoulder_lift_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+          elbow_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+          wrist_1_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+          wrist_2_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+          wrist_3_joint: {p: 100, d: 1, i: 1, i_clamp: 1}
+      stop_trajectory_duration: 0.5
+      state_publish_rate:  25
+      action_monitor_rate: 10
 
   forward_position_controller:
     ros__parameters:

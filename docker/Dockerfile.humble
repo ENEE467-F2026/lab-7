@@ -90,5 +90,12 @@ RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc && \
     echo "clear" >> ~/.bashrc && \
     echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7  '" >> ~/.bashrc
 
+# tmux Config
+ADD --chown=robot:robot \
+    https://raw.githubusercontent.com/MarylandRoboticsCenter/someConfigs/refs/heads/master/.tmux_K.conf \
+    /home/robot/.tmux.conf
+
+EXPOSE 11311
 ENTRYPOINT ["/bin/bash", "-i"]
+CMD ["rs-enumerate-devices", "--compact"]
 
