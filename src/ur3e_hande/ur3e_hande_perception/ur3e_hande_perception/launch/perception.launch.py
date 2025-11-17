@@ -95,8 +95,8 @@ def generate_launch_description():
             parameters=[
             {"use_sim_time": use_sim_time},
             {"input_topic": "/filtered_cloud"},
-            {"base_frame": "base_link"},
-            {"camera_frame": "camera_link"},
+            {"base_frame": "world"},
+            {"camera_frame": "camera_optical_link"},
             {"stop_after_first_pub": False}, # keep publishing segmentation results
             ],
         )

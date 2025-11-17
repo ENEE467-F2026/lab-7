@@ -14,13 +14,13 @@
   <!-- Flip the sign for extrusion_x if your camera is mounted on the left; extrusion_z is the height of the camera optical axis from the table -->
   <xacro:arg name="extrusion_x" default="0.58"/>
   <xacro:arg name="extrusion_y" default="0.533"/>
-  <xacro:arg name="extrusion_z" default="0.467"/>
+  <xacro:arg name="extrusion_z" default="0.50"/>
 
   <xacro:arg name="extrusion_roll" default="0.0"/>
   <xacro:arg name="extrusion_pitch" default="0.0"/>
   <xacro:arg name="extrusion_yaw" default="0.0"/>
 
-  <xacro:arg name="cam_offset_x" default="-0.005"/>
+  <xacro:arg name="cam_offset_x" default="0.002"/>
   <xacro:arg name="cam_offset_y" default="0.0"/>
   <xacro:arg name="cam_offset_z" default="0.0105"/>
 
@@ -155,7 +155,7 @@
      script_sender_port="$(arg script_sender_port)"
      trajectory_port="$(arg trajectory_port)"
      >
-     <origin xyz="0 0 0.85" rpy="0 0 0" />          <!-- position robot in the world -->
+     <origin xyz="0 0 0.7" rpy="0 0 0" />          <!-- position robot in the world -->
    </xacro:ur_robot>
 
    <xacro:if value="$(arg sim_gazebo)">
@@ -182,7 +182,7 @@
   </xacro:if>
 
   <!-- Import table -->
-   <xacro:include filename="$(find ur3e_description)/urdf/table.urdf.xacro"/>
+   <xacro:include filename="$(find ur3e_description)/urdf/table.urdf"/>
 
   <!-- Joint between table and ur -->
   <joint name="table_joint" type="fixed">
@@ -214,12 +214,23 @@
   </xacro:sensor_d435i> -->
 
   <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
- <xacro:sensor_d435i parent="side_extrusion_20">
+ <!-- <xacro:sensor_d435i parent="side_extrusion_20">
       <origin
       xyz="${cam_offset_x} ${cam_offset_y} ${cam_offset_z}"
       rpy="${cam_roll} ${cam_pitch} ${cam_yaw}"
       />   
-  </xacro:sensor_d435i>
+  </xacro:sensor_d435i> -->
+
+  <xacro:sensor_d435i parent="base_link">
+        <origin rpy="0.0 0.5 -3.14" xyz="0.555 0.5333 0.467"/>  
+    </xacro:sensor_d435i>
+
+  <link name="camera_optical_link"/>
+  <joint name="align_camera_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_link"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${pi}"/> <!-- sim: -3.14 -1.57 1.57; recc: ${-pi/2} 0 ${-pi/2}--> 
+  </joint>
 
 
 
