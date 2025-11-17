@@ -52,11 +52,13 @@ class PickAndPlaceSim(Node):
         # initialize state early to avoid callback exceptions
         self.objects = {}
         self.last_plane_marker = None
+        
 
         self.rtb_model = rtb.models.UR3()
         self.cb_group = ReentrantCallbackGroup()
 
         # variables for metrics
+        self.start_time = time.time()
         self.plan_time = None
         self.exec_time = None
         self.planning_success = None
@@ -538,14 +540,14 @@ class PickAndPlaceSim(Node):
         if self.planning_success is None:
             self.planning_success = True
         if self.print_metrics:
+            total_pipeline = time.time() - self.start_time
             self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
             self.get_logger().info(self.GREEN + "Metrics Summary:" + self.RESET)
             self.get_logger().info(self.GREEN + f"  1. Planning Success (bool): {int(self.planning_success)}" + self.RESET)
             self.get_logger().info(self.GREEN + f"  2. Planning time [s]: {self.plan_time:.4f} s" + self.RESET)
             self.get_logger().info(self.GREEN + f"  3. Execution time [s]: {self.exec_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.GREEN + f"  4. Time (PnP Pipeline) [s]: {total_pipeline:.4f} s" + self.RESET)
             self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
-
-
 
     # gripper methods
     def send_gripper_goal(self, position: float):
