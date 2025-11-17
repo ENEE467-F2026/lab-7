@@ -23,7 +23,7 @@ Before beginning, ensure you are on a lab machine. The lab computers contain a p
     ```
     xhost +local:root
     ```
-* Next change directory to the `~/Labs/lab-7-sim/` folder:
+* Next change directory to the `~/Labs/lab-7-sim/docker` folder:
     ```
     cd ~/Labs/lab-7-sim/docker
     ```
