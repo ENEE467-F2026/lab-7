@@ -25,7 +25,6 @@ setup(
     entry_points={
         'console_scripts': [
             'hande_command_sim = hande_action_client.hande_command_sim:main',
-            'hande_command_hw = hande_action_client.hande_command_hw:main',
         ],
     },
 )

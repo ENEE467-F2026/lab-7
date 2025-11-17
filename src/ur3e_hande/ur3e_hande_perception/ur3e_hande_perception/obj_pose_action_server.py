@@ -17,7 +17,7 @@
 
 """
 ROS 2 Node for table-top plane segmentation and object clustering.
-Assumes input from /filtered_cloud (downsampled, cropped point cloud).
+Assumes input from /filtered_cloud 
 
 Usage:
     ros2 run ur3e_hande_perception obj_pose_action_server

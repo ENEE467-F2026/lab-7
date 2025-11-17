@@ -13,7 +13,6 @@
   <test_depend>ament_lint_common</test_depend>
 
   <depend>robotiq_hande_description</depend>
-  <depend>robotiq_hande_driver</depend>
   <depend>ur_description</depend>
   <depend>ur_robot_driver</depend>
   <exec_depend>urdf_launch</exec_depend>

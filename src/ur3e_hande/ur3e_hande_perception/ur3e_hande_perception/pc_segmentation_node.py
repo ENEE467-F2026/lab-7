@@ -17,7 +17,7 @@
 
 """
 ROS 2 Node for tabletop plane segmentation and object clustering.
-Assumes input from /filtered_cloud (downsampled, cropped point cloud).
+Assumes input from /filtered_cloud.
 
 Author: Clinton Enwerem
 Developed for the course ENEE467: Robotics Projects Laboratory, Fall 2025, University of Maryland, College Park, MD.

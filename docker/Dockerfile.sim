@@ -1,5 +1,5 @@
 ############################################################
-# Base Image for the Hardware Lab with UR3e + Robotiq Hand-E
+# Base Image for Simulation Benchmarking
 ############################################################
 ARG ROS_DISTRO=jazzy
 ARG HOME=/home/robot
@@ -28,8 +28,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     ros-${ROS_DISTRO}-tf2-geometry-msgs \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     ros-${ROS_DISTRO}-rviz2 \
-    ros-${ROS_DISTRO}-librealsense2* \
-    ros-${ROS_DISTRO}-realsense2-* \
+    ros-${ROS_DISTRO}-realsense2-description \
+    ros-${ROS_DISTRO}-realsense2-camera-msgs \
     ros-${ROS_DISTRO}-pcl-* \
     libpcl-dev libboost-dev libblas-dev liblapack-dev python3-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -37,17 +37,6 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
 # Python packages 
 RUN pip install ipython roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 transforms3d==0.4.2 scikit-image scikit-learn --break-system-packages && \
     export PATH=/home/robot/.local/bin:$PATH
-
-# Librealsense installation
-ARG LIBREALSENSE_TAG=v2.57.3
-RUN git clone --depth 1 --branch ${LIBREALSENSE_TAG} https://github.com/IntelRealSense/librealsense.git /opt/librealsense \
- && cd /opt/librealsense && mkdir build && cd build \
- && cmake .. -DBUILD_EXAMPLES=true -DCMAKE_BUILD_TYPE=Release \
- && make -j"$(nproc)" && make install \
- && install -m 644 /opt/librealsense/config/99-realsense-libusb.rules /etc/udev/rules.d/99-realsense-libusb.rules || true
-
-RUN python3 -m pip install pyrealsense2 --no-cache-dir --ignore-installed --break-system-packages \
- || (cd /opt/librealsense && python3 -m pip install . --no-cache-dir --ignore-installed --break-system-packages)
 
 # MoveIt, UR Drivers, Gazebo, and Utilities
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -78,14 +67,14 @@ ARG userid=1002
 ARG groupid=1002
 
 # Create or reuse the user safely
-RUN existing_uid=$(getent passwd ${userid} | cut -d: -f1) && \
-    if [ -n "$existing_uid" ]; then \
-        echo "Reusing existing UID ${userid} (user: $existing_uid) as 'robot'"; \
-        usermod -l robot -d /home/robot -m "$existing_uid"; \
+RUN if id -u ${userid} >/dev/null 2>&1; then \
+      olduser=$(getent passwd ${userid} | cut -d: -f1); \
+      echo "Reusing existing UID ${userid} ($olduser) as 'robot'"; \
+      usermod -l robot -d /home/robot -m $olduser; \
     else \
-        echo "Creating new user 'robot' with UID ${userid} and GID ${groupid}"; \
-        groupadd -g ${groupid} -o robot || true; \
-        useradd -ms /bin/bash --uid ${userid} -g ${groupid} --groups sudo,video robot; \
+      echo "Creating new user robot"; \
+      groupadd -g ${groupid} -o robot || true; \
+      useradd -ms /bin/bash --uid ${userid} -g ${groupid} --groups sudo,video robot; \
     fi && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
@@ -125,7 +114,7 @@ RUN echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc && \
     echo "alias clc=clear" >> ~/.bashrc && \
     # clear terminal when starting
     echo "clear" >> ~/.bashrc && \
-    echo "toilet -f smblock --filter border:metal -w 24 ' ENEE 467     LAB 7  '" >> ~/.bashrc
+    echo "toilet -f term --filter border:metal 'ENEE467 LAB 7 (SIM)'" >> ~/.bashrc
 
 # tmux Config
 ADD --chown=robot:robot \
@@ -134,4 +123,3 @@ ADD --chown=robot:robot \
 
 EXPOSE 11311
 ENTRYPOINT ["/bin/bash", "-i"]
-CMD ["rs-enumerate-devices", "--compact"]
