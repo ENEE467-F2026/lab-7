@@ -59,7 +59,7 @@ def gripper_joint_names(prefix: str = prefix) -> List[str]:
 # They are needed for robot model loading and kinematics computations
 # Derived paths for moveit config and robot description
 ROBOT_NAME = os.path.basename(__file__).strip().split('.')[0]
-MOVEIT_CONFIG_PKG_SHARE_DIR = get_package_share_directory(ROBOT_NAME + "_moveit_config")
+MOVEIT_CONFIG_PKG_SHARE_DIR = get_package_share_directory(ROBOT_NAME + "_moveit_config_sim")
 DESCRIPTION_FILE = os.path.join(MOVEIT_CONFIG_PKG_SHARE_DIR, "config", ROBOT_NAME + ".urdf.xacro")
 JOINT_LIMITS_FILE = os.path.join(MOVEIT_CONFIG_PKG_SHARE_DIR, "config", "joint_limits.yaml")
 SRDF_FILE = os.path.join(MOVEIT_CONFIG_PKG_SHARE_DIR, "config", ROBOT_NAME + ".srdf")
