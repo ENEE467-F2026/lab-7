@@ -155,18 +155,21 @@ class PickAndPlace(Node):
         self.quat_xyzw = R.from_matrix(np.eye(3)).as_quat().tolist()
 
         # Compute joint targets with IK
+        # TODO (2a) — Compute IK for each sub-task
+        # using self.solve_ik(...) with appropriate seeds ie home_q, self.approach_q, etc.
+
         self.get_logger().info(f"Computing IK for approach at {self.approach_pos}")
-        self.approach_q = self.solve_ik(self.approach_pos, seed=home_q)
+        self.approach_q = None
 
         self.get_logger().info(f"Computing IK for pre-grip at {self.pre_grip_pos}")
-        self.pre_grip_q = self.solve_ik(self.pre_grip_pos, seed=self.approach_q)
+        self.pre_grip_q = None
 
         self.get_logger().info(f"Computing IK for place at {self.place_pos}")
-        self.place_q = self.solve_ik(self.place_pos, seed=home_q)
+        self.place_q = None
 
         # lift reuses the approach config with higher Z
-        self.after_pick_q = self.approach_q
-        self.retreat_q = home_q
+        self.after_pick_q = None
+        self.retreat_q = None
 
         # Gripper goals 
         self.p_grip_close = 255
@@ -383,6 +386,12 @@ class PickAndPlace(Node):
         self.get_logger().info("Waiting for custom Hand-E gripper action server...")
         self.gripper_action_client.wait_for_server()
         self.get_logger().info("Starting pick-and-place sequence...")
+
+        # TODO (2b): IK FAILURE HANDLING
+        # If any of [self.approach_q, self.pre_grip_q, self.place_q] is None:
+        #   * Log a self.get_logger().error(...)
+        #   * and return immediately
+        #   * Do NOT call timed_motion() at all
 
         # Approach
         self.get_logger().info("Moving to approach_q")
