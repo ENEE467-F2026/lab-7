@@ -59,8 +59,8 @@ class PickAndPlaceSim(Node):
 
         # variables for metrics
         self.start_time = time.time()
-        self.plan_time = None
-        self.exec_time = None
+        self.plan_times = []
+        self.exec_times = []
         self.planning_success = None
 
         # qos
@@ -87,6 +87,7 @@ class PickAndPlaceSim(Node):
         self.declare_parameter("place_margin", 0.0)  # m
         self.declare_parameter("plane_offset_z", 0.002)  # m
         self.declare_parameter("table_dims", [0.822, 1.092, 0.755])  # x,y,z
+        self.declare_parameter("print_extra_metrics", False)
 
         self.pregrasp_z = self.get_parameter("pregrasp_z").value
         self.lift_z_offset = self.get_parameter("lift_z_offset").value
@@ -97,6 +98,7 @@ class PickAndPlaceSim(Node):
         self.grip_exec_delay = self.get_parameter("grip_exec_delay").value
         self.safe_lift_z = self.get_parameter("safe_lift_z").value
         self.print_metrics = self.get_parameter("print_metrics").get_parameter_value().bool_value
+        self.print_extra_metrics = self.get_parameter("print_extra_metrics").get_parameter_value().bool_value
         self.max_vel_scale = self.get_parameter("max_vel_scale").get_parameter_value().double_value
         self.max_acc_scale = self.get_parameter("max_acc_scale").get_parameter_value().double_value
         self.goal_pos_tol = self.get_parameter("goal_pos_tol").get_parameter_value().double_value
@@ -160,7 +162,7 @@ class PickAndPlaceSim(Node):
         # Mirror the object across the robot base
         x_place = -x_obj * 1.2
 
-        # Optionally, clamp to a safe zone
+        # clamp to a safe zone
         TABLE_X, TABLE_Y, SAFE_Z = self.table_dims[0], self.table_dims[1], self.lift_z
         x_place = float(np.clip(x_place, -TABLE_X    / 2, TABLE_X    / 2))
         y_place = float(np.clip(y_obj, -TABLE_Y / 2, TABLE_Y / 2))
@@ -194,7 +196,7 @@ class PickAndPlaceSim(Node):
         self.moveit2.goal_position_tolerance = self.goal_pos_tol
         self.moveit2.goal_orientation_tolerance = self.goal_ori_tol
 
-        # subscribe AFTER MoveIt2 and state exist so the first plane message is handled
+        # subscribe after MoveIt2 and state exist so the first plane message is handled
         self.pcd_plane_sub = self.create_subscription(
             MarkerArray,
             "plane_marker",
@@ -336,8 +338,9 @@ class PickAndPlaceSim(Node):
             self.get_logger().warn(f"[{label}] Planning/execution threw: {e}")
             return False
         t1 = time.time()
-        if self.plan_time is None:
-            self.plan_time = t1 - t0
+        plan_dt = t1 - t0
+        self.plan_times.append(plan_dt)
+        self.get_logger().info(f"[{label}] Plan time: {plan_dt:.4f} s")
         
         if traj is not None and not getattr(traj, "joint_trajectory", None):
             self.get_logger().warn(f"[{label}] Planning returned an unexpected result.")
@@ -345,12 +348,14 @@ class PickAndPlaceSim(Node):
         if synchronous:
             # Wait until execution finishes before continuing 
             try:
-                t_exec0 = time.time()
+                t2 = time.time()
                 self.get_logger().info(f"[{label}] Waiting until execution finished...")
                 self.moveit2.wait_until_executed()
-                t_exec1 = time.time()
-                if self.exec_time is None:
-                    self.exec_time = t_exec1 - t_exec0
+                t3 = time.time()
+                exec_dt = t3 - t2
+                self.exec_times.append(exec_dt)
+                self.get_logger().info(f"[{label}] Exec time: {exec_dt:.4f} s")
+
             except Exception as e:
                 self.get_logger().warn(f"[{label}] Waiting for execution failed: {e}")
                 return False
@@ -540,14 +545,28 @@ class PickAndPlaceSim(Node):
         if self.planning_success is None:
             self.planning_success = True
         if self.print_metrics:
+            total_plan_time = sum(self.plan_times)
+            total_exec_time = sum(self.exec_times)
+            avg_plan_time = total_plan_time / len(self.plan_times)
+            avg_exec_time = total_exec_time / len(self.exec_times)
             total_pipeline = time.time() - self.start_time
+            if self.print_extra_metrics:
+                self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
+                self.get_logger().info(self.GREEN + f"---------------------- MAX_VEL_SCALE = {self.max_vel_scale} -----------------------" + self.RESET)
+                self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
             self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
             self.get_logger().info(self.GREEN + "Metrics Summary:" + self.RESET)
             self.get_logger().info(self.GREEN + f"  1. Planning Success (bool): {int(self.planning_success)}" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  2. Planning time [s]: {self.plan_time:.4f} s" + self.RESET)
-            self.get_logger().info(self.GREEN + f"  3. Execution time [s]: {self.exec_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.GREEN + f"  2. Planning time [s]: {avg_plan_time:.4f} s" + self.RESET)
+            self.get_logger().info(self.GREEN + f"  3. Execution time [s]: {avg_exec_time:.4f} s" + self.RESET)
             self.get_logger().info(self.GREEN + f"  4. Time (PnP Pipeline) [s]: {total_pipeline:.4f} s" + self.RESET)
             self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
+            if self.print_extra_metrics:
+                self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
+                self.get_logger().info(self.GREEN + f"  5. Total Planning time [s]: {total_plan_time:.4f} s" + self.RESET)
+                self.get_logger().info(self.GREEN + f"  6. Total Execution time [s]: {total_exec_time:.4f} s" + self.RESET)
+                self.get_logger().info(self.GREEN + f"  7. Total (PnP Pipeline) [s]: {total_pipeline:.4f} s" + self.RESET)
+                self.get_logger().info(self.GREEN + "-------------------------------------------------------" + self.RESET)
 
     # gripper methods
     def send_gripper_goal(self, position: float):

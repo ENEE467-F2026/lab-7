@@ -17,7 +17,7 @@ Usage:
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -32,6 +32,7 @@ def generate_launch_description():
     world_to_spawn = LaunchConfiguration("world_to_spawn")
     pnp = LaunchConfiguration("pnp")
     print_metrics = LaunchConfiguration("print_metrics")
+    print_extra_metrics = LaunchConfiguration("print_extra_metrics")
     use_perception = LaunchConfiguration("use_perception")
     max_acc_scale = LaunchConfiguration("max_acc_scale")
     max_vel_scale = LaunchConfiguration("max_vel_scale")
@@ -98,13 +99,18 @@ def generate_launch_description():
             description="Whether to print pick-and-place metrics to console.",
         ),
         DeclareLaunchArgument(
+            "print_extra_metrics",
+            default_value="false",
+            description="Whether to print extra pick-and-place metrics (not included in Iter 1) to console.",
+        ),
+        DeclareLaunchArgument(
             "use_perception",
             default_value="true",
             description="Whether to use perception nodes for object pose estimation.",
         ),
     ]
 
-    # Gazebo + MoveIt2 simulation
+    # Gazebo and MoveIt2 simulation
     gz_moveit_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -167,7 +173,7 @@ def generate_launch_description():
 
     # Pick-and-Place Client
     pick_and_place = TimerAction(
-        period=10.0,  # wait for perception + pose server to initialize
+        period=10.0,  # wait for perception and pose server to initialize
         actions=[
             Node(
                 package="ur3e_hande_moveit_py",
@@ -184,6 +190,7 @@ def generate_launch_description():
                     {"pregrasp_z": ParameterValue(pregrasp_z, value_type=float)},
                     {"place_offset_y": ParameterValue(place_offset_y, value_type=float)},
                     {"print_metrics": ParameterValue(print_metrics, value_type=bool)},
+                    {"print_extra_metrics": ParameterValue(print_extra_metrics, value_type=bool)},
                     # {"obj_pos": obj_pos}, # If obj_pos is omitted, PickAndPlaceSim will query GetTargetObjPose
                 ],
             )

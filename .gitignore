@@ -23,3 +23,4 @@ yolov8n.pt
 **src/ur3e_hande/ur3e_hande_perception/scripts/pc_segmentation_node_o3d.py
 **src/ur3e_hande/ur3e_hande_perception/scripts/yolo_pc_pose_estimation.py
 src/ur3e_hande/ur3e_hande_perception/image.png
+src/ur3e_hande/ur3e_hande_moveit_py/ur3e_hande_moveit_py/pnp_demo_sim_test.py

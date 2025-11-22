@@ -21,6 +21,9 @@ services:
     privileged: true
     tty: true
     stdin_open: true
+    volumes:
+      - ../src:/home/robot/ros2_ws/src:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw    
     device_cgroup_rules:
       - 'c 81:* rmw'     
       - 'c 189:* rmw'   
