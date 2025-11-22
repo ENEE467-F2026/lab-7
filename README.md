@@ -65,4 +65,4 @@ The command will launch VSCode on your host and automatically attach it to the r
 
 ## Lab Instructions
 
-Please follow the [lab manual](Lab_7_Autonomous_Manipulation_on_the_Real_Robot.pdf) closely. All instructions are contained inside the lab manual.
+Please follow the <a href="#" target="_blank">lab manual</a> closely. All instructions are contained inside the lab manual.

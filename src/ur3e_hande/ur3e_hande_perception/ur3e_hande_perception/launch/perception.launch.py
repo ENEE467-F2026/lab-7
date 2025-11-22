@@ -105,7 +105,7 @@ def generate_launch_description():
             parameters=[
             {"use_sim_time": use_sim_time},
             {"input_topic": "/filtered_cloud"},
-            {"base_frame": "world"},
+            {"base_frame": "camera_link"}, # change to "world" if launching perception as part of the full arm-gripper manipulation system
             {"camera_frame": "camera_depth_optical_frame"}, # set automatically from point cloud header in pc_segmentation_node.py
             {"stop_after_first_pub": stop_after_first_pub}, # keep publishing segmentation results
             ],
