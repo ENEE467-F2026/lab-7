@@ -1,13 +1,13 @@
 # ENEE 467 Fall 2025: Robotics Project Laboratory
-## Lab 7: Autonomous Manipulation with ROS 2 on the Real UR3e-Hand-E Robot
+## Lab 7: Hardware-Based 3D Perception, Motion Planning, and Control for the UR3e Robot
 
-This repository contains a Docker container for Lab 7 (Autonomous Manipulation with ROS 2 on the Real UR3e-Hand-E Robot) as well as the necessary code templates for completing the hardware procedure and exercises. Due to the introduction of several changes to the UR hardware stack in ROS 2 Jazzy as well as the more pronounced RTDE-ModBUS issues, this repo provides packages developed in and for ROS 2 Humble, although a few might be compatible with newer ROS 2 distros.
+This repository contains a Docker container for Lab 7 (Hardware-Based 3D Perception, Motion Planning, and Control for the UR3e Robot) as well as the necessary code templates for completing the hardware procedure and exercises. Due to the introduction of several changes to the UR hardware stack in ROS 2 Jazzy as well as the more pronounced RTDE-ModBUS issues, this repo provides packages developed in and for ROS 2 Humble, although a few might be compatible with newer ROS 2 distros.
 
 ## Overview
 
 ![ROS 2 Humble](https://img.shields.io/badge/ROS2-Humble-blue)
 
-Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. This lab brings these elements together in ROS 2, enabling the real UR3e-Hand-E robot to detect, grasp, and place an object. Students will explore how these subsystems interact in real time and how autonomy developed in simulation transfers to physical hardware.
+Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. Among these elements, this lab focuses on perception and control to enable the real UR3e robot to detect and plan motions to an object in its workspace from point cloud input. Through this lab, students will explore how these subsystems interact in real time, in simulation and partly in hardware.
 
 ## Lab Software
 
@@ -65,4 +65,4 @@ The command will launch VSCode on your host and automatically attach it to the r
 
 ## Lab Instructions
 
-Please follow the <a href="#" target="_blank">lab manual</a> closely. All instructions are contained inside the lab manual.
+Please follow the [lab manual](Lab_7_Hardware_3D_Perception_and_Control_for_UR3e.pdf) closely. All instructions are contained inside the lab manual.

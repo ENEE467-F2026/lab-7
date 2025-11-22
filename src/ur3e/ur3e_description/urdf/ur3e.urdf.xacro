@@ -193,7 +193,7 @@
   </xacro:if>
 
   <!-- Import table -->
-   <xacro:include filename="$(find ur3e_description)/urdf/table.urdf"/>
+   <xacro:include filename="$(find ur3e_description)/urdf/table.urdf.xacro"/>
 
   <!-- Joint between table and ur -->
   <joint name="table_joint" type="fixed">
@@ -225,7 +225,7 @@
   </xacro:sensor_d435i> -->
 
   <!-- Use the sensor_d435i macro; this is the camera on the right; add a unique namespace (e.g. camera2) if using both cameras-->
- <xacro:sensor_d435i parent="table" use_nominal_extrinsics="true" add_plug="true" use_mesh="true" publish_pointcloud="true">
+ <xacro:sensor_d435i parent="table" use_nominal_extrinsics="true">
       <origin
       xyz="${extrusion_x} ${extrusion_y} ${mount_height}"
       rpy="${camera_roll} ${camera_pitch} ${camera_yaw}"
@@ -265,7 +265,7 @@
 <joint name="back_wall_fixed" type="fixed">
   <parent link="base_link"/>
   <child link="back_wall"/>
-  <origin xyz="0 0 0" rpy="0 0 0"/>
+  <origin xyz="0 0 0" rpy="0 0 1.57"/>
 </joint>
 
 

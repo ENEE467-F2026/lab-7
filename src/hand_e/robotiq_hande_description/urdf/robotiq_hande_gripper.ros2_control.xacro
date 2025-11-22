@@ -9,6 +9,7 @@
         <xacro:if value="${use_fake_hardware}">
           <plugin>mock_components/GenericSystem</plugin>
         </xacro:if>
+      </hardware>
 
       <!-- The right finger joint uses the mimic feature -->
       <joint name="${prefix}robotiq_hande_left_finger_joint">

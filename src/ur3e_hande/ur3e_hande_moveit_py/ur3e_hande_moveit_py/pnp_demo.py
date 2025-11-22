@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Lab 7: Autonomous Manipulation with ROS 2 on the Real UR3e-Hand-E Robot
+# Lab 7: Hardware-Based 3D Perception, Motion Planning, and Control for the UR3e Robot
 # Copyright (C) 2025 Clinton Enwerem
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -164,12 +164,15 @@ class PickAndPlace(Node):
         self.get_logger().info(f"Computing IK for pre-grip at {self.pre_grip_pos}")
         self.pre_grip_q = None
 
-        self.get_logger().info(f"Computing IK for place at {self.place_pos}")
-        self.place_q = None
-
         # lift reuses the approach config with higher Z (optionally)
         self.after_pick_q = None
+
+        self.get_logger().info(f"Computing IK for place at {self.place_pos}")
+        self.place_q = None
+        
         self.retreat_q = None
+
+
 
         # Gripper goals 
         self.p_grip_close = 255
