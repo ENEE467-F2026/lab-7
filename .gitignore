@@ -18,7 +18,6 @@
 # **src/
 **realsense/
 **/docs
-Lab_7_Autonomous_Manipulation_on_the_Real_Robot.pdf
 yolov8n.pt 
 **src/ur3e_hande/ur3e_hande_perception/scripts/pc_segmentation_node_o3d.py
 **src/ur3e_hande/ur3e_hande_perception/scripts/yolo_pc_pose_estimation.py

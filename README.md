@@ -1,13 +1,13 @@
 # ENEE 467 Fall 2025: Robotics Project Laboratory
-## Lab 7: Autonomous Manipulation with ROS 2 on the Real UR3e-Hand-E Robot
+## Lab 7: Hardware-Based 3D Perception, Motion Planning, and Control for the UR3e Robot
 
-This repository contains a Docker container for Lab 7 (Autonomous Manipulation with ROS 2 on the Real UR3e-Hand-E Robot) as well as the necessary code templates for completing the hardware procedure and exercises. Due to its better ROS 2 compliant simulation support, this repo provides packages developed for Gazebo Harmonic and targeting ROS 2 Jazzy. 
+This repository contains a Docker container for Lab 7 (Hardware-Based 3D Perception, Motion Planning, and Control for the UR3e Robot) as well as the necessary code templates for completing the hardware procedure and exercises. Due to its better ROS 2 compliant simulation support, this repo provides packages developed for Gazebo Harmonic and targeting ROS 2 Jazzy. 
 
 ## Overview
 
 ![ROS 2 Jazzy](https://img.shields.io/badge/ROS2-Jazzy-orange)
 
-Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. This lab brings these elements together in ROS 2, enabling the real UR3e-Hand-E robot to detect, grasp, and place an object. Through this lab, students will explore how these subsystems interact in real time and how autonomy developed in simulation transfers to physical hardware.
+Autonomous robotic manipulation unites perception, planning, and control to enable robots sense, reason, and act independently towards the realization of a prescribed task. Among these elements, this lab focuses on perception and control to enable the real UR3e robot to detect and plan motions to an object in its workspace from point cloud input. Through this lab, students will explore how these subsystems interact in real time, in simulation and partly in hardware.
 
 ## Lab Software
 
@@ -46,4 +46,4 @@ The command will launch VSCode on your host and automatically attach it to the r
 
 ## Lab Instructions
 
-Please follow the [lab manual](Lab_7_Autonomous_Manipulation_on_the_Real_Robot.pdf) closely. All instructions are contained inside the lab manual.
+Please follow the [lab manual](Lab_7_Hardware_3D_Perception_and_Control_for_UR3e.pdf) closely. All instructions are contained inside the lab manual.
