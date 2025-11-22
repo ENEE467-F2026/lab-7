@@ -167,7 +167,7 @@ class PickAndPlace(Node):
         self.get_logger().info(f"Computing IK for place at {self.place_pos}")
         self.place_q = None
 
-        # lift reuses the approach config with higher Z
+        # lift reuses the approach config with higher Z (optionally)
         self.after_pick_q = None
         self.retreat_q = None
 
