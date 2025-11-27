@@ -40,6 +40,8 @@ def generate_launch_description():
         "Use 'base_link' if launching this launch file as part of a full manipulation system."),
         DeclareLaunchArgument("camera_frame", default_value="camera_depth_optical_frame", description="Name of the camera frame."),
         DeclareLaunchArgument("pc_topic", default_value="/camera/camera/depth/color/points", description="Topic from which to subscribe to the raw point cloud."),
+        DeclareLaunchArgument("pc_seg_input_topic", default_value="/filtered_cloud", description="Topic from which to subscribe to the raw point cloud."),
+
 
     ]
 
