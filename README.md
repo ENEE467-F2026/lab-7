@@ -1,7 +1,7 @@
-# ENEE 467 Fall 2025: Robotics Project Laboratory
-## Lab 7: Hardware-Based 3D Perception, Motion Planning, and Control for the UR3e Robot
+# ENEE 467 Fall 2026: Robotics Project Laboratory
+## Lab 7: Putting it All Together: Autonomous Manipulation on the UR3e-HandE
 
-This repository contains a Docker container for Lab 7 (Hardware-Based 3D Perception, Motion Planning, and Control for the UR3e Robot) as well as the necessary code templates for completing the hardware procedure and exercises. Due to its better ROS 2 compliant simulation support, this repo provides packages developed for Gazebo Harmonic and targeting ROS 2 Jazzy. 
+This repository contains a Docker container for Lab 7 (Putting it All Together: Autonomous Manipulation on the UR3e-HandE) as well as the necessary code templates for completing the hardware procedure and exercises. Due to its better ROS 2 compliant simulation support, this repo provides packages developed for Gazebo Harmonic and targeting ROS 2 Jazzy. 
 
 ## Overview
 
@@ -35,7 +35,7 @@ Before beginning, ensure you are on a lab machine. The lab computers contain a p
     ```
     (lab-7) robot@docker-desktop:~$
     ```
-* As you will not be editing any files for the simulator part, the repo directory is **NOT** mounted to the Docker container.
+* The repository's `src` directory is mounted into the container (read-write), so edits you make on the host take effect inside the container after a `colcon build`. The simulation exercise asks you to complete the inverse-kinematics step in `pnp_demo_sim.py`.
 
 ## Attaching the Docker Container to VSCode
 To enable type hints and IntelliSense, after starting the container, run the following command from a new terminal on the lab machine (host) to attach the running container to VSCode:
@@ -46,4 +46,4 @@ The command will launch VSCode on your host and automatically attach it to the r
 
 ## Lab Instructions
 
-Please follow the [lab manual](Lab_7_Hardware_3D_Perception_and_Control_for_UR3e.pdf) closely. All instructions are contained inside the lab manual.
+Please follow the [lab manual](Lab_7_Putting_it_All_Together_Autonomous_Manipulation_on_the_UR3e-HandE.pdf) closely. All instructions are contained inside the lab manual.

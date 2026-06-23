@@ -497,15 +497,23 @@ class PickAndPlaceSim(Node):
         self.gripper_client.wait_for_server()
         self.open_gripper()
         time.sleep(self.grip_exec_delay * 4)
+        ####################################################
+        # TODO (Sim IK): Compute the IK for each pick-and-place sub-task with
+        # self._ik_rtb(target_pos, q0=seed). Replace each `None` below with the
+        # matching call. The target position and seed are named in each comment.
+        # If your IK is correct the arm runs the full sequence in Gazebo; if a
+        # target returns None, that sub-task is safely skipped and the run aborts
+        # (no motion is forced). Verify the whole sequence here BEFORE hardware.
+        ####################################################
+
         # approach
-        q_approach = self._ik_rtb(self.approach_pos)
+        q_approach = None  # <--- MODIFY (target: self.approach_pos; no seed)
         if not self._plan_then_execute(q_approach, "Approach"):
             self.get_logger().error("Aborting: cannot reach approach pose.")
             return
-        
+
         # grasp
-        # use cube-specific approach as IK seed for grasp
-        q_grasp = self._ik_rtb(self.grasp_pos, q0=self.ur_pregrip)
+        q_grasp = None  # <--- MODIFY (target: self.grasp_pos; seed q0=self.ur_pregrip)
         if not self._plan_then_execute(q_grasp, "Grasp"):
             self.get_logger().error("Aborting: cannot reach grasp pose.")
             return
@@ -514,7 +522,7 @@ class PickAndPlaceSim(Node):
         time.sleep(self.grip_exec_delay)
 
         # lift
-        q_lift = self._ik_rtb(self.lift_pos, q0=q_grasp)
+        q_lift = None  # <--- MODIFY (target: self.lift_pos; seed q0=q_grasp)
         if not self._plan_then_execute(q_lift, "Lift"):
             self.get_logger().error("Aborting: cannot lift after grasp.")
             return
@@ -523,7 +531,7 @@ class PickAndPlaceSim(Node):
         if self.place_pos is None:
             self.get_logger().error("Aborting: no valid place position available.")
             return
-        q_place = self._ik_rtb(self.place_pos, q0=self.ur_place)
+        q_place = None  # <--- MODIFY (target: self.place_pos; seed q0=self.ur_place)
         if not self._plan_then_execute(q_place, "Place"):
             self.get_logger().error("Aborting: cannot reach place pose.")
             return
