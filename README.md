@@ -25,7 +25,7 @@ To build the Docker container, ensure that you have [Docker](https://www.docker.
 * Clone this repository and navigate to the `docker` folder
     ```
     cd ~/Labs
-    git clone https://github.com/ENEE467-F2025/lab-7.git
+    git clone https://github.com/ENEE467-F2026/lab-7.git
     cd lab-7/docker
     ```
 * Build the image with Docker compose
@@ -39,7 +39,7 @@ The lab computers contain a prebuild image so you will not have to build the ima
 * Clone this repo to get the lab-7 code if you haven't done so already
     ```
     cd ~/Labs
-    git clone https://github.com/ENEE467-F2025/lab-7.git
+    git clone https://github.com/ENEE467-F2026/lab-7.git
     cd lab-7/docker
     ```
 * Enable X11 forwarding
