@@ -13,6 +13,8 @@ Autonomous robotic manipulation unites perception, planning, and control to enab
 
 To avoid software conflicts and increase portability, all lab software will be packaged as a Docker container. Follow the instructions below to get started.
 
+**Note**: This branch provides the **hardware-only** container (`lab-7-hw-image`). The simulation section of the lab manual (Exercise 1) runs in the separate simulator-only container (`lab-7-sim-image`) from the `sim` branch; switch to this container only when the manual moves to the hardware sections.
+
 ## Building the Container
 
 First check to see if the image is prebuilt on the lab computer by running the following command
