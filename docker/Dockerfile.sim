@@ -35,7 +35,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
     && rm -rf /var/lib/apt/lists/*
 
 # Python packages 
-RUN pip install ipython roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 transforms3d==0.4.2 scikit-image scikit-learn --break-system-packages && \
+RUN pip install ipython==9.7.0 roboticstoolbox-python==1.1.1 python-fcl==0.7.0.8 transforms3d==0.4.2 scikit-image scikit-learn numpy==1.26.4 --break-system-packages && \
     export PATH=/home/robot/.local/bin:$PATH
 
 # MoveIt, UR Drivers, Gazebo, and Utilities
